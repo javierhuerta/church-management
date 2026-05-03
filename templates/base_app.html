@@ -37,13 +37,8 @@
       <nav class="flex items-center h-full gap-0">
         <a href="{% url 'calendar_app:calendar' %}"
            class="h-full flex items-center gap-1.5 px-4 text-sm font-medium transition-colors
-                  {% if request.resolver_match.url_name == 'calendar' %}text-primary border-b-2 border-primary font-semibold{% else %}text-zinc-500 hover:text-primary{% endif %}">
+                  {% if request.resolver_match.url_name == 'calendar' or request.resolver_match.url_name == 'agenda' %}text-primary border-b-2 border-primary font-semibold{% else %}text-zinc-500 hover:text-primary{% endif %}">
           <span class="material-symbols-outlined text-base">calendar_month</span>Calendario
-        </a>
-        <a href="{% url 'calendar_app:agenda' %}"
-           class="h-full flex items-center gap-1.5 px-4 text-sm font-medium transition-colors
-                  {% if request.resolver_match.url_name == 'agenda' %}text-primary border-b-2 border-primary font-semibold{% else %}text-zinc-500 hover:text-primary{% endif %}">
-          <span class="material-symbols-outlined text-base">view_agenda</span>Mi Agenda
         </a>
         <a href="{% url 'calendar_app:event_list' %}"
            class="h-full flex items-center gap-1.5 px-4 text-sm font-medium transition-colors

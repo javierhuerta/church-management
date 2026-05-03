@@ -132,29 +132,20 @@ def event_detail(request, slug):
 
 
 def agenda_view(request):
-    """Vista de agenda estilo lista para móvil."""
+    """Vista principal de agenda: hoy + primera página de próximos eventos."""
     today = date.today()
-    from datetime import timedelta
-    import calendar as cal_mod
 
     today_events = Event.objects.filter(
         start_datetime__date=today, is_published=True,
     ).select_related('department').order_by('start_datetime')
 
-    week_end = today + timedelta(days=7)
-    week_events = Event.objects.filter(
-        start_datetime__date__gt=today,
-        start_datetime__date__lte=week_end,
-        is_published=True,
+    # Primera página de próximos (excluye hoy)
+    upcoming_qs = Event.objects.filter(
+        start_datetime__date__gt=today, is_published=True,
     ).select_related('department').order_by('start_datetime')
 
-    last_day = cal_mod.monthrange(today.year, today.month)[1]
-    month_end = date(today.year, today.month, last_day)
-    month_events = Event.objects.filter(
-        start_datetime__date__gt=week_end,
-        start_datetime__date__lte=month_end,
-        is_published=True,
-    ).select_related('department').order_by('start_datetime')
+    paginator = Paginator(upcoming_qs, 10)
+    page1 = paginator.get_page(1)
 
     notice_event = Event.objects.filter(
         start_datetime__date__gte=today,
@@ -165,10 +156,45 @@ def agenda_view(request):
     return render(request, 'calendar_app/agenda.html', {
         'today': today,
         'today_events': today_events,
-        'week_events': week_events,
-        'month_events': month_events,
+        'upcoming_events': page1,
+        'upcoming_page': 2,
+        'upcoming_has_more': page1.has_next(),
         'notice_event': notice_event,
     })
+
+
+def agenda_json_view(request):
+    """Endpoint JSON para scroll infinito de próximos eventos."""
+    today = date.today()
+    try:
+        page_num = int(request.GET.get('page', 1))
+    except ValueError:
+        page_num = 1
+
+    upcoming_qs = Event.objects.filter(
+        start_datetime__date__gt=today, is_published=True,
+    ).select_related('department').order_by('start_datetime')
+
+    paginator = Paginator(upcoming_qs, 10)
+    page = paginator.get_page(page_num)
+
+    events = []
+    for ev in page:
+        events.append({
+            'title':      ev.title,
+            'url':        reverse('calendar_app:event_detail', args=[ev.slug]),
+            'day':        ev.start_datetime.strftime('%d'),
+            'month':      ev.start_datetime.strftime('%b').capitalize(),
+            'is_all_day': ev.is_all_day,
+            'start_time': ev.start_datetime.strftime('%-H:%M') if not ev.is_all_day else None,
+            'end_time':   ev.end_datetime.strftime('%-H:%M') if ev.end_datetime and not ev.is_all_day else None,
+            'location':   ev.location or '',
+            'dept_name':  ev.department.name if ev.department else '',
+            'dept_color': ev.department.color if ev.department else '',
+            'scope':      ev.get_scope_display(),
+        })
+
+    return JsonResponse({'events': events, 'has_more': page.has_next()})
 
 
 def tv_view(request):

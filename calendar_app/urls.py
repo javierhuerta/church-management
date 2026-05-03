@@ -9,6 +9,7 @@ urlpatterns = [
     path('actividades/<slug:slug>/', views.event_detail, name='event_detail'),
     path('tv/', views.tv_view, name='tv'),
     path('agenda/', views.agenda_view, name='agenda'),
+    path('agenda/json/', views.agenda_json_view, name='agenda_json'),
     path('secretaria/', views.admin_panel_view, name='admin_panel'),
     path('secretaria/crear-evento/', views.event_create_view, name='event_create'),
     path('secretaria/evento/<int:pk>/get/', views.event_get_view, name='event_get'),
