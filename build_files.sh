@@ -5,7 +5,7 @@
 set -e
 
 echo "==> Instalando dependencias Python..."
-pip install -r requirements.txt
+pip install -r requirements.txt --break-system-packages
 
 echo "==> Compilando CSS Tailwind..."
 python manage.py tailwind build
