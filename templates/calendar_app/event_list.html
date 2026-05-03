@@ -1,9 +1,8 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 {% block title %}Actividades — Iglesia Adventista Osorno Central{% endblock %}
 
 {% block content %}
-
-<!-- Encabezado -->
+<div class="px-4 md:px-0">
 <div class="mb-6">
   <h1 class="text-2xl font-bold text-primary mb-1" style="font-family:'Noto Serif',serif">Actividades</h1>
   <p class="text-sm text-zinc-500">Todas las actividades de la iglesia</p>
@@ -76,4 +75,5 @@
 </div>
 {% endif %}
 
+</div>{# /px-4 wrapper #}
 {% endblock %}

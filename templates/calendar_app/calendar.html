@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 {% block title %}Calendario {{ month_name }} {{ year }} — Iglesia Adventista Osorno Central{% endblock %}
 
 {% block content %}
@@ -143,4 +143,13 @@
 
   </div><!-- /main -->
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // En mobile redirigir a la vista de agenda (más adecuada para pantallas pequeñas)
+  if (window.innerWidth < 768) {
+    location.replace('{% url "calendar_app:agenda" %}');
+  }
+</script>
 {% endblock %}
