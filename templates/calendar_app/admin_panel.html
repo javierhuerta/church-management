@@ -15,9 +15,18 @@
     body { font-family: 'Public Sans', sans-serif; background: #fbf8fc; color: #1b1b1e; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-    .flatpickr-calendar { font-family: 'Public Sans', sans-serif; }
+    .flatpickr-calendar { font-family: 'Public Sans', sans-serif; font-size: 13px; width: 280px; padding: 8px; }
+    .flatpickr-months { padding: 4px 0; }
+    .flatpickr-month { height: 32px; }
+    .flatpickr-current-month { font-size: 13px; padding: 4px 0; }
+    .flatpickr-current-month .numInputWrapper { width: 52px; }
+    .flatpickr-weekdays { margin-top: 4px; }
+    .flatpickr-weekday { font-size: 11px; color: #74777f; font-weight: 600; }
+    .flatpickr-day { height: 32px; max-width: 32px; line-height: 32px; font-size: 12px; margin: 1px auto; }
     .flatpickr-day.selected, .flatpickr-day.selected:hover { background: #5a3e8a; border-color: #5a3e8a; }
     .flatpickr-day:hover { background: #f0eaf8; }
+    .flatpickr-time { border-top: 1px solid #e4e4e7; margin-top: 4px; padding-top: 4px; }
+    .flatpickr-time input { font-size: 13px; }
   </style>
 
 </head>
@@ -107,15 +116,9 @@
     {% endif %}
 
     <!-- Page header -->
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-      <div>
-        <h1 class="text-2xl font-bold text-primary mb-1" style="font-family:'Noto Serif',serif">Panel Secretaría</h1>
-        <p class="text-sm text-zinc-500">Gestión del calendario eclesiástico — {{ month_name }} {{ year }}</p>
-      </div>
-      <button type="button" onclick="openEventModal()"
-         class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity shrink-0">
-        <span class="material-symbols-outlined text-base">add</span>Nueva Actividad
-      </button>
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-primary mb-1" style="font-family:'Noto Serif',serif">Panel Secretaría</h1>
+      <p class="text-sm text-zinc-500">Gestión del calendario eclesiástico — {{ month_name }} {{ year }}</p>
     </div>
 
     <!-- ── Bento grid ── -->
@@ -291,7 +294,8 @@
 
 <!-- ── Modal Nuevo Evento ── -->
 <div id="eventModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"
-     class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+     style="display:none"
+     class="fixed inset-0 z-[200] items-center justify-center p-4 bg-black/50">
   <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[92vh] flex flex-col shadow-2xl">
 
     <!-- Header modal -->
@@ -468,7 +472,7 @@
       </fieldset>
 
       <!-- Error inline -->
-      <div id="modalError" class="hidden flex items-center gap-2 px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-red-800 text-sm">
+      <div id="modalError" style="display:none" class="flex items-center gap-2 px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-red-800 text-sm">
         <span class="material-symbols-outlined text-base">error</span>
         <span id="modalErrorText"></span>
       </div>
@@ -491,7 +495,8 @@
 
 <!-- Toast de éxito -->
 <div id="successToast"
-     class="fixed bottom-20 md:bottom-6 right-4 z-[300] hidden items-center gap-3 bg-green-700 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-lg">
+     style="display:none"
+     class="fixed bottom-20 md:bottom-6 right-4 z-[300] items-center gap-3 bg-green-700 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-lg">
   <span class="material-symbols-outlined text-base">check_circle</span>
   <span id="toastText">Actividad guardada</span>
   <a id="toastLink" href="#" class="underline ml-1">Ver</a>
@@ -524,38 +529,36 @@
     const timeWrap  = document.getElementById('startTimeWrap');
     const endTimeWrap = document.getElementById('endTimeWrap');
     if (cb.checked) {
-      timeWrap.classList.add('hidden');
-      endTimeWrap.classList.add('hidden');
+      timeWrap.style.display = 'none';
+      endTimeWrap.style.display = 'none';
     } else {
-      timeWrap.classList.remove('hidden');
-      endTimeWrap.classList.remove('hidden');
+      timeWrap.style.display = '';
+      endTimeWrap.style.display = '';
     }
   }
 
   // ── Modal abrir / cerrar ────────────────────────────────────────
   function openEventModal() {
     const modal = document.getElementById('eventModal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     setTimeout(() => document.getElementById('m_title').focus(), 50);
   }
 
   function closeEventModal() {
     const modal = document.getElementById('eventModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    modal.style.display = 'none';
     document.body.style.overflow = '';
     document.getElementById('eventForm').reset();
     fpStartDate.clear(); fpStartTime.clear();
     fpEndDate.clear();   fpEndTime.clear();
-    document.getElementById('modalError').classList.add('hidden');
-    document.getElementById('startTimeWrap').classList.remove('hidden');
-    document.getElementById('endTimeWrap').classList.remove('hidden');
+    document.getElementById('modalError').style.display = 'none';
+    document.getElementById('startTimeWrap').style.display = '';
+    document.getElementById('endTimeWrap').style.display = '';
   }
 
-  // Cerrar al hacer clic en overlay
-  document.getElementById('eventModal').addEventListener('click', function(e) {
+  // Cerrar al hacer clic en overlay (fuera del card)
+  document.getElementById('eventModal').addEventListener('mousedown', function(e) {
     if (e.target === this) closeEventModal();
   });
 
@@ -570,7 +573,7 @@
     const txt  = document.getElementById('submitBtnText');
     const errBox  = document.getElementById('modalError');
     const errText = document.getElementById('modalErrorText');
-    errBox.classList.add('hidden');
+    errBox.style.display = 'none';
 
     const form = document.getElementById('eventForm');
     const data = new FormData(form);
@@ -578,13 +581,13 @@
     // Validación rápida del lado del cliente
     if (!data.get('title').trim()) {
       errText.textContent = 'El título es obligatorio.';
-      errBox.classList.remove('hidden');
+      errBox.style.display = 'flex';
       document.getElementById('m_title').focus();
       return;
     }
     if (!data.get('start_date')) {
       errText.textContent = 'La fecha de inicio es obligatoria.';
-      errBox.classList.remove('hidden');
+      errBox.style.display = 'flex';
       return;
     }
 
@@ -604,18 +607,17 @@
         document.getElementById('toastText').textContent = `"${json.title}" guardada`;
         document.getElementById('toastLink').href = json.detail_url;
         const toast = document.getElementById('successToast');
-        toast.classList.remove('hidden');
-        toast.classList.add('flex');
-        setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('flex'); }, 5000);
+        toast.style.display = 'flex';
+        setTimeout(() => { toast.style.display = 'none'; }, 5000);
         // Recargar la página para mostrar el nuevo evento en el calendario
         setTimeout(() => location.reload(), 800);
       } else {
         errText.textContent = json.error || 'Error al guardar. Intenta nuevamente.';
-        errBox.classList.remove('hidden');
+        errBox.style.display = 'flex';
       }
     } catch (e) {
       errText.textContent = 'Error de conexión. Verifica tu red.';
-      errBox.classList.remove('hidden');
+      errBox.style.display = 'flex';
     } finally {
       btn.disabled = false;
       txt.textContent = 'Guardar actividad';
