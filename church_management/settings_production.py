@@ -20,7 +20,7 @@ DEBUG = False
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 
 # Agrega automáticamente *.vercel.app si no está incluido
-ALLOWED_HOSTS += [".vercel.app", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS += [".vercel.app", ".now.sh", "localhost", "127.0.0.1"]
 
 # ── Base de datos: Neon PostgreSQL ─────────────────────────────────────────────
 DATABASES = {
