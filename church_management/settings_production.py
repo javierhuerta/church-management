@@ -33,9 +33,17 @@ DATABASES = {
 }
 
 # ── Archivos estáticos con WhiteNoise ─────────────────────────────────────────
+# WHITENOISE_USE_FINDERS: WhiteNoise descubre archivos desde las apps instaladas
+# (Django admin, theme, etc.) sin necesitar collectstatic. Válido para Vercel
+# donde no podemos ejecutar pasos de build arbitrarios con @vercel/python.
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+WHITENOISE_USE_FINDERS = True
+
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
