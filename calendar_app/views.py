@@ -423,3 +423,104 @@ def event_create_view(request):
         'title': event.title,
         'detail_url': reverse('calendar_app:event_detail', args=[event.slug]),
     })
+
+
+def event_get_view(request, pk):
+    """Devuelve datos JSON de un evento para rellenar el modal de edición."""
+    event = get_object_or_404(Event, pk=pk)
+    local_start = timezone.localtime(event.start_datetime)
+    local_end = timezone.localtime(event.end_datetime) if event.end_datetime else None
+    return JsonResponse({
+        'ok': True,
+        'id': event.pk,
+        'title': event.title,
+        'description': event.description or '',
+        'department': event.department_id or '',
+        'responsible': event.responsible_id or '',
+        'location': event.location or '',
+        'is_all_day': event.is_all_day,
+        'start_date': local_start.strftime('%Y-%m-%d'),
+        'start_time': local_start.strftime('%H:%M'),
+        'end_date': local_end.strftime('%Y-%m-%d') if local_end else '',
+        'end_time': local_end.strftime('%H:%M') if local_end else '',
+        'event_type': event.event_type,
+        'scope': event.scope,
+        'audience': event.audience,
+        'bible_verse': event.bible_verse or '',
+        'is_published': event.is_published,
+        'is_featured': event.is_featured,
+    })
+
+
+@require_POST
+def event_update_view(request, pk):
+    """Actualizar un evento existente desde el modal de edición."""
+    event = get_object_or_404(Event, pk=pk)
+
+    title = request.POST.get('title', '').strip()
+    if not title:
+        return JsonResponse({'ok': False, 'error': 'El título es obligatorio.'}, status=400)
+
+    start_date = request.POST.get('start_date', '').strip()
+    start_time = request.POST.get('start_time', '').strip() or '09:00'
+    end_date = request.POST.get('end_date', '').strip()
+    end_time = request.POST.get('end_time', '').strip() or '11:00'
+    is_all_day = request.POST.get('is_all_day') == '1'
+
+    if not start_date:
+        return JsonResponse({'ok': False, 'error': 'La fecha de inicio es obligatoria.'}, status=400)
+
+    try:
+        start_naive = datetime.strptime(f"{start_date} {start_time}", '%Y-%m-%d %H:%M')
+        start_dt = timezone.make_aware(start_naive)
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': 'Fecha u hora de inicio inválida.'}, status=400)
+
+    end_dt = None
+    if end_date:
+        try:
+            end_naive = datetime.strptime(f"{end_date} {end_time}", '%Y-%m-%d %H:%M')
+            end_dt = timezone.make_aware(end_naive)
+        except ValueError:
+            pass
+
+    # Regenerar slug solo si el título cambió
+    if event.title != title:
+        base_slug = slugify(title)[:48]
+        slug = base_slug
+        counter = 1
+        while Event.objects.filter(slug=slug).exclude(pk=pk).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        event.slug = slug
+
+    event.title = title
+    event.description = request.POST.get('description', '').strip()
+    event.department_id = request.POST.get('department') or None
+    event.responsible_id = request.POST.get('responsible') or None
+    event.scope = request.POST.get('scope', 'local')
+    event.event_type = request.POST.get('event_type', 'other')
+    event.audience = request.POST.get('audience', 'all')
+    event.location = request.POST.get('location', '').strip()
+    event.bible_verse = request.POST.get('bible_verse', '').strip()
+    event.is_all_day = is_all_day
+    event.start_datetime = start_dt
+    event.end_datetime = end_dt
+    event.is_published = request.POST.get('is_published') == '1'
+    event.is_featured = request.POST.get('is_featured') == '1'
+    event.save()
+
+    return JsonResponse({
+        'ok': True,
+        'title': event.title,
+        'detail_url': reverse('calendar_app:event_detail', args=[event.slug]),
+    })
+
+
+@require_POST
+def event_delete_view(request, pk):
+    """Eliminar un evento."""
+    event = get_object_or_404(Event, pk=pk)
+    title = event.title
+    event.delete()
+    return JsonResponse({'ok': True, 'title': title})
