@@ -1,0 +1,53 @@
+<article class="bg-white rounded-xl border border-zinc-200 p-4 hover:border-zinc-300 hover:shadow-sm transition-all">
+  <a href="{% url 'calendar_app:event_detail' event.slug %}" class="flex gap-4">
+
+    <!-- Fecha -->
+    <div class="shrink-0 w-12 text-center pt-0.5">
+      <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 leading-none">
+        {{ event.start_datetime|date:"M" }}
+      </p>
+      <p class="text-2xl font-bold text-primary leading-none mt-0.5" style="font-family:'Noto Serif',serif">
+        {{ event.start_datetime|date:"d" }}
+      </p>
+    </div>
+
+    <!-- Info -->
+    <div class="flex-1 min-w-0">
+      <h3 class="font-semibold text-on-surface text-sm leading-snug mb-1.5" style="font-family:'Noto Serif',serif">
+        {{ event.title }}
+      </h3>
+      <div class="flex items-center flex-wrap gap-1.5 mb-2">
+        {% if event.department %}
+        <span class="px-2 py-0.5 rounded-full text-xs font-bold text-white"
+              style="background-color:{{ event.department.color }}">
+          {{ event.department.name }}
+        </span>
+        {% endif %}
+        <span class="px-2 py-0.5 rounded-full text-xs font-bold border border-zinc-200 text-zinc-500">
+          {{ event.get_scope_display }}
+        </span>
+      </div>
+      <div class="flex items-center gap-4 text-xs text-zinc-400 flex-wrap">
+        {% if not event.is_all_day %}
+        <span class="flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">schedule</span>
+          {{ event.start_datetime|time:"G:i" }} hrs
+        </span>
+        {% else %}
+        <span class="flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">today</span>
+          Todo el día
+        </span>
+        {% endif %}
+        {% if event.location %}
+        <span class="flex items-center gap-1 truncate">
+          <span class="material-symbols-outlined text-sm">location_on</span>
+          {{ event.location }}
+        </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <span class="material-symbols-outlined text-zinc-300 self-center shrink-0">chevron_right</span>
+  </a>
+</article>

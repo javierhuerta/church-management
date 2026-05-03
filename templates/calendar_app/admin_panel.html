@@ -1,0 +1,364 @@
+{% load static tailwind_tags django_browser_reload tz %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Secretaría — Iglesia Adventista Osorno Central</title>
+  {% tailwind_css %}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <style>
+    body { font-family: 'Public Sans', sans-serif; background: #fbf8fc; color: #1b1b1e; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  </style>
+  {% django_browser_reload_script %}
+</head>
+<body class="min-h-screen flex flex-col">
+
+<!-- ── Top App Bar — mismo diseño que base.html ── -->
+<header class="bg-white border-b border-zinc-200 sticky top-0 z-50">
+  <div class="max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
+
+    <!-- Logo -->
+    <a href="{% url 'calendar_app:calendar' %}" class="flex items-center gap-3 shrink-0">
+      <span class="material-symbols-outlined text-2xl text-primary">church</span>
+      <div class="leading-tight">
+        <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 hidden sm:block">Iglesia Adventista</p>
+        <p class="text-sm font-bold text-primary" style="font-family:'Noto Serif',serif">Osorno Central</p>
+      </div>
+    </a>
+
+    <!-- Nav desktop -->
+    <nav class="hidden md:flex items-center h-full gap-0">
+      <a href="{% url 'calendar_app:calendar' %}"
+         class="h-full flex items-center gap-1.5 px-4 text-sm font-medium text-zinc-500 hover:text-primary transition-colors">
+        <span class="material-symbols-outlined text-base">calendar_month</span>Calendario
+      </a>
+      <a href="{% url 'calendar_app:agenda' %}"
+         class="h-full flex items-center gap-1.5 px-4 text-sm font-medium text-zinc-500 hover:text-primary transition-colors">
+        <span class="material-symbols-outlined text-base">view_agenda</span>Mi Agenda
+      </a>
+      <a href="{% url 'calendar_app:event_list' %}"
+         class="h-full flex items-center gap-1.5 px-4 text-sm font-medium text-zinc-500 hover:text-primary transition-colors">
+        <span class="material-symbols-outlined text-base">event_note</span>Actividades
+      </a>
+      <a href="{% url 'calendar_app:admin_panel' %}"
+         class="h-full flex items-center gap-1.5 px-4 text-sm font-semibold text-primary border-b-2 border-primary transition-colors">
+        <span class="material-symbols-outlined text-base">history_edu</span>Secretaría
+      </a>
+    </nav>
+
+    <!-- Acciones -->
+    <div class="flex items-center gap-2 shrink-0">
+      <a href="{% url 'admin:calendar_app_event_add' %}"
+         class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity">
+        <span class="material-symbols-outlined text-base">add</span>Nuevo evento
+      </a>
+      <a href="{% url 'admin:index' %}" class="p-2 rounded-lg hover:bg-zinc-100 transition-colors" title="Administración Django">
+        <span class="material-symbols-outlined text-xl text-zinc-500">admin_panel_settings</span>
+      </a>
+      <button id="menuBtn" class="md:hidden p-2 rounded-lg hover:bg-zinc-100 transition-colors">
+        <span class="material-symbols-outlined text-xl text-zinc-600">menu</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile nav -->
+  <nav id="mobileMenu" class="md:hidden hidden border-t border-zinc-100 bg-white px-4 pb-3 pt-2 flex flex-col gap-0.5">
+    <a href="{% url 'calendar_app:calendar' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">
+      <span class="material-symbols-outlined text-base">calendar_month</span>Calendario
+    </a>
+    <a href="{% url 'calendar_app:agenda' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">
+      <span class="material-symbols-outlined text-base">view_agenda</span>Mi Agenda
+    </a>
+    <a href="{% url 'calendar_app:event_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">
+      <span class="material-symbols-outlined text-base">event_note</span>Actividades
+    </a>
+    <a href="{% url 'admin:calendar_app_event_add' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">
+      <span class="material-symbols-outlined text-base">add_circle</span>Nuevo evento
+    </a>
+  </nav>
+</header>
+
+<!-- ── Layout principal ── -->
+<div class="flex flex-1">
+
+  <!-- ── Sidebar de navegación lateral ── -->
+  <aside class="hidden md:flex flex-col w-60 shrink-0 border-r border-zinc-200 bg-white sticky top-16 self-start" style="min-height:calc(100vh - 64px);">
+    <div class="px-4 py-5 border-b border-zinc-100">
+      <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Panel</p>
+      <p class="text-sm font-semibold text-primary" style="font-family:'Noto Serif',serif">Secretaría Iglesia</p>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-0.5">
+      <a href="{% url 'calendar_app:calendar' %}"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50 transition-colors">
+        <span class="material-symbols-outlined text-lg">dashboard</span>Vista Principal
+      </a>
+      <a href="{% url 'calendar_app:admin_panel' %}"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-primary bg-zinc-100 transition-colors">
+        <span class="material-symbols-outlined text-lg">history_edu</span>Secretaría
+      </a>
+      <a href="{% url 'calendar_app:event_list' %}"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50 transition-colors">
+        <span class="material-symbols-outlined text-lg">event_note</span>Actividades
+      </a>
+      <a href="{% url 'calendar_app:agenda' %}"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50 transition-colors">
+        <span class="material-symbols-outlined text-lg">view_agenda</span>Agenda
+      </a>
+      <div class="border-t border-zinc-100 my-2"></div>
+      <a href="{% url 'admin:index' %}"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50 transition-colors">
+        <span class="material-symbols-outlined text-lg">admin_panel_settings</span>Admin Django
+      </a>
+    </nav>
+  </aside>
+
+  <!-- ── Contenido principal ── -->
+  <main class="flex-1 px-6 py-8 max-w-screen-xl mx-auto overflow-y-auto">
+
+    <!-- Mensajes flash -->
+    {% if messages %}
+    <div class="mb-5 space-y-2">
+      {% for message in messages %}
+      <div class="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm
+                  {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-800{% else %}border-primary/20 bg-primary/5 text-primary{% endif %}">
+        <span class="material-symbols-outlined text-base">info</span>{{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Page header -->
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-2xl font-bold text-primary mb-1" style="font-family:'Noto Serif',serif">Panel Secretaría</h1>
+        <p class="text-sm text-zinc-500">Gestión del calendario eclesiástico — {{ month_name }} {{ year }}</p>
+      </div>
+      <a href="{% url 'admin:calendar_app_event_add' %}"
+         class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity shrink-0">
+        <span class="material-symbols-outlined text-base">add</span>Nueva Actividad
+      </a>
+    </div>
+
+    <!-- ── Bento grid ── -->
+    <div class="grid grid-cols-12 gap-6">
+
+      <!-- Filtros -->
+      <div class="col-span-12 bg-white border border-zinc-200 rounded-xl p-4 flex flex-wrap items-end gap-4 shadow-sm">
+        <form method="get" class="flex flex-wrap items-end gap-4 flex-1">
+          <div class="flex flex-col gap-1 min-w-[200px]">
+            <label class="text-xs font-bold uppercase tracking-widest text-zinc-400">Alcance</label>
+            <select name="scope"
+                    class="border border-zinc-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                    onchange="this.form.submit()">
+              {% for val, label in scope_choices %}
+              <option value="{{ val }}" {% if scope_filter == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="flex flex-col gap-1 min-w-[200px]">
+            <label class="text-xs font-bold uppercase tracking-widest text-zinc-400">Departamento</label>
+            <select name="dept"
+                    class="border border-zinc-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                    onchange="this.form.submit()">
+              <option value="">Todos los departamentos</option>
+              {% for dept in departments %}
+              <option value="{{ dept.slug }}" {% if dept_filter == dept.slug %}selected{% endif %}>{{ dept.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <input type="hidden" name="year" value="{{ year }}" />
+          <input type="hidden" name="month" value="{{ month }}" />
+        </form>
+        <!-- Navegación mes -->
+        <div class="flex items-center gap-2 shrink-0">
+          <a href="?year={{ prev_year }}&month={{ prev_month }}{% if dept_filter %}&dept={{ dept_filter }}{% endif %}{% if scope_filter %}&scope={{ scope_filter }}{% endif %}"
+             class="p-2 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
+            <span class="material-symbols-outlined text-base text-zinc-600">chevron_left</span>
+          </a>
+          <span class="text-sm font-semibold text-primary px-2">{{ month_name }}</span>
+          <a href="?year={{ next_year }}&month={{ next_month }}{% if dept_filter %}&dept={{ dept_filter }}{% endif %}{% if scope_filter %}&scope={{ scope_filter }}{% endif %}"
+             class="p-2 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
+            <span class="material-symbols-outlined text-base text-zinc-600">chevron_right</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- ── Calendario 8/12 ── -->
+      <div class="col-span-12 lg:col-span-8 bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
+        <!-- Header -->
+        <div class="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
+          <h2 class="text-lg font-bold text-primary" style="font-family:'Noto Serif',serif">{{ month_name }} {{ year }}</h2>
+        </div>
+        <!-- Días -->
+        <div class="cal-grid border-b border-zinc-100 bg-zinc-50 text-center">
+          {% for d in day_names %}
+          <div class="py-2 text-xs font-bold uppercase tracking-widest {% if forloop.last %}text-primary{% else %}text-zinc-400{% endif %}">{{ d }}</div>
+          {% endfor %}
+        </div>
+        <!-- Celdas -->
+        <div class="cal-grid">
+          {% for week in calendar_weeks %}
+          {% for day in week %}
+          <div class="h-28 border-r border-b border-zinc-100 last:border-r-0 p-2 overflow-hidden
+                      {% if not day.in_month %}bg-zinc-50/40 opacity-50{% endif %}
+                      {% if day.is_today %}bg-blue-50/40{% endif %}">
+            {% if day.in_month %}
+            <span class="inline-flex items-center justify-center text-xs leading-none mb-1
+                         {% if day.is_today %}w-5 h-5 rounded-full bg-primary text-white font-bold{% else %}{% if day.events %}font-bold text-primary{% else %}text-zinc-500{% endif %}{% endif %}">
+              {{ day.day }}
+            </span>
+            {% else %}
+            <span class="text-xs text-zinc-400 block mb-1">{{ day.day }}</span>
+            {% endif %}
+            <div class="space-y-0.5 overflow-hidden">
+              {% for event in day.events|slice:":3" %}
+              <a href="{% url 'calendar_app:event_detail' event.slug %}"
+                 class="block border-l-2 pl-1.5 hover:opacity-80 transition-opacity"
+                 style="border-left-color:{{ event.department.color|default:'#74777f' }}">
+                <p class="text-[10px] font-semibold text-zinc-700 leading-snug truncate">{{ event.title }}</p>
+                {% if not event.is_all_day %}
+                <p class="text-[9px] text-zinc-400">{{ event.start_datetime|time:"G:i" }}</p>
+                {% endif %}
+              </a>
+              {% endfor %}
+              {% if day.events|length > 3 %}
+              <span class="text-[9px] text-zinc-400 font-semibold">+{{ day.events|length|add:"-3" }} más</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- ── Panel derecho 4/12 ── -->
+      <div class="col-span-12 lg:col-span-4 flex flex-col gap-5">
+
+        <!-- Formulario Registro Rápido -->
+        <div class="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
+          <h3 class="text-base font-bold text-primary mb-4" style="font-family:'Noto Serif',serif">Agendar Actividad</h3>
+          <form method="post" action="{% url 'calendar_app:admin_panel' %}" class="space-y-3">
+            {% csrf_token %}
+            <div>
+              <label class="text-xs font-bold uppercase tracking-widest text-zinc-400 block mb-1">Título</label>
+              <input type="text" name="title" required
+                     placeholder="Ej: Escuela Bíblica de Vacaciones"
+                     class="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-bold uppercase tracking-widest text-zinc-400 block mb-1">Fecha</label>
+                <input type="date" name="date" required
+                       class="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" />
+              </div>
+              <div>
+                <label class="text-xs font-bold uppercase tracking-widest text-zinc-400 block mb-1">Responsable</label>
+                <input type="text" name="responsible_name" placeholder="Nombre"
+                       class="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" />
+              </div>
+            </div>
+            <button type="submit"
+                    class="w-full bg-primary text-white py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
+              Agendar
+            </button>
+          </form>
+        </div>
+
+        <!-- Aviso -->
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+          <span class="material-symbols-outlined text-amber-500 shrink-0 mt-0.5">info</span>
+          <div>
+            <p class="text-xs font-bold text-amber-700 mb-1">Aviso Administrativo</p>
+            <p class="text-xs text-amber-600">Las actividades distritales deben ser aprobadas por el Pastor antes de su publicación.</p>
+          </div>
+        </div>
+
+        <!-- Próximas actividades -->
+        <div class="flex-1 bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
+          <div class="px-4 py-3 border-b border-zinc-100">
+            <h3 class="text-sm font-bold text-primary" style="font-family:'Noto Serif',serif">Próximas Actividades</h3>
+          </div>
+          <div class="divide-y divide-zinc-100">
+            {% for event in upcoming_events %}
+            <a href="{% url 'calendar_app:event_detail' event.slug %}"
+               class="flex items-center gap-3 px-4 py-3 hover:bg-zinc-50 transition-colors">
+              <div class="shrink-0 w-10 text-center bg-zinc-100 rounded-lg py-1">
+                <p class="text-[9px] font-bold uppercase tracking-widest text-zinc-400 leading-none">{{ event.start_datetime|date:"M" }}</p>
+                <p class="text-sm font-bold text-primary leading-none" style="font-family:'Noto Serif',serif">{{ event.start_datetime|date:"d" }}</p>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-semibold text-zinc-800 truncate">{{ event.title }}</p>
+                <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                  <span class="text-[9px] font-bold uppercase tracking-widest border rounded-full px-1.5 py-0.5 text-zinc-500 border-zinc-200">
+                    {{ event.get_scope_display }}
+                  </span>
+                  {% if event.department %}
+                  <span class="text-[9px] font-bold text-white rounded-full px-1.5 py-0.5"
+                        style="background-color:{{ event.department.color }}">{{ event.department.name }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-zinc-300 shrink-0">chevron_right</span>
+            </a>
+            {% empty %}
+            <div class="px-4 py-6 text-center text-xs text-zinc-400 italic">Sin próximas actividades.</div>
+            {% endfor %}
+          </div>
+          <a href="{% url 'calendar_app:event_list' %}"
+             class="flex items-center justify-center gap-1.5 py-3 border-t border-zinc-100 text-xs text-zinc-500 hover:text-primary transition-colors">
+            Ver todas las actividades
+            <span class="material-symbols-outlined text-xs">open_in_new</span>
+          </a>
+        </div>
+
+      </div><!-- fin panel derecho -->
+    </div><!-- fin bento grid -->
+
+    <!-- Footer -->
+    <footer class="mt-10 pt-5 border-t border-zinc-200">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-zinc-400">
+        <span class="uppercase tracking-widest">© {% now "Y" %} Iglesia Adventista del Séptimo Día — Osorno Central</span>
+        <div class="flex gap-5">
+          <a href="{% url 'calendar_app:calendar' %}" class="hover:text-primary transition-colors">Calendario</a>
+          <a href="{% url 'admin:index' %}" class="hover:text-primary transition-colors">Admin Django</a>
+          <a href="{% url 'calendar_app:tv' %}" class="hover:text-primary transition-colors">Vista TV</a>
+        </div>
+      </div>
+    </footer>
+
+  </main>
+</div>
+
+<!-- Mobile bottom nav -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-white border-t border-zinc-200 flex justify-around items-center z-50">
+  <a href="{% url 'calendar_app:calendar' %}" class="flex flex-col items-center gap-0.5 text-zinc-500">
+    <span class="material-symbols-outlined text-xl">calendar_month</span>
+    <span class="text-[9px]">Calendario</span>
+  </a>
+  <a href="{% url 'calendar_app:agenda' %}" class="flex flex-col items-center gap-0.5 text-zinc-500">
+    <span class="material-symbols-outlined text-xl">view_agenda</span>
+    <span class="text-[9px]">Agenda</span>
+  </a>
+  <a href="{% url 'calendar_app:admin_panel' %}" class="flex flex-col items-center gap-0.5 text-primary">
+    <span class="material-symbols-outlined text-xl">history_edu</span>
+    <span class="text-[9px]">Secretaría</span>
+  </a>
+  <a href="{% url 'admin:index' %}" class="flex flex-col items-center gap-0.5 text-zinc-500">
+    <span class="material-symbols-outlined text-xl">admin_panel_settings</span>
+    <span class="text-[9px]">Admin</span>
+  </a>
+</nav>
+
+<script>
+  const btn = document.getElementById('menuBtn');
+  const menu = document.getElementById('mobileMenu');
+  if (btn && menu) btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+</script>
+</body>
+</html>

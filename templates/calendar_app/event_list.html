@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Actividades — Iglesia Adventista Osorno Central{% endblock %}
+
+{% block content %}
+
+<!-- Encabezado -->
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-primary mb-1" style="font-family:'Noto Serif',serif">Actividades</h1>
+  <p class="text-sm text-zinc-500">Todas las actividades de la iglesia</p>
+</div>
+
+<!-- Filtros -->
+<form method="get" action="" class="bg-white border border-zinc-200 rounded-xl p-4 mb-6 flex flex-col sm:flex-row gap-3">
+  <div class="flex-1 relative">
+    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-base">search</span>
+    <input type="text" name="q" value="{{ request.GET.q|default:'' }}"
+           placeholder="Buscar actividades…"
+           class="w-full pl-9 pr-4 py-2 text-sm border border-zinc-200 rounded-lg bg-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition">
+  </div>
+  <select name="dept"
+          class="sm:w-48 px-3 py-2 text-sm border border-zinc-200 rounded-lg bg-zinc-50 text-zinc-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition">
+    <option value="">Todos los departamentos</option>
+    {% for dept in departments %}
+    <option value="{{ dept.slug }}" {% if request.GET.dept == dept.slug %}selected{% endif %}>{{ dept.name }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit"
+          class="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity shrink-0">
+    Filtrar
+  </button>
+  {% if request.GET.q or request.GET.dept %}
+  <a href="{% url 'calendar_app:event_list' %}"
+     class="px-4 py-2 border border-zinc-200 text-zinc-600 text-sm font-medium rounded-lg hover:bg-zinc-50 transition-colors shrink-0">
+    Limpiar
+  </a>
+  {% endif %}
+</form>
+
+<!-- Lista de eventos -->
+{% if events %}
+<div class="flex flex-col gap-3">
+  {% for event in events %}
+  {% include "calendar_app/partials/event_card.html" %}
+  {% endfor %}
+</div>
+
+<!-- Paginación -->
+{% if events.has_other_pages %}
+<nav class="flex items-center justify-center gap-2 mt-8">
+  {% if events.has_previous %}
+  <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.dept %}dept={{ request.GET.dept }}&{% endif %}page={{ events.previous_page_number }}"
+     class="flex items-center gap-1 px-4 py-2 border border-zinc-200 text-sm font-medium text-zinc-600 rounded-lg hover:bg-zinc-50 transition-colors">
+    <span class="material-symbols-outlined text-base">chevron_left</span>Anterior
+  </a>
+  {% endif %}
+  <span class="px-4 py-2 text-sm text-zinc-500">
+    Página {{ events.number }} de {{ events.paginator.num_pages }}
+  </span>
+  {% if events.has_next %}
+  <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.dept %}dept={{ request.GET.dept }}&{% endif %}page={{ events.next_page_number }}"
+     class="flex items-center gap-1 px-4 py-2 border border-zinc-200 text-sm font-medium text-zinc-600 rounded-lg hover:bg-zinc-50 transition-colors">
+    Siguiente<span class="material-symbols-outlined text-base">chevron_right</span>
+  </a>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<div class="flex flex-col items-center justify-center py-20 text-center">
+  <span class="material-symbols-outlined text-5xl text-zinc-300 mb-4">event_busy</span>
+  <p class="text-lg font-semibold text-zinc-400 mb-1">Sin resultados</p>
+  <p class="text-sm text-zinc-400">No se encontraron actividades con esos filtros.</p>
+  <a href="{% url 'calendar_app:event_list' %}" class="mt-4 px-4 py-2 border border-zinc-200 text-sm text-zinc-600 rounded-lg hover:bg-zinc-50 transition-colors">
+    Ver todas las actividades
+  </a>
+</div>
+{% endif %}
+
+{% endblock %}
