@@ -294,13 +294,13 @@
 
 <!-- ── Modal Nuevo Evento (Flowbite) ── -->
 <!-- Safelist de clases del backdrop que Flowbite agrega dinámicamente -->
-<div class="bg-black/40 fixed inset-0 z-40" aria-hidden="true" style="display:none;"></div>
+<div class="bg-black/40 fixed inset-0 z-40 top-16" aria-hidden="true" style="display:none;"></div>
 
 <div id="eventModal" tabindex="-1" aria-hidden="true"
-     class="hidden overflow-x-hidden overflow-y-auto fixed top-0 right-0 left-0 z-[200] justify-center items-center w-full h-full inset-0">
-  <div class="relative p-4 w-full max-w-2xl mx-auto my-auto flex items-center min-h-full">
+     class="hidden overflow-x-hidden overflow-y-auto fixed top-0 right-0 left-0 z-[200] justify-center items-center w-full h-full inset-0 pt-16">
+  <div class="relative p-4 w-full max-w-2xl mx-auto my-auto flex items-center min-h-[calc(100%-4rem)]">
     <!-- Card del modal -->
-    <div class="relative bg-white rounded-2xl shadow-2xl flex flex-col max-h-[calc(100vh-4rem)] w-full overflow-hidden">
+    <div class="relative bg-white rounded-2xl shadow-2xl flex flex-col max-h-[calc(100vh-5.5rem)] w-full overflow-hidden">
 
       <!-- Header -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 shrink-0 rounded-t-2xl">
@@ -560,7 +560,7 @@
 
   const eventModal = new Modal(document.getElementById('eventModal'), {
     backdrop: 'dynamic',
-    backdropClasses: 'bg-black/40 fixed inset-0 z-40',
+    backdropClasses: 'bg-black/40 fixed inset-0 z-40 top-16',
     closable: true,
     onHide: resetEventModal,
   });
