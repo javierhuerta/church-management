@@ -4,10 +4,13 @@ from datetime import date, datetime
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 from django.core.paginator import Paginator
+from django.views.decorators.http import require_POST
 
 from .models import Department, Event, Responsible
 
@@ -346,4 +349,77 @@ def admin_panel_view(request):
             ('union', 'Unión'),
             ('general', 'General'),
         ],
+    })
+
+
+@require_POST
+def event_create_view(request):
+    """Crear un nuevo evento desde el modal del panel de secretaría."""
+    title = request.POST.get('title', '').strip()
+    if not title:
+        return JsonResponse({'ok': False, 'error': 'El título es obligatorio.'}, status=400)
+
+    start_date = request.POST.get('start_date', '').strip()
+    start_time = request.POST.get('start_time', '').strip() or '09:00'
+    end_date = request.POST.get('end_date', '').strip()
+    end_time = request.POST.get('end_time', '').strip() or '11:00'
+    is_all_day = request.POST.get('is_all_day') == '1'
+
+    if not start_date:
+        return JsonResponse({'ok': False, 'error': 'La fecha de inicio es obligatoria.'}, status=400)
+
+    try:
+        start_naive = datetime.strptime(f"{start_date} {start_time}", '%Y-%m-%d %H:%M')
+        start_dt = timezone.make_aware(start_naive)
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': 'Fecha u hora de inicio inválida.'}, status=400)
+
+    end_dt = None
+    if end_date:
+        try:
+            end_naive = datetime.strptime(f"{end_date} {end_time}", '%Y-%m-%d %H:%M')
+            end_dt = timezone.make_aware(end_naive)
+        except ValueError:
+            pass
+
+    base_slug = slugify(title)[:48]
+    slug = base_slug
+    counter = 1
+    while Event.objects.filter(slug=slug).exists():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+
+    dept_id = request.POST.get('department') or None
+    resp_id = request.POST.get('responsible') or None
+    scope = request.POST.get('scope', 'local')
+    event_type = request.POST.get('event_type', 'other')
+    audience = request.POST.get('audience', 'all')
+    location = request.POST.get('location', '').strip()
+    bible_verse = request.POST.get('bible_verse', '').strip()
+    description = request.POST.get('description', '').strip()
+    is_published = request.POST.get('is_published') == '1'
+    is_featured = request.POST.get('is_featured') == '1'
+
+    event = Event.objects.create(
+        title=title,
+        slug=slug,
+        description=description,
+        department_id=dept_id,
+        responsible_id=resp_id,
+        scope=scope,
+        event_type=event_type,
+        audience=audience,
+        start_datetime=start_dt,
+        end_datetime=end_dt,
+        is_all_day=is_all_day,
+        location=location,
+        bible_verse=bible_verse,
+        is_published=is_published,
+        is_featured=is_featured,
+    )
+
+    return JsonResponse({
+        'ok': True,
+        'title': event.title,
+        'detail_url': reverse('calendar_app:event_detail', args=[event.slug]),
     })

@@ -10,4 +10,5 @@ urlpatterns = [
     path('tv/', views.tv_view, name='tv'),
     path('agenda/', views.agenda_view, name='agenda'),
     path('secretaria/', views.admin_panel_view, name='admin_panel'),
+    path('secretaria/crear-evento/', views.event_create_view, name='event_create'),
 ]

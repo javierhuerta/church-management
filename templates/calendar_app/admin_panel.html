@@ -10,7 +10,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" />
   <style>
+    .flatpickr-calendar { font-family: 'Public Sans', sans-serif; }
+    .flatpickr-day.selected, .flatpickr-day.selected:hover { background: #5a3e8a; border-color: #5a3e8a; }
+    .flatpickr-day:hover { background: #f0eaf8; }</style>
     body { font-family: 'Public Sans', sans-serif; background: #fbf8fc; color: #1b1b1e; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
@@ -54,10 +58,10 @@
 
     <!-- Acciones -->
     <div class="flex items-center gap-2 shrink-0">
-      <a href="{% url 'admin:calendar_app_event_add' %}"
+      <button type="button" onclick="openEventModal()"
          class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity">
         <span class="material-symbols-outlined text-base">add</span>Nuevo evento
-      </a>
+      </button>
       <a href="{% url 'admin:index' %}" class="p-2 rounded-lg hover:bg-zinc-100 transition-colors" title="Administración Django">
         <span class="material-symbols-outlined text-xl text-zinc-500">admin_panel_settings</span>
       </a>
@@ -78,45 +82,14 @@
     <a href="{% url 'calendar_app:event_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">
       <span class="material-symbols-outlined text-base">event_note</span>Actividades
     </a>
-    <a href="{% url 'admin:calendar_app_event_add' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">
+    <button type="button" onclick="openEventModal()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50 w-full text-left">
       <span class="material-symbols-outlined text-base">add_circle</span>Nuevo evento
-    </a>
+    </button>
   </nav>
 </header>
 
 <!-- ── Layout principal ── -->
 <div class="flex flex-1">
-
-  <!-- ── Sidebar de navegación lateral ── -->
-  <aside class="hidden md:flex flex-col w-60 shrink-0 border-r border-zinc-200 bg-white sticky top-16 self-start" style="min-height:calc(100vh - 64px);">
-    <div class="px-4 py-5 border-b border-zinc-100">
-      <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Panel</p>
-      <p class="text-sm font-semibold text-primary" style="font-family:'Noto Serif',serif">Secretaría Iglesia</p>
-    </div>
-    <nav class="flex-1 px-3 py-4 space-y-0.5">
-      <a href="{% url 'calendar_app:calendar' %}"
-         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50 transition-colors">
-        <span class="material-symbols-outlined text-lg">dashboard</span>Vista Principal
-      </a>
-      <a href="{% url 'calendar_app:admin_panel' %}"
-         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-primary bg-zinc-100 transition-colors">
-        <span class="material-symbols-outlined text-lg">history_edu</span>Secretaría
-      </a>
-      <a href="{% url 'calendar_app:event_list' %}"
-         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50 transition-colors">
-        <span class="material-symbols-outlined text-lg">event_note</span>Actividades
-      </a>
-      <a href="{% url 'calendar_app:agenda' %}"
-         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50 transition-colors">
-        <span class="material-symbols-outlined text-lg">view_agenda</span>Agenda
-      </a>
-      <div class="border-t border-zinc-100 my-2"></div>
-      <a href="{% url 'admin:index' %}"
-         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50 transition-colors">
-        <span class="material-symbols-outlined text-lg">admin_panel_settings</span>Admin Django
-      </a>
-    </nav>
-  </aside>
 
   <!-- ── Contenido principal ── -->
   <main class="flex-1 px-6 py-8 max-w-screen-xl mx-auto overflow-y-auto">
@@ -139,10 +112,10 @@
         <h1 class="text-2xl font-bold text-primary mb-1" style="font-family:'Noto Serif',serif">Panel Secretaría</h1>
         <p class="text-sm text-zinc-500">Gestión del calendario eclesiástico — {{ month_name }} {{ year }}</p>
       </div>
-      <a href="{% url 'admin:calendar_app_event_add' %}"
+      <button type="button" onclick="openEventModal()"
          class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity shrink-0">
         <span class="material-symbols-outlined text-base">add</span>Nueva Actividad
-      </a>
+      </button>
     </div>
 
     <!-- ── Bento grid ── -->
@@ -240,45 +213,6 @@
       <!-- ── Panel derecho 4/12 ── -->
       <div class="col-span-12 lg:col-span-4 flex flex-col gap-5">
 
-        <!-- Formulario Registro Rápido -->
-        <div class="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-          <h3 class="text-base font-bold text-primary mb-4" style="font-family:'Noto Serif',serif">Agendar Actividad</h3>
-          <form method="post" action="{% url 'calendar_app:admin_panel' %}" class="space-y-3">
-            {% csrf_token %}
-            <div>
-              <label class="text-xs font-bold uppercase tracking-widest text-zinc-400 block mb-1">Título</label>
-              <input type="text" name="title" required
-                     placeholder="Ej: Escuela Bíblica de Vacaciones"
-                     class="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" />
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="text-xs font-bold uppercase tracking-widest text-zinc-400 block mb-1">Fecha</label>
-                <input type="date" name="date" required
-                       class="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" />
-              </div>
-              <div>
-                <label class="text-xs font-bold uppercase tracking-widest text-zinc-400 block mb-1">Responsable</label>
-                <input type="text" name="responsible_name" placeholder="Nombre"
-                       class="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" />
-              </div>
-            </div>
-            <button type="submit"
-                    class="w-full bg-primary text-white py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
-              Agendar
-            </button>
-          </form>
-        </div>
-
-        <!-- Aviso -->
-        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-          <span class="material-symbols-outlined text-amber-500 shrink-0 mt-0.5">info</span>
-          <div>
-            <p class="text-xs font-bold text-amber-700 mb-1">Aviso Administrativo</p>
-            <p class="text-xs text-amber-600">Las actividades distritales deben ser aprobadas por el Pastor antes de su publicación.</p>
-          </div>
-        </div>
-
         <!-- Próximas actividades -->
         <div class="flex-1 bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
           <div class="px-4 py-3 border-b border-zinc-100">
@@ -355,10 +289,338 @@
   </a>
 </nav>
 
+<!-- ── Modal Nuevo Evento ── -->
+<div id="eventModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"
+     class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[92vh] flex flex-col shadow-2xl">
+
+    <!-- Header modal -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 shrink-0">
+      <div>
+        <h2 id="modalTitle" class="text-lg font-bold text-primary" style="font-family:'Noto Serif',serif">Nueva Actividad</h2>
+        <p class="text-xs text-zinc-400">Completa los datos para crear la actividad en el calendario</p>
+      </div>
+      <button type="button" onclick="closeEventModal()" class="p-2 rounded-lg hover:bg-zinc-100 transition-colors" aria-label="Cerrar">
+        <span class="material-symbols-outlined text-zinc-500">close</span>
+      </button>
+    </div>
+
+    <!-- Formulario (scroll) -->
+    <form id="eventForm" class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+      {% csrf_token %}
+
+      <!-- Sección: Información básica -->
+      <fieldset class="space-y-4">
+        <legend class="text-xs font-bold uppercase tracking-widest text-zinc-400 pb-2 border-b border-zinc-100 w-full">Información básica</legend>
+
+        <div>
+          <label for="m_title" class="text-xs font-bold uppercase tracking-widest text-zinc-500 block mb-1">Título <span class="text-red-500">*</span></label>
+          <input id="m_title" name="title" type="text" required autocomplete="off"
+                 placeholder="Ej: Escuela Bíblica de Vacaciones"
+                 class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" />
+        </div>
+
+        <div>
+          <label for="m_description" class="text-xs font-bold uppercase tracking-widest text-zinc-500 block mb-1">Descripción</label>
+          <textarea id="m_description" name="description" rows="2"
+                    placeholder="Breve descripción de la actividad..."
+                    class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition resize-none"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="m_department" class="text-xs font-bold uppercase tracking-widest text-zinc-500 block mb-1">Departamento</label>
+            <select id="m_department" name="department"
+                    class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition">
+              <option value="">Sin departamento</option>
+              {% for dept in departments %}
+              <option value="{{ dept.pk }}">{{ dept.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="m_responsible" class="text-xs font-bold uppercase tracking-widest text-zinc-500 block mb-1">Responsable</label>
+            <select id="m_responsible" name="responsible"
+                    class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition">
+              <option value="">Sin asignar</option>
+              {% for r in responsibles %}
+              <option value="{{ r.pk }}">{{ r.full_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="m_location" class="text-xs font-bold uppercase tracking-widest text-zinc-500 block mb-1">Lugar</label>
+          <input id="m_location" name="location" type="text" autocomplete="off"
+                 placeholder="Ej: Templo Osorno Central"
+                 class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" />
+        </div>
+      </fieldset>
+
+      <!-- Sección: Fecha y Hora -->
+      <fieldset class="space-y-4">
+        <legend class="text-xs font-bold uppercase tracking-widest text-zinc-400 pb-2 border-b border-zinc-100 w-full">Fecha y hora</legend>
+
+        <label class="flex items-center gap-3 cursor-pointer select-none">
+          <input type="checkbox" id="m_all_day" name="is_all_day" value="1"
+                 class="w-4 h-4 rounded accent-primary" onchange="toggleAllDay(this)" />
+          <span class="text-sm font-medium text-zinc-700">Actividad de día completo (o varios días)</span>
+        </label>
+
+        <div id="timeFields" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="m_start_date" class="text-xs font-bold uppercase tracking-widest text-zinc-500 block mb-1">Fecha inicio <span class="text-red-500">*</span></label>
+            <input id="m_start_date" name="start_date" type="text" readonly="readonly" required
+                   placeholder="dd/mm/aaaa"
+                   class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition cursor-pointer" />
+          </div>
+          <div id="startTimeWrap">
+            <label for="m_start_time" class="text-xs font-bold uppercase tracking-widest text-zinc-500 block mb-1">Hora inicio</label>
+            <input id="m_start_time" name="start_time" type="text" readonly="readonly"
+                   placeholder="09:00"
+                   class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition cursor-pointer" />
+          </div>
+        </div>
+
+        <div id="endFields" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="m_end_date" class="text-xs font-bold uppercase tracking-widest text-zinc-500 block mb-1">Fecha término</label>
+            <input id="m_end_date" name="end_date" type="text" readonly="readonly"
+                   placeholder="dd/mm/aaaa"
+                   class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition cursor-pointer" />
+          </div>
+          <div id="endTimeWrap">
+            <label for="m_end_time" class="text-xs font-bold uppercase tracking-widest text-zinc-500 block mb-1">Hora término</label>
+            <input id="m_end_time" name="end_time" type="text" readonly="readonly"
+                   placeholder="11:00"
+                   class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition cursor-pointer" />
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Sección: Clasificación -->
+      <fieldset class="space-y-4">
+        <legend class="text-xs font-bold uppercase tracking-widest text-zinc-400 pb-2 border-b border-zinc-100 w-full">Clasificación</legend>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label for="m_event_type" class="text-xs font-bold uppercase tracking-widest text-zinc-500 block mb-1">Tipo</label>
+            <select id="m_event_type" name="event_type"
+                    class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition">
+              <option value="service">Culto</option>
+              <option value="seminar">Seminario</option>
+              <option value="meeting">Reunión</option>
+              <option value="social">Social</option>
+              <option value="youth">Jóvenes</option>
+              <option value="children">Infantil</option>
+              <option value="outreach">Evangelismo</option>
+              <option value="other" selected>Otro</option>
+            </select>
+          </div>
+          <div>
+            <label for="m_scope" class="text-xs font-bold uppercase tracking-widest text-zinc-500 block mb-1">Alcance</label>
+            <select id="m_scope" name="scope"
+                    class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition">
+              <option value="local" selected>Local</option>
+              <option value="association">Asociación</option>
+              <option value="union">Unión</option>
+              <option value="general">General</option>
+            </select>
+          </div>
+          <div>
+            <label for="m_audience" class="text-xs font-bold uppercase tracking-widest text-zinc-500 block mb-1">Público</label>
+            <select id="m_audience" name="audience"
+                    class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition">
+              <option value="all" selected>Todo público</option>
+              <option value="members">Miembros</option>
+              <option value="leaders">Directivos</option>
+              <option value="youth">Jóvenes</option>
+              <option value="juveniles">Juveniles</option>
+              <option value="children">Niños</option>
+              <option value="women">Mujeres</option>
+              <option value="men">Varones</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Sección: Opciones -->
+      <fieldset class="space-y-4">
+        <legend class="text-xs font-bold uppercase tracking-widest text-zinc-400 pb-2 border-b border-zinc-100 w-full">Opciones</legend>
+        <div>
+          <label for="m_bible_verse" class="text-xs font-bold uppercase tracking-widest text-zinc-500 block mb-1">Versículo bíblico</label>
+          <input id="m_bible_verse" name="bible_verse" type="text" autocomplete="off"
+                 placeholder="Ej: Juan 3:16"
+                 class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" />
+        </div>
+        <div class="flex flex-wrap gap-6">
+          <label class="flex items-center gap-2.5 cursor-pointer select-none">
+            <input type="checkbox" name="is_published" value="1" checked
+                   class="w-4 h-4 rounded accent-primary" />
+            <span class="text-sm font-medium text-zinc-700">Publicar inmediatamente</span>
+          </label>
+          <label class="flex items-center gap-2.5 cursor-pointer select-none">
+            <input type="checkbox" name="is_featured" value="1"
+                   class="w-4 h-4 rounded accent-primary" />
+            <span class="text-sm font-medium text-zinc-700">Destacar en inicio</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- Error inline -->
+      <div id="modalError" class="hidden flex items-center gap-2 px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-red-800 text-sm">
+        <span class="material-symbols-outlined text-base">error</span>
+        <span id="modalErrorText"></span>
+      </div>
+    </form>
+
+    <!-- Footer modal -->
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100 shrink-0 bg-zinc-50/50 rounded-b-2xl">
+      <button type="button" onclick="closeEventModal()"
+              class="px-4 py-2 text-sm font-semibold text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors">
+        Cancelar
+      </button>
+      <button type="button" id="submitEventBtn" onclick="submitEventForm()"
+              class="flex items-center gap-2 px-5 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60">
+        <span class="material-symbols-outlined text-base">save</span>
+        <span id="submitBtnText">Guardar actividad</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast de éxito -->
+<div id="successToast"
+     class="fixed bottom-20 md:bottom-6 right-4 z-[300] hidden items-center gap-3 bg-green-700 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-lg">
+  <span class="material-symbols-outlined text-base">check_circle</span>
+  <span id="toastText">Actividad guardada</span>
+  <a id="toastLink" href="#" class="underline ml-1">Ver</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
 <script>
+  // ── Menú móvil ──────────────────────────────────────────────────
   const btn = document.getElementById('menuBtn');
   const menu = document.getElementById('mobileMenu');
   if (btn && menu) btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+
+  // ── Flatpickr ───────────────────────────────────────────────────
+  const fpOpts = { locale: 'es', dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y', allowInput: false };
+  const fpTimeOpts = { enableTime: true, noCalendar: true, dateFormat: 'H:i', time_24hr: true, allowInput: false };
+
+  const fpStartDate = flatpickr('#m_start_date', fpOpts);
+  const fpStartTime = flatpickr('#m_start_time', fpTimeOpts);
+  const fpEndDate   = flatpickr('#m_end_date',   fpOpts);
+  const fpEndTime   = flatpickr('#m_end_time',   fpTimeOpts);
+
+  // Sincronizar fecha mínima de término con inicio
+  document.getElementById('m_start_date')._flatpickr.config.onChange.push((dates) => {
+    if (dates[0]) fpEndDate.set('minDate', dates[0]);
+  });
+
+  // ── Toggle todo el día ──────────────────────────────────────────
+  function toggleAllDay(cb) {
+    const timeWrap  = document.getElementById('startTimeWrap');
+    const endTimeWrap = document.getElementById('endTimeWrap');
+    if (cb.checked) {
+      timeWrap.classList.add('hidden');
+      endTimeWrap.classList.add('hidden');
+    } else {
+      timeWrap.classList.remove('hidden');
+      endTimeWrap.classList.remove('hidden');
+    }
+  }
+
+  // ── Modal abrir / cerrar ────────────────────────────────────────
+  function openEventModal() {
+    const modal = document.getElementById('eventModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('m_title').focus(), 50);
+  }
+
+  function closeEventModal() {
+    const modal = document.getElementById('eventModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+    document.getElementById('eventForm').reset();
+    fpStartDate.clear(); fpStartTime.clear();
+    fpEndDate.clear();   fpEndTime.clear();
+    document.getElementById('modalError').classList.add('hidden');
+    document.getElementById('startTimeWrap').classList.remove('hidden');
+    document.getElementById('endTimeWrap').classList.remove('hidden');
+  }
+
+  // Cerrar al hacer clic en overlay
+  document.getElementById('eventModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEventModal();
+  });
+
+  // Cerrar con Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeEventModal();
+  });
+
+  // ── Envío del formulario via fetch ──────────────────────────────
+  async function submitEventForm() {
+    const btn  = document.getElementById('submitEventBtn');
+    const txt  = document.getElementById('submitBtnText');
+    const errBox  = document.getElementById('modalError');
+    const errText = document.getElementById('modalErrorText');
+    errBox.classList.add('hidden');
+
+    const form = document.getElementById('eventForm');
+    const data = new FormData(form);
+
+    // Validación rápida del lado del cliente
+    if (!data.get('title').trim()) {
+      errText.textContent = 'El título es obligatorio.';
+      errBox.classList.remove('hidden');
+      document.getElementById('m_title').focus();
+      return;
+    }
+    if (!data.get('start_date')) {
+      errText.textContent = 'La fecha de inicio es obligatoria.';
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    btn.disabled = true;
+    txt.textContent = 'Guardando...';
+
+    try {
+      const resp = await fetch('{% url "calendar_app:event_create" %}', {
+        method: 'POST',
+        body: data,
+        headers: { 'X-CSRFToken': data.get('csrfmiddlewaretoken') },
+      });
+      const json = await resp.json();
+      if (json.ok) {
+        closeEventModal();
+        // Mostrar toast
+        document.getElementById('toastText').textContent = `"${json.title}" guardada`;
+        document.getElementById('toastLink').href = json.detail_url;
+        const toast = document.getElementById('successToast');
+        toast.classList.remove('hidden');
+        toast.classList.add('flex');
+        setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('flex'); }, 5000);
+        // Recargar la página para mostrar el nuevo evento en el calendario
+        setTimeout(() => location.reload(), 800);
+      } else {
+        errText.textContent = json.error || 'Error al guardar. Intenta nuevamente.';
+        errBox.classList.remove('hidden');
+      }
+    } catch (e) {
+      errText.textContent = 'Error de conexión. Verifica tu red.';
+      errBox.classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      txt.textContent = 'Guardar actividad';
+    }
+  }
 </script>
 </body>
 </html>
