@@ -294,7 +294,7 @@
 
 <!-- ── Modal Nuevo Evento (Flowbite) ── -->
 <!-- Safelist de clases del backdrop que Flowbite agrega dinámicamente -->
-<div class="bg-gray-900 bg-opacity-50 fixed inset-0 z-40" aria-hidden="true" style="display:none;"></div>
+<div class="bg-black/40 fixed inset-0 z-40" aria-hidden="true" style="display:none;"></div>
 
 <div id="eventModal" tabindex="-1" aria-hidden="true"
      class="hidden overflow-x-hidden overflow-y-auto fixed top-0 right-0 left-0 z-[200] justify-center items-center w-full inset-0 max-h-full">
@@ -560,7 +560,7 @@
 
   const eventModal = new Modal(document.getElementById('eventModal'), {
     backdrop: 'dynamic',
-    backdropClasses: 'bg-gray-900 bg-opacity-50 fixed inset-0 z-40',
+    backdropClasses: 'bg-black/40 fixed inset-0 z-40',
     closable: true,
     onHide: resetEventModal,
   });
