@@ -292,225 +292,229 @@
   </a>
 </nav>
 
-<!-- ── Dialog Nuevo Evento (elemento nativo <dialog>) ── -->
-<dialog id="eventDialog"
-        style="border:none; border-radius:16px; padding:0; width:min(680px, calc(100vw - 32px));
-               max-height:min(90vh, 860px); box-shadow:0 25px 60px rgba(0,0,0,.25);
-               overflow:hidden; display:flex; flex-direction:column;">
-  <style>
-    #eventDialog::backdrop { background: rgba(0,0,0,.5); backdrop-filter: blur(2px); }
-  </style>
+<!-- ── Modal Nuevo Evento (Flowbite) ── -->
+<!-- Safelist de clases del backdrop que Flowbite agrega dinámicamente -->
+<div class="bg-gray-900 bg-opacity-50 fixed inset-0 z-40" aria-hidden="true" style="display:none;"></div>
 
-  <!-- Header -->
-  <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px 16px; border-bottom:1px solid #e4e4e7; flex-shrink:0;">
-    <div>
-      <h2 style="margin:0; font-size:17px; font-weight:700; color:#3d2a6b; font-family:'Noto Serif',serif;">Nueva Actividad</h2>
-      <p style="margin:4px 0 0; font-size:12px; color:#a1a1aa;">Completa los datos para crear la actividad en el calendario</p>
+<div id="eventModal" tabindex="-1" aria-hidden="true"
+     class="hidden overflow-x-hidden overflow-y-auto fixed top-0 right-0 left-0 z-[200] justify-center items-center w-full inset-0 max-h-full">
+  <div class="relative p-4 w-full max-w-2xl max-h-full mx-auto my-8">
+    <!-- Card del modal -->
+    <div class="relative bg-white rounded-2xl shadow-2xl flex flex-col max-h-[calc(100vh-8rem)]">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 shrink-0 rounded-t-2xl">
+        <div>
+          <h2 class="text-lg font-bold text-primary" style="font-family:'Noto Serif',serif;">Nueva Actividad</h2>
+          <p class="text-xs text-zinc-400 mt-0.5">Completa los datos para crear la actividad en el calendario</p>
+        </div>
+        <button type="button" onclick="closeEventModal()"
+                class="p-2 rounded-lg hover:bg-zinc-100 transition-colors text-zinc-500"
+                aria-label="Cerrar">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <!-- Formulario con scroll -->
+      <form id="eventForm" class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        {% csrf_token %}
+
+        <!-- Información básica -->
+        <div class="space-y-4">
+          <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 pb-2 border-b border-zinc-100">Información básica</p>
+
+          <div>
+            <label for="m_title" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">
+              Título <span class="text-red-500">*</span>
+            </label>
+            <input id="m_title" name="title" type="text" required autocomplete="off"
+                   placeholder="Ej: Escuela Bíblica de Vacaciones"
+                   class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors" />
+          </div>
+
+          <div>
+            <label for="m_description" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Descripción</label>
+            <textarea id="m_description" name="description" rows="2"
+                      placeholder="Breve descripción de la actividad..."
+                      class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors resize-none"></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="m_department" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Departamento</label>
+              <select id="m_department" name="department"
+                      class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary transition-colors">
+                <option value="">Sin departamento</option>
+                {% for dept in departments %}
+                <option value="{{ dept.pk }}">{{ dept.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label for="m_responsible" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Responsable</label>
+              <select id="m_responsible" name="responsible"
+                      class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary transition-colors">
+                <option value="">Sin asignar</option>
+                {% for r in responsibles %}
+                <option value="{{ r.pk }}">{{ r.full_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label for="m_location" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Lugar</label>
+            <input id="m_location" name="location" type="text" autocomplete="off"
+                   placeholder="Ej: Templo Osorno Central"
+                   class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors" />
+          </div>
+        </div>
+
+        <!-- Fecha y hora -->
+        <div class="space-y-4">
+          <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 pb-2 border-b border-zinc-100">Fecha y hora</p>
+
+          <label class="flex items-center gap-3 cursor-pointer select-none">
+            <input type="checkbox" id="m_all_day" name="is_all_day" value="1"
+                   class="w-4 h-4 accent-primary" onchange="toggleAllDay(this)" />
+            <span class="text-sm text-zinc-700">Actividad de día completo (o varios días)</span>
+          </label>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="m_start_date" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">
+                Fecha inicio <span class="text-red-500">*</span>
+              </label>
+              <input id="m_start_date" name="start_date" type="text" readonly required
+                     placeholder="dd/mm/aaaa"
+                     class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors cursor-pointer" />
+            </div>
+            <div id="startTimeWrap">
+              <label for="m_start_time" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Hora inicio</label>
+              <input id="m_start_time" name="start_time" type="text" readonly
+                     placeholder="09:00"
+                     class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors cursor-pointer" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="m_end_date" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Fecha término</label>
+              <input id="m_end_date" name="end_date" type="text" readonly
+                     placeholder="dd/mm/aaaa"
+                     class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors cursor-pointer" />
+            </div>
+            <div id="endTimeWrap">
+              <label for="m_end_time" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Hora término</label>
+              <input id="m_end_time" name="end_time" type="text" readonly
+                     placeholder="11:00"
+                     class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors cursor-pointer" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Clasificación -->
+        <div class="space-y-4">
+          <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 pb-2 border-b border-zinc-100">Clasificación</p>
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label for="m_event_type" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Tipo</label>
+              <select id="m_event_type" name="event_type"
+                      class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary transition-colors">
+                <option value="service">Culto</option>
+                <option value="seminar">Seminario</option>
+                <option value="meeting">Reunión</option>
+                <option value="social">Social</option>
+                <option value="youth">Jóvenes</option>
+                <option value="children">Infantil</option>
+                <option value="outreach">Evangelismo</option>
+                <option value="other" selected>Otro</option>
+              </select>
+            </div>
+            <div>
+              <label for="m_scope" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Alcance</label>
+              <select id="m_scope" name="scope"
+                      class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary transition-colors">
+                <option value="local" selected>Local</option>
+                <option value="association">Asociación</option>
+                <option value="union">Unión</option>
+                <option value="general">General</option>
+              </select>
+            </div>
+            <div>
+              <label for="m_audience" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Público</label>
+              <select id="m_audience" name="audience"
+                      class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary transition-colors">
+                <option value="all" selected>Todo público</option>
+                <option value="members">Miembros</option>
+                <option value="leaders">Directivos</option>
+                <option value="youth">Jóvenes</option>
+                <option value="juveniles">Juveniles</option>
+                <option value="children">Niños</option>
+                <option value="women">Mujeres</option>
+                <option value="men">Varones</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Opciones -->
+        <div class="space-y-4">
+          <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 pb-2 border-b border-zinc-100">Opciones</p>
+          <div>
+            <label for="m_bible_verse" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Versículo bíblico</label>
+            <input id="m_bible_verse" name="bible_verse" type="text" autocomplete="off"
+                   placeholder="Ej: Juan 3:16"
+                   class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors" />
+          </div>
+          <div class="flex flex-wrap gap-6">
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" name="is_published" value="1" checked class="w-4 h-4 accent-primary" />
+              <span class="text-sm text-zinc-700">Publicar inmediatamente</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" name="is_featured" value="1" class="w-4 h-4 accent-primary" />
+              <span class="text-sm text-zinc-700">Destacar en inicio</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Error inline -->
+        <div id="modalError" style="display:none;"
+             class="flex items-center gap-2 px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-red-800 text-sm">
+          <span class="material-symbols-outlined text-base shrink-0">error</span>
+          <span id="modalErrorText"></span>
+        </div>
+      </form>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100 shrink-0 bg-zinc-50 rounded-b-2xl">
+        <button type="button" onclick="closeEventModal()"
+                class="px-4 py-2 text-sm font-semibold text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors">
+          Cancelar
+        </button>
+        <button type="button" id="submitEventBtn" onclick="submitEventForm()"
+                class="flex items-center gap-2 px-5 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60">
+          <span class="material-symbols-outlined text-base">save</span>
+          <span id="submitBtnText">Guardar actividad</span>
+        </button>
+      </div>
     </div>
-    <button type="button" onclick="closeEventModal()"
-            style="padding:6px; border:none; background:none; cursor:pointer; border-radius:8px; color:#71717a; line-height:0;"
-            aria-label="Cerrar">
-      <span class="material-symbols-outlined" style="font-size:20px;">close</span>
-    </button>
   </div>
-
-  <!-- Cuerpo con scroll -->
-  <form id="eventForm" method="dialog"
-        style="flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:24px;">
-    {% csrf_token %}
-
-    <!-- Básico -->
-    <div style="display:flex; flex-direction:column; gap:14px;">
-      <p style="margin:0; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#a1a1aa; padding-bottom:8px; border-bottom:1px solid #f4f4f5;">Información básica</p>
-
-      <div>
-        <label for="m_title" style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#71717a; margin-bottom:6px;">Título <span style="color:#ef4444;">*</span></label>
-        <input id="m_title" name="title" type="text" required autocomplete="off"
-               placeholder="Ej: Escuela Bíblica de Vacaciones"
-               style="width:100%; box-sizing:border-box; border:1px solid #e4e4e7; border-radius:8px; padding:9px 12px; font-size:14px; outline:none; font-family:'Public Sans',sans-serif; color:#1b1b1e; background:#fff;"
-               onfocus="this.style.borderColor='#5a3e8a'" onblur="this.style.borderColor='#e4e4e7'" />
-      </div>
-
-      <div>
-        <label for="m_description" style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#71717a; margin-bottom:6px;">Descripción</label>
-        <textarea id="m_description" name="description" rows="2"
-                  placeholder="Breve descripción de la actividad..."
-                  style="width:100%; box-sizing:border-box; border:1px solid #e4e4e7; border-radius:8px; padding:9px 12px; font-size:14px; outline:none; font-family:'Public Sans',sans-serif; color:#1b1b1e; background:#fff; resize:none;"
-                  onfocus="this.style.borderColor='#5a3e8a'" onblur="this.style.borderColor='#e4e4e7'"></textarea>
-      </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div>
-          <label for="m_department" style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#71717a; margin-bottom:6px;">Departamento</label>
-          <select id="m_department" name="department"
-                  style="width:100%; box-sizing:border-box; border:1px solid #e4e4e7; border-radius:8px; padding:9px 12px; font-size:14px; outline:none; font-family:'Public Sans',sans-serif; color:#1b1b1e; background:#fff;">
-            <option value="">Sin departamento</option>
-            {% for dept in departments %}
-            <option value="{{ dept.pk }}">{{ dept.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div>
-          <label for="m_responsible" style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#71717a; margin-bottom:6px;">Responsable</label>
-          <select id="m_responsible" name="responsible"
-                  style="width:100%; box-sizing:border-box; border:1px solid #e4e4e7; border-radius:8px; padding:9px 12px; font-size:14px; outline:none; font-family:'Public Sans',sans-serif; color:#1b1b1e; background:#fff;">
-            <option value="">Sin asignar</option>
-            {% for r in responsibles %}
-            <option value="{{ r.pk }}">{{ r.full_name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label for="m_location" style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#71717a; margin-bottom:6px;">Lugar</label>
-        <input id="m_location" name="location" type="text" autocomplete="off"
-               placeholder="Ej: Templo Osorno Central"
-               style="width:100%; box-sizing:border-box; border:1px solid #e4e4e7; border-radius:8px; padding:9px 12px; font-size:14px; outline:none; font-family:'Public Sans',sans-serif; color:#1b1b1e; background:#fff;"
-               onfocus="this.style.borderColor='#5a3e8a'" onblur="this.style.borderColor='#e4e4e7'" />
-      </div>
-    </div>
-
-    <!-- Fecha y hora -->
-    <div style="display:flex; flex-direction:column; gap:14px;">
-      <p style="margin:0; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#a1a1aa; padding-bottom:8px; border-bottom:1px solid #f4f4f5;">Fecha y hora</p>
-
-      <label style="display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;">
-        <input type="checkbox" id="m_all_day" name="is_all_day" value="1"
-               style="width:16px; height:16px; accent-color:#5a3e8a; cursor:pointer;"
-               onchange="toggleAllDay(this)" />
-        <span style="font-size:14px; color:#3f3f46;">Actividad de día completo (o varios días)</span>
-      </label>
-
-      <div id="datesRow" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div>
-          <label for="m_start_date" style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#71717a; margin-bottom:6px;">Fecha inicio <span style="color:#ef4444;">*</span></label>
-          <input id="m_start_date" name="start_date" type="text" readonly required
-                 placeholder="dd/mm/aaaa"
-                 style="width:100%; box-sizing:border-box; border:1px solid #e4e4e7; border-radius:8px; padding:9px 12px; font-size:14px; outline:none; font-family:'Public Sans',sans-serif; color:#1b1b1e; background:#fff; cursor:pointer;" />
-        </div>
-        <div id="startTimeWrap">
-          <label for="m_start_time" style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#71717a; margin-bottom:6px;">Hora inicio</label>
-          <input id="m_start_time" name="start_time" type="text" readonly
-                 placeholder="09:00"
-                 style="width:100%; box-sizing:border-box; border:1px solid #e4e4e7; border-radius:8px; padding:9px 12px; font-size:14px; outline:none; font-family:'Public Sans',sans-serif; color:#1b1b1e; background:#fff; cursor:pointer;" />
-        </div>
-      </div>
-
-      <div id="endRow" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div>
-          <label for="m_end_date" style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#71717a; margin-bottom:6px;">Fecha término</label>
-          <input id="m_end_date" name="end_date" type="text" readonly
-                 placeholder="dd/mm/aaaa"
-                 style="width:100%; box-sizing:border-box; border:1px solid #e4e4e7; border-radius:8px; padding:9px 12px; font-size:14px; outline:none; font-family:'Public Sans',sans-serif; color:#1b1b1e; background:#fff; cursor:pointer;" />
-        </div>
-        <div id="endTimeWrap">
-          <label for="m_end_time" style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#71717a; margin-bottom:6px;">Hora término</label>
-          <input id="m_end_time" name="end_time" type="text" readonly
-                 placeholder="11:00"
-                 style="width:100%; box-sizing:border-box; border:1px solid #e4e4e7; border-radius:8px; padding:9px 12px; font-size:14px; outline:none; font-family:'Public Sans',sans-serif; color:#1b1b1e; background:#fff; cursor:pointer;" />
-        </div>
-      </div>
-    </div>
-
-    <!-- Clasificación -->
-    <div style="display:flex; flex-direction:column; gap:14px;">
-      <p style="margin:0; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#a1a1aa; padding-bottom:8px; border-bottom:1px solid #f4f4f5;">Clasificación</p>
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
-        <div>
-          <label for="m_event_type" style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#71717a; margin-bottom:6px;">Tipo</label>
-          <select id="m_event_type" name="event_type"
-                  style="width:100%; box-sizing:border-box; border:1px solid #e4e4e7; border-radius:8px; padding:9px 12px; font-size:14px; outline:none; font-family:'Public Sans',sans-serif; color:#1b1b1e; background:#fff;">
-            <option value="service">Culto</option>
-            <option value="seminar">Seminario</option>
-            <option value="meeting">Reunión</option>
-            <option value="social">Social</option>
-            <option value="youth">Jóvenes</option>
-            <option value="children">Infantil</option>
-            <option value="outreach">Evangelismo</option>
-            <option value="other" selected>Otro</option>
-          </select>
-        </div>
-        <div>
-          <label for="m_scope" style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#71717a; margin-bottom:6px;">Alcance</label>
-          <select id="m_scope" name="scope"
-                  style="width:100%; box-sizing:border-box; border:1px solid #e4e4e7; border-radius:8px; padding:9px 12px; font-size:14px; outline:none; font-family:'Public Sans',sans-serif; color:#1b1b1e; background:#fff;">
-            <option value="local" selected>Local</option>
-            <option value="association">Asociación</option>
-            <option value="union">Unión</option>
-            <option value="general">General</option>
-          </select>
-        </div>
-        <div>
-          <label for="m_audience" style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#71717a; margin-bottom:6px;">Público</label>
-          <select id="m_audience" name="audience"
-                  style="width:100%; box-sizing:border-box; border:1px solid #e4e4e7; border-radius:8px; padding:9px 12px; font-size:14px; outline:none; font-family:'Public Sans',sans-serif; color:#1b1b1e; background:#fff;">
-            <option value="all" selected>Todo público</option>
-            <option value="members">Miembros</option>
-            <option value="leaders">Directivos</option>
-            <option value="youth">Jóvenes</option>
-            <option value="juveniles">Juveniles</option>
-            <option value="children">Niños</option>
-            <option value="women">Mujeres</option>
-            <option value="men">Varones</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Opciones -->
-    <div style="display:flex; flex-direction:column; gap:14px;">
-      <p style="margin:0; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#a1a1aa; padding-bottom:8px; border-bottom:1px solid #f4f4f5;">Opciones</p>
-      <div>
-        <label for="m_bible_verse" style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#71717a; margin-bottom:6px;">Versículo bíblico</label>
-        <input id="m_bible_verse" name="bible_verse" type="text" autocomplete="off"
-               placeholder="Ej: Juan 3:16"
-               style="width:100%; box-sizing:border-box; border:1px solid #e4e4e7; border-radius:8px; padding:9px 12px; font-size:14px; outline:none; font-family:'Public Sans',sans-serif; color:#1b1b1e; background:#fff;"
-               onfocus="this.style.borderColor='#5a3e8a'" onblur="this.style.borderColor='#e4e4e7'" />
-      </div>
-      <div style="display:flex; flex-wrap:wrap; gap:20px;">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;">
-          <input type="checkbox" name="is_published" value="1" checked style="width:16px; height:16px; accent-color:#5a3e8a; cursor:pointer;" />
-          <span style="font-size:14px; color:#3f3f46;">Publicar inmediatamente</span>
-        </label>
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;">
-          <input type="checkbox" name="is_featured" value="1" style="width:16px; height:16px; accent-color:#5a3e8a; cursor:pointer;" />
-          <span style="font-size:14px; color:#3f3f46;">Destacar en inicio</span>
-        </label>
-      </div>
-    </div>
-
-    <!-- Error inline -->
-    <div id="modalError" style="display:none; align-items:center; gap:8px; padding:12px 16px; border-radius:10px; border:1px solid #fecaca; background:#fef2f2; color:#991b1b; font-size:13px;">
-      <span class="material-symbols-outlined" style="font-size:16px; flex-shrink:0;">error</span>
-      <span id="modalErrorText"></span>
-    </div>
-  </form>
-
-  <!-- Footer -->
-  <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; padding:16px 24px; border-top:1px solid #f4f4f5; flex-shrink:0; background:#fafafa; border-radius:0 0 16px 16px;">
-    <button type="button" onclick="closeEventModal()"
-            style="padding:8px 18px; font-size:13px; font-weight:600; color:#52525b; border:1px solid #e4e4e7; border-radius:8px; background:#fff; cursor:pointer; font-family:'Public Sans',sans-serif;">
-      Cancelar
-    </button>
-    <button type="button" id="submitEventBtn" onclick="submitEventForm()"
-            style="display:flex; align-items:center; gap:6px; padding:8px 20px; font-size:13px; font-weight:600; color:#fff; background:#5a3e8a; border:none; border-radius:8px; cursor:pointer; font-family:'Public Sans',sans-serif;">
-      <span class="material-symbols-outlined" style="font-size:16px;">save</span>
-      <span id="submitBtnText">Guardar actividad</span>
-    </button>
-  </div>
-</dialog>
+</div>
 
 <!-- Toast de éxito -->
 <div id="successToast"
-     style="display:none; position:fixed; bottom:24px; right:16px; z-index:300; align-items:center; gap:10px; background:#15803d; color:#fff; font-size:13px; font-weight:600; padding:12px 20px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.2); font-family:'Public Sans',sans-serif;">
-  <span class="material-symbols-outlined" style="font-size:16px;">check_circle</span>
+     class="fixed bottom-6 right-4 z-[300] items-center gap-3 bg-green-700 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-lg"
+     style="display:none;">
+  <span class="material-symbols-outlined text-base">check_circle</span>
   <span id="toastText">Actividad guardada</span>
-  <a id="toastLink" href="#" style="text-decoration:underline; color:inherit; margin-left:4px;">Ver</a>
+  <a id="toastLink" href="#" class="underline ml-1">Ver</a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
 <script>
   // ── Menú móvil ──────────────────────────────────────────────────
   const btn = document.getElementById('menuBtn');
@@ -544,40 +548,31 @@
     }
   }
 
-  // ── Modal abrir / cerrar ────────────────────────────────────────
+  // ── Flowbite Modal ──────────────────────────────────────────────
+  function resetEventModal() {
+    document.getElementById('eventForm').reset();
+    fpStartDate.clear(); fpStartTime.clear();
+    fpEndDate.clear();   fpEndTime.clear();
+    document.getElementById('modalError').style.display = 'none';
+    document.getElementById('startTimeWrap').style.display = '';
+    document.getElementById('endTimeWrap').style.display = '';
+  }
+
+  const eventModal = new Modal(document.getElementById('eventModal'), {
+    backdrop: 'dynamic',
+    backdropClasses: 'bg-gray-900 bg-opacity-50 fixed inset-0 z-40',
+    closable: true,
+    onHide: resetEventModal,
+  });
+
   function openEventModal() {
-    document.getElementById('eventDialog').showModal();
-    document.getElementById('m_title').focus();
+    eventModal.show();
+    setTimeout(() => document.getElementById('m_title').focus(), 100);
   }
 
   function closeEventModal() {
-    const dlg = document.getElementById('eventDialog');
-    dlg.close();
-    document.getElementById('eventForm').reset();
-    fpStartDate.clear(); fpStartTime.clear();
-    fpEndDate.clear();   fpEndTime.clear();
-    document.getElementById('modalError').style.display = 'none';
-    document.getElementById('startTimeWrap').style.display = '';
-    document.getElementById('endTimeWrap').style.display = '';
+    eventModal.hide();
   }
-
-  // Cerrar al hacer clic en el backdrop (fuera del dialog)
-  document.getElementById('eventDialog').addEventListener('mousedown', function(e) {
-    const rect = this.getBoundingClientRect();
-    const outside = e.clientX < rect.left || e.clientX > rect.right ||
-                    e.clientY < rect.top  || e.clientY > rect.bottom;
-    if (outside) closeEventModal();
-  });
-
-  // El elemento <dialog> ya maneja Escape nativo; limpiamos el form al cerrar
-  document.getElementById('eventDialog').addEventListener('close', function() {
-    document.getElementById('eventForm').reset();
-    fpStartDate.clear(); fpStartTime.clear();
-    fpEndDate.clear();   fpEndTime.clear();
-    document.getElementById('modalError').style.display = 'none';
-    document.getElementById('startTimeWrap').style.display = '';
-    document.getElementById('endTimeWrap').style.display = '';
-  });
 
   // ── Envío del formulario via fetch ──────────────────────────────
   async function submitEventForm() {
