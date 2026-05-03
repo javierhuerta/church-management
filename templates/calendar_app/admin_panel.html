@@ -825,7 +825,7 @@
       if (json.ok) {
         closeEventModal();
         showToastSuccess(`"${json.title}" guardada`, json.detail_url);
-        setTimeout(() => location.reload(), 800);
+        setTimeout(() => location.reload(), 5500);
       } else {
         errText.textContent = json.error || 'Error al guardar. Intenta nuevamente.';
         errBox.style.display = 'flex';
@@ -940,7 +940,7 @@
       if (json.ok) {
         closeEditModal();
         showToastSuccess(`"${json.title}" actualizada`, json.detail_url);
-        setTimeout(() => location.reload(), 800);
+        setTimeout(() => location.reload(), 5500);
       } else {
         errText.textContent = json.error || 'Error al guardar.';
         errBox.style.display = 'flex';
@@ -970,7 +970,7 @@
       if (json.ok) {
         closeEditModal();
         showToastSuccess(`"${json.title}" eliminada`, null);
-        setTimeout(() => location.reload(), 800);
+        setTimeout(() => location.reload(), 5500);
       } else {
         showToastError('No se pudo eliminar el evento.');
       }
