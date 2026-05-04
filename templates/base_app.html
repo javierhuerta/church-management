@@ -54,6 +54,7 @@
 
       <!-- Acciones derecha -->
       <div class="flex items-center gap-2 shrink-0">
+        {% block header_actions %}
         {% if user.is_authenticated and user.is_staff %}
         <a href="{% url 'calendar_app:admin_panel' %}"
            class="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-200 text-primary text-sm font-semibold rounded-lg hover:bg-zinc-50 transition-colors">
@@ -63,6 +64,7 @@
           <span class="material-symbols-outlined text-xl text-zinc-500">admin_panel_settings</span>
         </a>
         {% endif %}
+        {% endblock header_actions %}
       </div>
     </div>
   </header>
@@ -153,6 +155,8 @@
     </a>
     {% endif %}
   </nav>
+
+  {% block extra_body %}{% endblock %}
 
   {% block extra_scripts %}{% endblock %}
 </body>

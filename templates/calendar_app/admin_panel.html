@@ -1,107 +1,48 @@
-{% load static tailwind_tags tz %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Panel Secretaría — Iglesia Adventista Osorno Central</title>
-  {% tailwind_css %}
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" />
-  <style>
-    body { font-family: 'Public Sans', sans-serif; background: #fbf8fc; color: #1b1b1e; }
-    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-    .flatpickr-calendar { font-family: 'Public Sans', sans-serif; font-size: 13px; width: 280px; padding: 8px; }
-    .flatpickr-months { padding: 4px 0; }
-    .flatpickr-month { height: 32px; }
-    .flatpickr-current-month { font-size: 13px; padding: 4px 0; }
-    .flatpickr-current-month .numInputWrapper { width: 52px; }
-    .flatpickr-weekdays { margin-top: 4px; }
-    .flatpickr-weekday { font-size: 11px; color: #74777f; font-weight: 600; }
-    .flatpickr-day { height: 32px; max-width: 32px; line-height: 32px; font-size: 12px; margin: 1px auto; }
-    .flatpickr-day.selected, .flatpickr-day.selected:hover { background: #5a3e8a; border-color: #5a3e8a; }
-    .flatpickr-day:hover { background: #f0eaf8; }
-    .flatpickr-time { border-top: 1px solid #e4e4e7; margin-top: 4px; padding-top: 4px; }
-    .flatpickr-time input { font-size: 13px; }
-  </style>
+{% extends "base_app.html" %}
+{% load tz %}
+{% block title %}Panel Secretaría — Iglesia Adventista Osorno Central{% endblock %}
 
-</head>
-<body class="min-h-screen flex flex-col">
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" />
+<style>
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .flatpickr-calendar { font-family: 'Public Sans', sans-serif; font-size: 13px; width: 280px; padding: 8px; }
+  .flatpickr-months { padding: 4px 0; }
+  .flatpickr-month { height: 32px; }
+  .flatpickr-current-month { font-size: 13px; padding: 4px 0; }
+  .flatpickr-current-month .numInputWrapper { width: 52px; }
+  .flatpickr-weekdays { margin-top: 4px; }
+  .flatpickr-weekday { font-size: 11px; color: #74777f; font-weight: 600; }
+  .flatpickr-day { height: 32px; max-width: 32px; line-height: 32px; font-size: 12px; margin: 1px auto; }
+  .flatpickr-day.selected, .flatpickr-day.selected:hover { background: #5a3e8a; border-color: #5a3e8a; }
+  .flatpickr-day:hover { background: #f0eaf8; }
+  .flatpickr-time { border-top: 1px solid #e4e4e7; margin-top: 4px; padding-top: 4px; }
+  .flatpickr-time input { font-size: 13px; }
+</style>
+{% endblock extra_head %}
 
-<!-- ── Top App Bar — mismo diseño que base.html ── -->
-<header class="bg-white border-b border-zinc-200 sticky top-0 z-50">
-  <div class="max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
+{% block header_actions %}
+<button type="button" onclick="openEventModal()"
+   class="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity">
+  <span class="material-symbols-outlined text-base">add</span>Nuevo evento
+</button>
+<a href="{% url 'calendar_app:admin_panel' %}"
+   class="flex items-center gap-1.5 px-3 py-1.5 border border-primary text-primary text-sm font-semibold rounded-lg bg-primary/5">
+  <span class="material-symbols-outlined text-base">history_edu</span>Panel
+</a>
+<a href="{% url 'admin:index' %}" class="p-2 rounded-lg hover:bg-zinc-100 transition-colors" title="Administración Django">
+  <span class="material-symbols-outlined text-xl text-zinc-500">admin_panel_settings</span>
+</a>
+{% endblock %}
 
-    <!-- Logo -->
-    <a href="{% url 'calendar_app:calendar' %}" class="flex items-center gap-3 shrink-0">
-      <span class="material-symbols-outlined text-2xl text-primary">church</span>
-      <div class="leading-tight">
-        <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 hidden sm:block">Iglesia Adventista</p>
-        <p class="text-sm font-bold text-primary" style="font-family:'Noto Serif',serif">Osorno Central</p>
-      </div>
-    </a>
+{% block mobile_header_action %}
+<button type="button" onclick="openEventModal()"
+   class="p-2 rounded-lg hover:bg-zinc-100 transition-colors" aria-label="Nuevo evento">
+  <span class="material-symbols-outlined text-xl text-primary">add_circle</span>
+</button>
+{% endblock %}
 
-    <!-- Nav desktop -->
-    <nav class="hidden md:flex items-center h-full gap-0">
-      <a href="{% url 'calendar_app:calendar' %}"
-         class="h-full flex items-center gap-1.5 px-4 text-sm font-medium text-zinc-500 hover:text-primary transition-colors">
-        <span class="material-symbols-outlined text-base">calendar_month</span>Calendario
-      </a>
-      <a href="{% url 'calendar_app:agenda' %}"
-         class="h-full flex items-center gap-1.5 px-4 text-sm font-medium text-zinc-500 hover:text-primary transition-colors">
-        <span class="material-symbols-outlined text-base">view_agenda</span>Mi Agenda
-      </a>
-      <a href="{% url 'calendar_app:event_list' %}"
-         class="h-full flex items-center gap-1.5 px-4 text-sm font-medium text-zinc-500 hover:text-primary transition-colors">
-        <span class="material-symbols-outlined text-base">event_note</span>Actividades
-      </a>
-      <a href="{% url 'calendar_app:admin_panel' %}"
-         class="h-full flex items-center gap-1.5 px-4 text-sm font-semibold text-primary border-b-2 border-primary transition-colors">
-        <span class="material-symbols-outlined text-base">history_edu</span>Secretaría
-      </a>
-    </nav>
-
-    <!-- Acciones -->
-    <div class="flex items-center gap-2 shrink-0">
-      <button type="button" onclick="openEventModal()"
-         class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity">
-        <span class="material-symbols-outlined text-base">add</span>Nuevo evento
-      </button>
-      <a href="{% url 'admin:index' %}" class="p-2 rounded-lg hover:bg-zinc-100 transition-colors" title="Administración Django">
-        <span class="material-symbols-outlined text-xl text-zinc-500">admin_panel_settings</span>
-      </a>
-      <button id="menuBtn" class="md:hidden p-2 rounded-lg hover:bg-zinc-100 transition-colors">
-        <span class="material-symbols-outlined text-xl text-zinc-600">menu</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Mobile nav -->
-  <nav id="mobileMenu" class="md:hidden hidden border-t border-zinc-100 bg-white px-4 pb-3 pt-2 flex flex-col gap-0.5">
-    <a href="{% url 'calendar_app:calendar' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">
-      <span class="material-symbols-outlined text-base">calendar_month</span>Calendario
-    </a>
-    <a href="{% url 'calendar_app:agenda' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">
-      <span class="material-symbols-outlined text-base">view_agenda</span>Mi Agenda
-    </a>
-    <a href="{% url 'calendar_app:event_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">
-      <span class="material-symbols-outlined text-base">event_note</span>Actividades
-    </a>
-    <button type="button" onclick="openEventModal()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50 w-full text-left">
-      <span class="material-symbols-outlined text-base">add_circle</span>Nuevo evento
-    </button>
-  </nav>
-</header>
-
-<!-- ── Layout principal ── -->
-<div class="flex flex-1">
-
-  <!-- ── Contenido principal ── -->
-  <main class="flex-1 px-6 py-8 max-w-screen-xl mx-auto overflow-y-auto">
+{% block content %}
 
     <!-- Mensajes flash -->
     {% if messages %}
@@ -269,28 +210,9 @@
       </div>
     </footer>
 
-  </main>
-</div>
+{% endblock content %}
 
-<!-- Mobile bottom nav -->
-<nav class="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-white border-t border-zinc-200 flex justify-around items-center z-50">
-  <a href="{% url 'calendar_app:calendar' %}" class="flex flex-col items-center gap-0.5 text-zinc-500">
-    <span class="material-symbols-outlined text-xl">calendar_month</span>
-    <span class="text-[9px]">Calendario</span>
-  </a>
-  <a href="{% url 'calendar_app:agenda' %}" class="flex flex-col items-center gap-0.5 text-zinc-500">
-    <span class="material-symbols-outlined text-xl">view_agenda</span>
-    <span class="text-[9px]">Agenda</span>
-  </a>
-  <a href="{% url 'calendar_app:admin_panel' %}" class="flex flex-col items-center gap-0.5 text-primary">
-    <span class="material-symbols-outlined text-xl">history_edu</span>
-    <span class="text-[9px]">Secretaría</span>
-  </a>
-  <a href="{% url 'admin:index' %}" class="flex flex-col items-center gap-0.5 text-zinc-500">
-    <span class="material-symbols-outlined text-xl">admin_panel_settings</span>
-    <span class="text-[9px]">Admin</span>
-  </a>
-</nav>
+{% block extra_body %}
 
 <!-- ── Modal Nuevo Evento (Flowbite) ── -->
 <!-- Safelist de clases del backdrop que Flowbite agrega dinámicamente -->
@@ -729,12 +651,11 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
-<script>
-  // ── Menú móvil ──────────────────────────────────────────────────
-  const btn = document.getElementById('menuBtn');
-  const menu = document.getElementById('mobileMenu');
-  if (btn && menu) btn.addEventListener('click', () => menu.classList.toggle('hidden'));
 
+{% endblock extra_body %}
+
+{% block extra_scripts %}
+<script>
   // ── Flatpickr ───────────────────────────────────────────────────
   const fpOpts = { locale: 'es', dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y', allowInput: false };
   const fpTimeOpts = { enableTime: true, noCalendar: true, dateFormat: 'H:i', time_24hr: true, allowInput: false };
@@ -1001,5 +922,4 @@
     document.getElementById(id).style.display = 'none';
   }
 </script>
-</body>
-</html>
+{% endblock extra_scripts %}
