@@ -76,7 +76,7 @@ def _is_mobile(request):
 
 
 def calendar_view(request):
-    if _is_mobile(request):
+    if _is_mobile(request) and 'cal' not in request.GET:
         return redirect(reverse('calendar_app:event_list') + ('?' + request.GET.urlencode() if request.GET else ''))
 
     today = date.today()

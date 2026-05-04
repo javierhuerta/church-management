@@ -3,7 +3,7 @@
             flex h-[60px] safe-bottom shadow-[0_-1px_0_rgba(0,0,0,0.06)] dark:shadow-[0_-1px_0_rgba(255,255,255,0.05)]">
 
   <!-- Calendario -->
-  <a href="{% url 'calendar_app:calendar' %}"
+  <a href="{% url 'calendar_app:calendar' %}?cal=1"
      class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
             {% if request.resolver_match.url_name == 'calendar' %}
               text-primary dark:text-[#adc7f7]
