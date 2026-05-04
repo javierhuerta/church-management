@@ -146,17 +146,24 @@
                          px-2 py-0.5 rounded-full">Hoy</span>
           </div>
           <div class="flex-1 px-2 pb-2 overflow-hidden space-y-1">
-            {% for event in day.events|slice:":3" %}
-            <div class="rounded px-2 py-1.5 text-white"
-                 style="background-color:{{ event.department.color|default:'#002045' }}">
-              {% if event.department %}
-              <p class="text-[10px] font-bold uppercase tracking-widest opacity-80 leading-none">{{ event.department.name }}</p>
+            {% for entry in day.events|slice:":3" %}
+            {% with ev=entry.event %}
+            <div class="px-2 py-1.5 text-white
+                        {% if entry.is_continuation %}rounded-l-none border-l-2 border-white/30{% else %}rounded{% endif %}"
+                 style="background-color:{{ ev.department.color|default:'#002045' }};">
+              {% if entry.is_start %}
+                {% if ev.department %}
+                <p class="text-[10px] font-bold uppercase tracking-widest opacity-80 leading-none">{{ ev.department.name }}</p>
+                {% endif %}
+              {% else %}
+                <p class="text-[10px] opacity-60 leading-none">&#8594; continúa</p>
               {% endif %}
-              <p class="text-sm font-semibold leading-snug truncate" style="font-family:'Noto Serif',serif">{{ event.title }}</p>
-              {% if not event.is_all_day %}
-              <p class="text-xs opacity-70 leading-none mt-0.5">{{ event.start_datetime|time:"G:i" }} hrs</p>
+              <p class="text-sm font-semibold leading-snug truncate" style="font-family:'Noto Serif',serif">{{ ev.title }}</p>
+              {% if entry.is_start and not ev.is_all_day %}
+              <p class="text-xs opacity-70 leading-none mt-0.5">{{ ev.start_datetime|time:"G:i" }}{% if ev.end_datetime and not entry.is_multiday %} – {{ ev.end_datetime|time:"G:i" }}{% endif %} hrs</p>
               {% endif %}
             </div>
+            {% endwith %}
             {% empty %}
             <p class="text-xs text-zinc-400 dark:text-[#8b90a8] italic">Sin actividades</p>
             {% endfor %}
@@ -183,15 +190,20 @@
             <span class="text-sm {% if day.events %}font-bold text-primary dark:text-[#adc7f7]{% else %}text-zinc-500 dark:text-[#8b90a8]{% endif %}">{{ day.day }}</span>
           </div>
           <div class="flex-1 px-2 pb-2 overflow-hidden space-y-1 mt-1">
-            {% for event in day.events|slice:":3" %}
-            <div class="border-l-[3px] pl-2 py-0.5"
-                 style="border-left-color:{{ event.department.color|default:'#74777f' }};">
+            {% for entry in day.events|slice:":3" %}
+            {% with ev=entry.event %}
+            <div class="border-l-[3px] pl-2 py-0.5
+                        {% if not entry.is_end and entry.is_multiday %}opacity-90{% endif %}"
+                 style="border-left-color:{{ ev.department.color|default:'#74777f' }};">
               <p class="text-xs font-semibold leading-snug truncate
-                        text-zinc-700 dark:text-[#c4c6cf]">{{ event.title }}</p>
-              {% if not event.is_all_day %}
-              <p class="text-[10px] text-zinc-400 dark:text-[#8b90a8] leading-none">{{ event.start_datetime|time:"G:i" }}</p>
+                        text-zinc-700 dark:text-[#c4c6cf]">
+                {% if entry.is_continuation %}<span class="opacity-50 mr-0.5">→</span>{% endif %}{{ ev.title }}
+              </p>
+              {% if entry.is_start and not ev.is_all_day %}
+              <p class="text-[10px] text-zinc-400 dark:text-[#8b90a8] leading-none">{{ ev.start_datetime|time:"G:i" }}{% if ev.end_datetime and not entry.is_multiday %} – {{ ev.end_datetime|time:"G:i" }}{% endif %}</p>
               {% endif %}
             </div>
+            {% endwith %}
             {% endfor %}
             {% if day.events|length > 3 %}
             <span class="text-[10px] text-zinc-400 dark:text-[#8b90a8] font-semibold">+{{ day.events|length|add:"-3" }} más</span>

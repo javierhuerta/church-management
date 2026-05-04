@@ -31,6 +31,44 @@ MONTH_NAMES = [
 DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
 
+def _spread_multiday_events(events_qs, year, month):
+    """
+    Construye events_by_day teniendo en cuenta eventos multi-día:
+    un evento aparece en cada día del mes que abarca (inicio → fin).
+    Cada entrada es un dict con la info del evento más metadatos de posición:
+      is_start, is_end, is_continuation
+    """
+    month_start = date(year, month, 1)
+    # Último día del mes
+    if month == 12:
+        month_end = date(year + 1, 1, 1) - timedelta(days=1)
+    else:
+        month_end = date(year, month + 1, 1) - timedelta(days=1)
+
+    events_by_day = {}
+    for event in events_qs:
+        # Usar hora local para evitar desfase por zona horaria UTC
+        ev_start = timezone.localtime(event.start_datetime).date()
+        ev_end = (timezone.localtime(event.end_datetime).date() if event.end_datetime else ev_start)
+
+        # Rango visible dentro del mes
+        visible_start = max(ev_start, month_start)
+        visible_end = min(ev_end, month_end)
+
+        cur = visible_start
+        while cur <= visible_end:
+            events_by_day.setdefault(cur.day, []).append({
+                'event': event,
+                'is_start': cur == ev_start,
+                'is_end': cur == ev_end,
+                'is_continuation': cur > ev_start,
+                'is_multiday': ev_start != ev_end,
+            })
+            cur += timedelta(days=1)
+
+    return events_by_day
+
+
 def calendar_view(request):
     today = date.today()
 
@@ -50,8 +88,10 @@ def calendar_view(request):
     type_filters = fd.get('type', [])
 
     events_qs = Event.objects.filter(
-        start_datetime__year=year,
-        start_datetime__month=month,
+        # Incluye eventos que comienzan en el mes O que empiezan antes y terminan en el mes
+        Q(start_datetime__year=year, start_datetime__month=month) |
+        Q(start_datetime__date__lt=date(year, month, 1),
+          end_datetime__date__gte=date(year, month, 1)),
         is_published=True,
     ).select_related('department', 'responsible')
 
@@ -62,10 +102,7 @@ def calendar_view(request):
     if type_filters:
         events_qs = events_qs.filter(event_type__in=type_filters)
 
-    events_by_day = {}
-    for event in events_qs:
-        d = event.start_datetime.day
-        events_by_day.setdefault(d, []).append(event)
+    events_by_day = _spread_multiday_events(events_qs, year, month)
 
     cal = calendar.Calendar(firstweekday=6).monthdayscalendar(year, month)
     calendar_weeks = []
@@ -512,15 +549,13 @@ def tv_view(request):
     ).select_related('department').order_by('start_datetime')[:6]
 
     events_qs = Event.objects.filter(
-        start_datetime__year=year,
-        start_datetime__month=month,
+        Q(start_datetime__year=year, start_datetime__month=month) |
+        Q(start_datetime__date__lt=date(year, month, 1),
+          end_datetime__date__gte=date(year, month, 1)),
         is_published=True,
     ).select_related('department')
 
-    events_by_day = {}
-    for event in events_qs:
-        d = event.start_datetime.day
-        events_by_day.setdefault(d, []).append(event)
+    events_by_day = _spread_multiday_events(events_qs, year, month)
 
     # Domingo primero (firstweekday=6 = domingo en python-calendar)
     cal = calendar.Calendar(firstweekday=6).monthdayscalendar(year, month)
@@ -599,8 +634,9 @@ def admin_panel_view(request):
     scope_filter = fd.get('scope', '')
 
     events_qs = Event.objects.filter(
-        start_datetime__year=year,
-        start_datetime__month=month,
+        Q(start_datetime__year=year, start_datetime__month=month) |
+        Q(start_datetime__date__lt=date(year, month, 1),
+          end_datetime__date__gte=date(year, month, 1)),
     ).select_related('department', 'responsible')
 
     if dept_filter:
@@ -608,10 +644,7 @@ def admin_panel_view(request):
     if scope_filter:
         events_qs = events_qs.filter(scope=scope_filter)
 
-    events_by_day = {}
-    for event in events_qs:
-        d = event.start_datetime.day
-        events_by_day.setdefault(d, []).append(event)
+    events_by_day = _spread_multiday_events(events_qs, year, month)
 
     # Domingo primero
     sun_cal = calendar.Calendar(firstweekday=6)

@@ -164,15 +164,20 @@
             <span class="text-xs text-zinc-400 dark:text-zinc-700 block mb-1">{{ day.day }}</span>
             {% endif %}
             <div class="space-y-0.5 overflow-hidden">
-              {% for event in day.events|slice:":3" %}
+              {% for entry in day.events|slice:":3" %}
+              {% with event=entry.event %}
               <button type="button" onclick="openEditModal({{ event.pk }})"
-                 class="block w-full text-left border-l-2 pl-1.5 hover:opacity-80 transition-opacity"
-                 style="border-left-color:{{ event.department.color|default:'#74777f' }}">
-                <p class="text-[10px] font-semibold text-zinc-700 dark:text-[#c4c6cf] leading-snug truncate">{{ event.title }}</p>
-                {% if not event.is_all_day %}
+                 class="block w-full text-left border-l-2 pl-1.5 hover:opacity-80 transition-opacity
+                        {% if entry.is_continuation %}opacity-70{% endif %}"
+                 style="border-left-color:{{ event.department.color|default:'#74777f' }}{% if entry.is_continuation %};border-left-width:1px{% endif %}">
+                <p class="text-[10px] font-semibold text-zinc-700 dark:text-[#c4c6cf] leading-snug truncate">
+                  {% if entry.is_continuation %}<span class="opacity-50">↩ </span>{% endif %}{{ event.title }}
+                </p>
+                {% if entry.is_start and not event.is_all_day %}
                 <p class="text-[9px] text-zinc-400 dark:text-[#8b90a8]">{{ event.start_datetime|time:"G:i" }}</p>
                 {% endif %}
               </button>
+              {% endwith %}
               {% endfor %}
               {% if day.events|length > 3 %}
               <span class="text-[9px] text-zinc-400 dark:text-[#8b90a8] font-semibold">+{{ day.events|length|add:"-3" }} más</span>
@@ -239,18 +244,6 @@
 
       </div><!-- fin panel derecho -->
     </div><!-- fin bento grid -->
-
-    <!-- Footer -->
-    <footer class="mt-10 pt-5 border-t border-zinc-200 dark:border-zinc-700/40">
-      <div class="flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-zinc-400 dark:text-[#8b90a8]">
-        <span class="uppercase tracking-widest">© {% now "Y" %} Iglesia Adventista del Séptimo Día — Osorno Central</span>
-        <div class="flex gap-5">
-          <a href="{% url 'calendar_app:calendar' %}" class="hover:text-primary dark:hover:text-[#adc7f7] transition-colors">Calendario</a>
-          <a href="{% url 'admin:index' %}" class="hover:text-primary dark:hover:text-[#adc7f7] transition-colors">Admin Django</a>
-          <a href="{% url 'calendar_app:tv' %}" class="hover:text-primary dark:hover:text-[#adc7f7] transition-colors">Vista TV</a>
-        </div>
-      </div>
-    </footer>
 
 {% endblock content %}
 

@@ -33,14 +33,22 @@
 
       <!-- Mobile: título truncado con borde de color -->
       <ul class="sm:hidden flex flex-col gap-0.5 mt-0.5">
-        {% for ev in cell.events|slice:":2" %}
+        {% for entry in cell.events|slice:":2" %}
+        {% with ev=entry.event %}
         <li>
           <a href="{% url 'calendar_app:event_detail' ev.slug %}"
-             class="block w-full rounded px-1 py-0.5 text-[10px] font-semibold leading-tight truncate text-[#1b1b1e] dark:text-[#e2e4ef]"
-             style="border-left: 2px solid {{ ev.department.color|default:'#94a3b8' }};
-                    background-color: {{ ev.department.color|default:'#94a3b8' }}22;"
-             title="{{ ev.title }}">{{ ev.title }}</a>
+             class="flex items-center w-full rounded px-1 py-0.5 text-[10px] font-semibold leading-tight truncate text-[#1b1b1e] dark:text-[#e2e4ef]
+                    {% if entry.is_continuation %}rounded-l-none{% endif %}
+                    {% if not entry.is_end %}rounded-r-none{% endif %}"
+             style="border-left: {% if entry.is_continuation %}0{% else %}2px{% endif %} solid {{ ev.department.color|default:'#94a3b8' }};
+                    background-color: {{ ev.department.color|default:'#94a3b8' }}22;
+                    {% if not entry.is_end %}border-right: 0;{% endif %}"
+             title="{{ ev.title }}">
+            {% if entry.is_continuation %}<span class="text-[8px] opacity-50 mr-0.5">↩</span>{% endif %}
+            {{ ev.title }}
+          </a>
         </li>
+        {% endwith %}
         {% endfor %}
         {% if cell.events|length > 2 %}
         <li class="text-[9px] text-zinc-400 dark:text-[#8b90a8] leading-none px-1">+{{ cell.events|length|add:"-2" }} más</li>
@@ -49,22 +57,34 @@
 
       <!-- Desktop: píldoras con texto y tooltip -->
       <ul class="hidden sm:flex flex-col gap-0.5 overflow-hidden">
-        {% for ev in cell.events|slice:":4" %}
+        {% for entry in cell.events|slice:":4" %}
+        {% with ev=entry.event %}
         <li>
           <a href="{% url 'calendar_app:event_detail' ev.slug %}"
-             class="ev-pill flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] leading-tight hover:opacity-80 transition-opacity"
-             style="border-left: 2px solid {{ ev.department.color|default:'#94a3b8' }};
-                    background-color: {{ ev.department.color|default:'#94a3b8' }}28;"
+             class="ev-pill flex items-center gap-1 px-1.5 py-0.5 text-[11px] leading-tight hover:opacity-80 transition-opacity
+                    {% if entry.is_continuation %}rounded-l-none{% else %}rounded{% endif %}
+                    {% if entry.is_end or not entry.is_multiday %}rounded-r{% else %}rounded-r-none{% endif %}"
+             style="border-left: {% if entry.is_continuation %}0{% else %}2px solid {{ ev.department.color|default:'#94a3b8' }}{% endif %};
+                    background-color: {{ ev.department.color|default:'#94a3b8' }}28;
+                    {% if not entry.is_end and entry.is_multiday %}border-right: 0; padding-right: 2px;{% endif %}"
              data-ev-title="{{ ev.title|escapejs }}"
              data-ev-color="{{ ev.department.color|default:'#94a3b8' }}"
              data-ev-dept="{{ ev.department.name|default:''|escapejs }}"
-             data-ev-time="{% if ev.is_all_day %}Todo el día{% else %}{{ ev.start_datetime|time:'H:i' }} hrs{% endif %}"
+             data-ev-time="{% if ev.is_all_day %}Todo el día{% elif ev.end_datetime %}{{ ev.start_datetime|time:'H:i' }}–{{ ev.end_datetime|time:'H:i' }} hrs{% else %}{{ ev.start_datetime|time:'H:i' }} hrs{% endif %}"
              data-ev-location="{{ ev.location|default:''|escapejs }}"
              data-ev-type="{{ ev.get_event_type_display|escapejs }}">
-            {% if not ev.is_all_day %}<span class="shrink-0 text-[10px] text-[#74777f] dark:text-[#8b90a8] tabular-nums">{{ ev.start_datetime|time:'H:i' }}</span>{% endif %}
+            {% if entry.is_start and not ev.is_all_day %}
+              <span class="shrink-0 text-[10px] text-[#74777f] dark:text-[#8b90a8] tabular-nums">{{ ev.start_datetime|time:'H:i' }}</span>
+            {% elif entry.is_continuation %}
+              <span class="shrink-0 text-[10px] opacity-40">↩</span>
+            {% endif %}
             <span class="font-semibold text-[#1b1b1e] dark:text-[#e2e4ef] truncate">{{ ev.title }}</span>
+            {% if entry.is_multiday and entry.is_start %}
+              <span class="ml-auto shrink-0 text-[9px] opacity-50 pr-0.5">→</span>
+            {% endif %}
           </a>
         </li>
+        {% endwith %}
         {% endfor %}
         {% if cell.events|length > 4 %}
         <li class="text-[10px] text-zinc-400 dark:text-[#8b90a8] px-1.5 font-medium">+{{ cell.events|length|add:"-4" }} más</li>
