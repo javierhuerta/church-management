@@ -1,0 +1,52 @@
+<nav class="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white dark:bg-[#0f1121]
+            border-t border-zinc-200 dark:border-white/[0.07]
+            flex h-[60px] safe-bottom shadow-[0_-1px_0_rgba(0,0,0,0.06)] dark:shadow-[0_-1px_0_rgba(255,255,255,0.05)]">
+
+  <!-- Calendario -->
+  <a href="{% url 'calendar_app:calendar' %}"
+     class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
+            {% if request.resolver_match.url_name == 'calendar' %}
+              text-primary dark:text-[#adc7f7]
+            {% else %}
+              text-[#74777f] dark:text-[#8b90a8] hover:text-primary dark:hover:text-[#adc7f7]
+            {% endif %}">
+    <span class="material-symbols-outlined"
+          style="font-size:24px; font-variation-settings:'FILL' {% if request.resolver_match.url_name == 'calendar' %}1{% else %}0{% endif %},'wght' 400,'GRAD' 0,'opsz' 24">
+      calendar_month
+    </span>
+    <span class="text-xs font-semibold leading-none">Calendario</span>
+  </a>
+
+  <!-- Actividades -->
+  <a href="{% url 'calendar_app:event_list' %}"
+     class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
+            {% if request.resolver_match.url_name == 'event_list' or request.resolver_match.url_name == 'event_detail' %}
+              text-primary dark:text-[#adc7f7]
+            {% else %}
+              text-[#74777f] dark:text-[#8b90a8] hover:text-primary dark:hover:text-[#adc7f7]
+            {% endif %}">
+    <span class="material-symbols-outlined"
+          style="font-size:24px; font-variation-settings:'FILL' {% if request.resolver_match.url_name == 'event_list' or request.resolver_match.url_name == 'event_detail' %}1{% else %}0{% endif %},'wght' 400,'GRAD' 0,'opsz' 24">
+      event_note
+    </span>
+    <span class="text-xs font-semibold leading-none">Actividades</span>
+  </a>
+
+  {% if user.is_authenticated and user.is_staff %}
+  <!-- Panel (solo staff) -->
+  <a href="{% url 'calendar_app:admin_panel' %}"
+     class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
+            {% if request.resolver_match.url_name == 'admin_panel' %}
+              text-primary dark:text-[#adc7f7]
+            {% else %}
+              text-[#74777f] dark:text-[#8b90a8] hover:text-primary dark:hover:text-[#adc7f7]
+            {% endif %}">
+    <span class="material-symbols-outlined"
+          style="font-size:24px; font-variation-settings:'FILL' {% if request.resolver_match.url_name == 'admin_panel' %}1{% else %}0{% endif %},'wght' 400,'GRAD' 0,'opsz' 24">
+      history_edu
+    </span>
+    <span class="text-xs font-semibold leading-none">Panel</span>
+  </a>
+  {% endif %}
+
+</nav>

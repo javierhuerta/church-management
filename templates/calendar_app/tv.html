@@ -6,6 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="refresh" content="300" />
   <title>Vista TV — Iglesia Adventista Osorno Central</title>
+  <!-- Anti-flicker: aplica .dark antes del primer paint -->
+  <script>
+    (function() {
+      var t = localStorage.getItem('theme');
+      if (t === 'dark' || (t === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
   {% tailwind_css %}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,34 +23,44 @@
   <style>
     * { box-sizing: border-box; }
     body { font-family: 'Public Sans', sans-serif; background: #fbf8fc; overflow: hidden; color: #1b1b1e; }
+    html.dark body { background: #0d0f1a; color: #e2e4ef; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
   </style>
 </head>
 <body class="h-screen flex flex-col select-none">
 
   <!-- ── Header: solo logo + mes + fecha + reloj. SIN navbar ── -->
-  <header class="bg-white border-b border-zinc-200 shrink-0 h-16 flex items-center justify-between px-8 gap-6">
+  <header class="bg-white dark:bg-[#0f1121]
+                 border-b border-zinc-200 dark:border-zinc-700/50
+                 shrink-0 h-16 flex items-center justify-between px-8 gap-6">
     <!-- Logo -->
     <div class="flex items-center gap-3">
-      <span class="material-symbols-outlined text-2xl text-primary">church</span>
+      <span class="material-symbols-outlined text-2xl text-primary dark:text-[#adc7f7]">church</span>
       <div class="leading-tight">
-        <p class="text-xs font-bold uppercase tracking-widest text-zinc-400">Iglesia Adventista</p>
-        <p class="text-sm font-bold text-primary" style="font-family:'Noto Serif',serif">Osorno Central</p>
+        <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-[#8b90a8]">Iglesia Adventista</p>
+        <p class="text-sm font-bold text-primary dark:text-[#adc7f7]" style="font-family:'Noto Serif',serif">Osorno Central</p>
       </div>
     </div>
 
     <!-- Mes/año centrado -->
-    <h1 class="text-xl font-bold text-primary" style="font-family:'Noto Serif',serif">
+    <h1 class="text-xl font-bold text-primary dark:text-[#adc7f7]" style="font-family:'Noto Serif',serif">
       {{ month_name }} {{ year }}
     </h1>
 
     <!-- Fecha + reloj -->
     <div class="flex items-center gap-3">
-      <span class="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 rounded-full text-xs font-semibold text-zinc-600">
+      <span class="flex items-center gap-1.5 px-3 py-1.5
+                   bg-zinc-100 dark:bg-zinc-800
+                   rounded-full text-xs font-semibold
+                   text-zinc-600 dark:text-[#c4c6cf]">
         <span class="material-symbols-outlined text-sm">calendar_today</span>
         {{ today_label }}
       </span>
-      <span class="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 border border-primary/20 rounded-full text-sm font-bold text-primary tabular-nums" id="tv-time">
+      <span class="flex items-center gap-1.5 px-3 py-1.5
+                   bg-primary/5 dark:bg-[#adc7f7]/10
+                   border border-primary/20 dark:border-[#adc7f7]/20
+                   rounded-full text-sm font-bold
+                   text-primary dark:text-[#adc7f7] tabular-nums" id="tv-time">
         <span class="material-symbols-outlined text-sm">schedule</span>
         --:--
       </span>
@@ -55,28 +74,41 @@
     <section class="flex-1 flex flex-col overflow-hidden">
 
       <!-- Nombres de días -->
-      <div class="grid grid-cols-7 shrink-0 bg-zinc-50 border-b border-zinc-200">
+      <div class="grid grid-cols-7 shrink-0
+                  bg-zinc-50 dark:bg-[#0f1121]
+                  border-b border-zinc-200 dark:border-zinc-700/50">
         {% for d in day_names %}
         <div class="py-2 text-center text-xs font-bold uppercase tracking-widest
-                    {% if forloop.last %}text-primary{% else %}text-zinc-400{% endif %}">
+                    {% if forloop.last %}text-primary dark:text-[#adc7f7]/70{% else %}text-zinc-400 dark:text-[#8b90a8]{% endif %}">
           {{ d }}
         </div>
         {% endfor %}
       </div>
 
       <!-- Celdas del calendario -->
-      <div class="flex-1 grid grid-cols-7 border-l border-zinc-200 bg-white overflow-hidden"
+      <div class="flex-1 grid grid-cols-7
+                  border-l border-zinc-200 dark:border-zinc-700/50
+                  bg-white dark:bg-[#111420] overflow-hidden"
            style="grid-template-rows: repeat({{ num_weeks }}, 1fr);">
         {% for week in calendar_weeks %}
         {% for day in week %}
 
         {% if day.is_today %}
-        <!-- Celda HOY: resaltada con acento primario -->
-        <div class="border-r border-b border-zinc-200 overflow-hidden flex flex-col"
-             style="border-bottom-color: #002045; border-bottom-width: 3px; background: #eff4ff;">
+        <!-- Celda HOY -->
+        <div class="border-r border-b
+                    border-zinc-200 dark:border-zinc-700/40
+                    overflow-hidden flex flex-col"
+             style="border-bottom-color: #002045; border-bottom-width: 3px; background: #eff4ff;"
+             data-dark-style="border-bottom-color:#adc7f7;background:#1a2033;">
           <div class="px-2 pt-2 pb-1 flex items-center justify-between shrink-0">
-            <span class="w-6 h-6 flex items-center justify-center rounded-full bg-primary text-white text-xs font-bold">{{ day.day }}</span>
-            <span class="text-[9px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">Hoy</span>
+            <span class="w-6 h-6 flex items-center justify-center rounded-full
+                         bg-primary dark:bg-[#adc7f7]
+                         text-white dark:text-[#0d0f1a]
+                         text-xs font-bold">{{ day.day }}</span>
+            <span class="text-[9px] font-bold uppercase tracking-widest
+                         text-primary dark:text-[#adc7f7]
+                         bg-primary/10 dark:bg-[#adc7f7]/10
+                         px-1.5 py-0.5 rounded-full">Hoy</span>
           </div>
           <div class="flex-1 px-2 pb-2 overflow-hidden space-y-1">
             {% for event in day.events|slice:":3" %}
@@ -91,40 +123,43 @@
               {% endif %}
             </div>
             {% empty %}
-            <p class="text-[10px] text-zinc-400 italic">Sin actividades</p>
+            <p class="text-[10px] text-zinc-400 dark:text-[#8b90a8] italic">Sin actividades</p>
             {% endfor %}
             {% if day.events|length > 3 %}
-            <span class="text-[10px] text-zinc-500 font-semibold">+{{ day.events|length|add:"-3" }} más</span>
+            <span class="text-[10px] text-zinc-500 dark:text-[#8b90a8] font-semibold">+{{ day.events|length|add:"-3" }} más</span>
             {% endif %}
           </div>
         </div>
 
         {% elif not day.in_month %}
         <!-- Celda fuera del mes -->
-        <div class="border-r border-b border-zinc-200 p-2 bg-zinc-50/60 opacity-40">
-          <span class="text-xs text-zinc-400">{{ day.day }}</span>
+        <div class="border-r border-b
+                    border-zinc-200 dark:border-zinc-700/40
+                    p-2 bg-zinc-50/60 dark:bg-black/20 opacity-40">
+          <span class="text-xs text-zinc-400 dark:text-zinc-600">{{ day.day }}</span>
         </div>
 
         {% else %}
         <!-- Celda normal -->
-        <div class="border-r border-b border-zinc-200 overflow-hidden flex flex-col
-                    {% if day.events %}bg-white{% else %}bg-white{% endif %}
-                    hover:bg-zinc-50/50 transition-colors">
+        <div class="border-r border-b
+                    border-zinc-200 dark:border-zinc-700/40
+                    overflow-hidden flex flex-col bg-white dark:bg-[#111420]">
           <div class="px-2 pt-2 shrink-0">
-            <span class="text-xs {% if day.events %}font-bold text-primary{% else %}text-zinc-500{% endif %}">{{ day.day }}</span>
+            <span class="text-xs {% if day.events %}font-bold text-primary dark:text-[#adc7f7]{% else %}text-zinc-500 dark:text-[#8b90a8]{% endif %}">{{ day.day }}</span>
           </div>
           <div class="flex-1 px-2 pb-2 overflow-hidden space-y-1 mt-1">
             {% for event in day.events|slice:":3" %}
             <div class="border-l-2 pl-1.5 py-0.5"
                  style="border-left-color:{{ event.department.color|default:'#74777f' }};">
-              <p class="text-[10px] font-semibold leading-snug truncate">{{ event.title }}</p>
+              <p class="text-[10px] font-semibold leading-snug truncate
+                        text-zinc-700 dark:text-[#c4c6cf]">{{ event.title }}</p>
               {% if not event.is_all_day %}
-              <p class="text-[9px] text-zinc-400 leading-none">{{ event.start_datetime|time:"G:i" }}</p>
+              <p class="text-[9px] text-zinc-400 dark:text-[#8b90a8] leading-none">{{ event.start_datetime|time:"G:i" }}</p>
               {% endif %}
             </div>
             {% endfor %}
             {% if day.events|length > 3 %}
-            <span class="text-[9px] text-zinc-400 font-semibold">+{{ day.events|length|add:"-3" }} más</span>
+            <span class="text-[9px] text-zinc-400 dark:text-[#8b90a8] font-semibold">+{{ day.events|length|add:"-3" }} más</span>
             {% endif %}
           </div>
         </div>
@@ -136,18 +171,23 @@
     </section>
 
     <!-- ════════════ COLUMNA DERECHA: Sidebar de eventos ════════════ -->
-    <aside class="w-80 shrink-0 bg-white border-l border-zinc-200 flex flex-col overflow-hidden">
+    <aside class="w-80 shrink-0
+                  bg-white dark:bg-[#0f1121]
+                  border-l border-zinc-200 dark:border-zinc-700/50
+                  flex flex-col overflow-hidden">
 
       <!-- Eventos de hoy -->
-      <div class="px-5 pt-5 pb-3 border-b border-zinc-100">
+      <div class="px-5 pt-5 pb-3 border-b border-zinc-100 dark:border-zinc-700/40">
         <div class="flex items-center gap-2 mb-3">
-          <span class="material-symbols-outlined text-base text-primary">today</span>
-          <h2 class="text-xs font-bold uppercase tracking-widest text-primary">Hoy</h2>
+          <span class="material-symbols-outlined text-base text-primary dark:text-[#adc7f7]">today</span>
+          <h2 class="text-xs font-bold uppercase tracking-widest text-primary dark:text-[#adc7f7]">Hoy</h2>
         </div>
         {% if today_events %}
         <div class="space-y-2">
           {% for event in today_events|slice:":4" %}
-          <div class="flex items-start gap-3 p-3 rounded-lg border border-zinc-100 bg-zinc-50/50">
+          <div class="flex items-start gap-3 p-3 rounded-lg
+                      border border-zinc-100 dark:border-zinc-700/40
+                      bg-zinc-50/50 dark:bg-[#161929]">
             <span class="w-2 h-2 rounded-full shrink-0 mt-1.5"
                   style="background-color:{{ event.department.color|default:'#002045' }}"></span>
             <div class="min-w-0">
@@ -155,17 +195,17 @@
               <p class="text-[10px] font-bold uppercase tracking-widest leading-none mb-0.5"
                  style="color:{{ event.department.color|default:'#002045' }}">{{ event.department.name }}</p>
               {% endif %}
-              <p class="text-sm font-semibold text-zinc-800 leading-snug truncate">{{ event.title }}</p>
+              <p class="text-sm font-semibold text-zinc-800 dark:text-[#c4c6cf] leading-snug truncate">{{ event.title }}</p>
               {% if not event.is_all_day %}
-              <p class="text-xs text-zinc-400 mt-0.5 flex items-center gap-1">
+              <p class="text-xs text-zinc-400 dark:text-[#8b90a8] mt-0.5 flex items-center gap-1">
                 <span class="material-symbols-outlined text-xs">schedule</span>
                 {{ event.start_datetime|time:"G:i" }}{% if event.end_datetime %} – {{ event.end_datetime|time:"G:i" }}{% endif %} hrs
               </p>
               {% else %}
-              <p class="text-xs text-zinc-400 mt-0.5">Todo el día</p>
+              <p class="text-xs text-zinc-400 dark:text-[#8b90a8] mt-0.5">Todo el día</p>
               {% endif %}
               {% if event.location %}
-              <p class="text-xs text-zinc-400 truncate flex items-center gap-1">
+              <p class="text-xs text-zinc-400 dark:text-[#8b90a8] truncate flex items-center gap-1">
                 <span class="material-symbols-outlined text-xs">location_on</span>{{ event.location }}
               </p>
               {% endif %}
@@ -174,9 +214,11 @@
           {% endfor %}
         </div>
         {% else %}
-        <div class="flex items-center gap-2 p-3 rounded-lg bg-zinc-50 border border-zinc-100">
-          <span class="material-symbols-outlined text-base text-zinc-300">event_available</span>
-          <p class="text-xs text-zinc-400 italic">Sin actividades hoy.</p>
+        <div class="flex items-center gap-2 p-3 rounded-lg
+                    bg-zinc-50 dark:bg-[#161929]
+                    border border-zinc-100 dark:border-zinc-700/40">
+          <span class="material-symbols-outlined text-base text-zinc-300 dark:text-zinc-600">event_available</span>
+          <p class="text-xs text-zinc-400 dark:text-[#8b90a8] italic">Sin actividades hoy.</p>
         </div>
         {% endif %}
       </div>
@@ -184,42 +226,51 @@
       <!-- Próximos eventos de la semana -->
       <div class="flex-1 px-5 pt-4 overflow-y-auto">
         <div class="flex items-center gap-2 mb-3">
-          <span class="material-symbols-outlined text-base text-zinc-500">date_range</span>
-          <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-500">Próximos</h2>
+          <span class="material-symbols-outlined text-base text-zinc-500 dark:text-[#8b90a8]">date_range</span>
+          <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-[#8b90a8]">Próximos</h2>
         </div>
         {% if upcoming_events %}
         <div class="space-y-2">
           {% for event in upcoming_events %}
           <div class="flex items-start gap-3">
             <!-- Badge fecha -->
-            <div class="shrink-0 w-9 text-center bg-zinc-100 rounded-lg py-1">
-              <p class="text-[9px] font-bold uppercase tracking-widest text-zinc-400 leading-none">{{ event.start_datetime|date:"M" }}</p>
-              <p class="text-sm font-bold text-primary leading-none" style="font-family:'Noto Serif',serif">{{ event.start_datetime|date:"d" }}</p>
+            <div class="shrink-0 w-9 text-center
+                        bg-zinc-100 dark:bg-[#1a1d2e]
+                        rounded-lg py-1">
+              <p class="text-[9px] font-bold uppercase tracking-widest
+                        text-zinc-400 dark:text-[#8b90a8] leading-none">{{ event.start_datetime|date:"M" }}</p>
+              <p class="text-sm font-bold text-primary dark:text-[#adc7f7] leading-none"
+                 style="font-family:'Noto Serif',serif">{{ event.start_datetime|date:"d" }}</p>
             </div>
             <div class="min-w-0 flex-1">
-              <p class="text-xs font-semibold text-zinc-700 leading-snug truncate">{{ event.title }}</p>
+              <p class="text-xs font-semibold
+                        text-zinc-700 dark:text-[#c4c6cf] leading-snug truncate">{{ event.title }}</p>
               {% if event.department %}
-              <span class="inline-block mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase leading-none"
+              <span class="inline-block mt-0.5 px-1.5 py-0.5 rounded-full
+                           text-[9px] font-bold text-white uppercase leading-none"
                     style="background-color:{{ event.department.color }}">{{ event.department.name }}</span>
               {% endif %}
               {% if not event.is_all_day %}
-              <p class="text-[10px] text-zinc-400 mt-0.5">{{ event.start_datetime|time:"G:i" }} hrs</p>
+              <p class="text-[10px] text-zinc-400 dark:text-[#8b90a8] mt-0.5">{{ event.start_datetime|time:"G:i" }} hrs</p>
               {% endif %}
             </div>
           </div>
           {% endfor %}
         </div>
         {% else %}
-        <p class="text-xs text-zinc-400 italic">Sin próximas actividades esta semana.</p>
+        <p class="text-xs text-zinc-400 dark:text-[#8b90a8] italic">Sin próximas actividades esta semana.</p>
         {% endif %}
       </div>
 
       <!-- Footer del sidebar -->
-      <div class="px-5 py-3 border-t border-zinc-100 bg-zinc-50/50 shrink-0">
-        <p class="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center">
+      <div class="px-5 py-3
+                  border-t border-zinc-100 dark:border-zinc-700/40
+                  bg-zinc-50/50 dark:bg-[#0f1121] shrink-0">
+        <p class="text-[10px] font-bold uppercase tracking-widest
+                  text-zinc-400 dark:text-[#8b90a8] text-center">
           Iglesia Adventista — Osorno Central
         </p>
-        <p class="text-[9px] text-zinc-300 text-center mt-0.5">Actualiza cada 5 minutos</p>
+        <p class="text-[9px] text-zinc-300 dark:text-zinc-600 text-center mt-0.5">Actualiza cada 5 minutos</p>
       </div>
     </aside>
 
@@ -234,6 +285,24 @@
     }
     updateClock();
     setInterval(updateClock, 10000);
+
+    // Aplicar estilos inline dark a la celda "Hoy" si el modo oscuro está activo
+    (function applyTodayCellDark() {
+      const isDark = document.documentElement.classList.contains('dark');
+      document.querySelectorAll('[data-dark-style]').forEach(function(el) {
+        if (isDark) {
+          el.getAttribute('data-dark-style').split(';').forEach(function(rule) {
+            if (!rule.trim()) return;
+            const parts = rule.split(':');
+            if (parts.length >= 2) {
+              const prop = parts[0].trim();
+              const val = parts.slice(1).join(':').trim();
+              el.style.setProperty(prop, val);
+            }
+          });
+        }
+      });
+    })();
   </script>
 </body>
 </html>

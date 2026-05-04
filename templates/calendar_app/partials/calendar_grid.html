@@ -1,11 +1,11 @@
 <!-- Grilla del calendario -->
-<div class="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
+<div class="bg-white dark:bg-[#111420] border border-zinc-200 dark:border-zinc-700/50 rounded-xl overflow-hidden shadow-sm dark:shadow-black/30">
 
   <!-- Días de la semana -->
-  <div class="grid grid-cols-7 border-b border-zinc-200 bg-zinc-50/60">
+  <div class="grid grid-cols-7 border-b border-zinc-200 dark:border-zinc-700/50 bg-zinc-50/60 dark:bg-[#0f1121]">
     {% for day_name in day_names %}
-    <div class="py-2.5 text-center text-xs font-bold uppercase tracking-widest border-r border-zinc-100 last:border-r-0
-                {% if forloop.counter0 >= 5 %}text-zinc-600{% else %}text-zinc-400{% endif %}">
+    <div class="py-3 text-center text-xs font-bold uppercase tracking-widest border-r border-zinc-100 dark:border-zinc-700/40 last:border-r-0
+                {% if forloop.counter0 >= 5 %}text-[#5d5e66] dark:text-[#adc7f7]/70{% else %}text-zinc-400 dark:text-[#8b90a8]{% endif %}">
       {{ day_name }}
     </div>
     {% endfor %}
@@ -13,13 +13,21 @@
 
   <!-- Semanas -->
   {% for week in calendar_weeks %}
-  <div class="grid grid-cols-7 border-b border-zinc-100 last:border-b-0">
+  <div class="grid grid-cols-7 border-b border-zinc-100 dark:border-zinc-700/40 last:border-b-0">
     {% for cell in week %}
-    <div class="min-h-[52px] sm:min-h-[100px] lg:min-h-[calc((100vh-14rem)/6)] border-r border-zinc-100 last:border-r-0 p-1 sm:p-1.5
-                {% if not cell.in_month %}bg-zinc-50/60{% elif cell.is_today %}bg-blue-50/60{% elif forloop.counter0 >= 5 %}bg-zinc-50/30{% endif %}">
+    <div class="min-h-[64px] sm:min-h-[110px] lg:min-h-[calc((100vh-14rem)/6)] border-r border-zinc-100 dark:border-zinc-700/40 last:border-r-0 p-1 sm:p-1.5
+                {% if not cell.in_month %}
+                  bg-zinc-50/60 dark:bg-black/20
+                {% elif cell.is_today %}
+                  bg-primary/[0.04] dark:bg-[#adc7f7]/[0.06]
+                {% elif forloop.counter0 >= 5 %}
+                  bg-zinc-50/30 dark:bg-black/[0.08]
+                {% else %}
+                  dark:bg-[#111420]
+                {% endif %}">
       {% if cell.in_month %}
-      <p class="text-[11px] sm:text-xs font-bold mb-0.5 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full
-                 {% if cell.is_today %}bg-primary text-white{% else %}text-zinc-500{% endif %}">
+      <p class="text-[11px] sm:text-xs font-bold mb-0.5 w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center rounded-full
+                 {% if cell.is_today %}bg-primary dark:bg-[#adc7f7] text-white dark:text-[#0d0f1a] font-bold{% else %}text-[#74777f] dark:text-[#8b90a8]{% endif %}">
         {{ cell.day }}
       </p>
 
@@ -34,7 +42,7 @@
         </li>
         {% endfor %}
         {% if cell.events|length > 3 %}
-        <li class="text-[9px] text-zinc-400 leading-none px-0.5">+{{ cell.events|length|add:"-3" }}</li>
+        <li class="text-[9px] text-zinc-400 dark:text-[#8b90a8] leading-none px-0.5">+{{ cell.events|length|add:"-3" }}</li>
         {% endif %}
       </ul>
 
@@ -45,23 +53,26 @@
           <a href="{% url 'calendar_app:event_detail' ev.slug %}"
              class="ev-pill flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] leading-tight hover:opacity-80 transition-opacity"
              style="border-left: 2px solid {{ ev.department.color|default:'#94a3b8' }};
-                    background-color: {{ ev.department.color|default:'#94a3b8' }}22;"
+                    background-color: {{ ev.department.color|default:'#94a3b8' }}28;"
              data-ev-title="{{ ev.title|escapejs }}"
              data-ev-color="{{ ev.department.color|default:'#94a3b8' }}"
              data-ev-dept="{{ ev.department.name|default:''|escapejs }}"
              data-ev-time="{% if ev.is_all_day %}Todo el día{% else %}{{ ev.start_datetime|time:'H:i' }} hrs{% endif %}"
              data-ev-location="{{ ev.location|default:''|escapejs }}"
              data-ev-type="{{ ev.get_event_type_display|escapejs }}">
-            {% if not ev.is_all_day %}<span class="shrink-0 text-[10px] text-zinc-400 tabular-nums">{{ ev.start_datetime|time:'H:i' }}</span>{% endif %}
-            <span class="font-semibold text-zinc-800 truncate">{{ ev.title }}</span>
+            {% if not ev.is_all_day %}<span class="shrink-0 text-[10px] text-[#74777f] dark:text-[#8b90a8] tabular-nums">{{ ev.start_datetime|time:'H:i' }}</span>{% endif %}
+            <span class="font-semibold text-[#1b1b1e] dark:text-[#e2e4ef] truncate">{{ ev.title }}</span>
           </a>
         </li>
         {% endfor %}
         {% if cell.events|length > 4 %}
-        <li class="text-[10px] text-zinc-400 px-1.5 font-medium">+{{ cell.events|length|add:"-4" }} más</li>
+        <li class="text-[10px] text-zinc-400 dark:text-[#8b90a8] px-1.5 font-medium">+{{ cell.events|length|add:"-4" }} más</li>
         {% endif %}
       </ul>
 
+      {% else %}
+      <!-- Número de días fuera del mes actual -->
+      <p class="text-[11px] text-zinc-300 dark:text-zinc-700 mb-0.5">{{ cell.day }}</p>
       {% endif %}
     </div>
     {% endfor %}
@@ -72,11 +83,17 @@
 
 <!-- Tooltip flotante (se posiciona con JS) -->
 <div id="cal-ev-tooltip"
-     class="hidden fixed z-[400] pointer-events-none bg-white rounded-xl shadow-xl border border-zinc-200 w-64 overflow-hidden"
+     class="hidden fixed z-[400] pointer-events-none
+            bg-white dark:bg-[#1a1d2e]
+            rounded-xl shadow-xl
+            border border-zinc-200 dark:border-zinc-700/60
+            w-64 overflow-hidden"
      style="top:0;left:0">
   <div id="cal-ev-tooltip-bar" class="h-1"></div>
   <div class="p-3.5">
-    <p id="cal-ev-tooltip-title" class="font-bold text-sm text-zinc-900 leading-snug mb-2"></p>
-    <div id="cal-ev-tooltip-meta" class="space-y-1.5 text-xs text-zinc-500"></div>
+    <p id="cal-ev-tooltip-title"
+       class="font-bold text-sm text-[#1b1b1e] dark:text-[#e2e4ef] leading-snug mb-2"></p>
+    <div id="cal-ev-tooltip-meta"
+         class="space-y-1.5 text-xs text-[#74777f] dark:text-[#8b90a8]"></div>
   </div>
 </div>

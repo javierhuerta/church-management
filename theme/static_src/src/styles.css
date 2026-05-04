@@ -2,6 +2,24 @@
 
 @source "../../../**/*.{html,py,js}";
 
+/* ── Dark mode: activado por clase .dark en <html> ─────────── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Tipografía base accesible (adultos mayores) ───────────── */
+@layer base {
+  body {
+    font-size: 17px;
+    line-height: 1.65;
+  }
+}
+
+/* ── Eventos del calendario: más visibles en modo oscuro ───── */
+@layer utilities {
+  .dark .ev-pill {
+    filter: brightness(1.6) saturate(0.85);
+  }
+}
+
 /**
  * Design tokens de Stitch — Iglesia Adventista Osorno Central
  * Estos tokens replican el tailwind.config del diseño original
@@ -105,4 +123,47 @@
   .text-caption     { font-size: 13px; line-height: 1.4; font-weight: 400; }
   .text-label-caps  { font-size: 12px; line-height: 1;   font-weight: 700; letter-spacing: 0.05em; }
 }
+
+/* ── Transición suave al cambiar tema ───────────────────────── */
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+body, header, footer, nav, main {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* ── Flatpickr en modo oscuro ───────────────────────────────── */
+.dark .flatpickr-calendar {
+  background: #1a1d2e;
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  color: #e2e4ef;
+}
+.dark .flatpickr-months .flatpickr-month,
+.dark .flatpickr-current-month .cur-month,
+.dark .flatpickr-current-month input.cur-year { color: #e2e4ef; }
+.dark .flatpickr-weekday { color: #8b90a8; background: transparent; }
+.dark .flatpickr-weekdays { background: transparent; }
+.dark .flatpickr-day { color: #e2e4ef; }
+.dark .flatpickr-day.prevMonthDay,
+.dark .flatpickr-day.nextMonthDay { color: #4a4f68; }
+.dark .flatpickr-day:hover { background: rgba(173,199,247,0.12); border-color: transparent; }
+.dark .flatpickr-day.today { border-color: #adc7f7; }
+.dark .flatpickr-day.selected,
+.dark .flatpickr-day.selected:hover { background: #adc7f7; border-color: #adc7f7; color: #0d0f1a; font-weight: 700; }
+.dark .flatpickr-day.disabled,
+.dark .flatpickr-day.disabled:hover { color: #3d4158; }
+.dark .numInputWrapper span { border-color: rgba(255,255,255,0.1); }
+.dark .numInputWrapper span:hover { background: rgba(255,255,255,0.08); }
+.dark .numInputWrapper span svg path { fill: #8b90a8; }
+.dark .flatpickr-time { border-top-color: rgba(255,255,255,0.08); }
+.dark .flatpickr-time input { color: #e2e4ef; }
+.dark .flatpickr-time .flatpickr-time-separator { color: #8b90a8; }
+.dark .flatpickr-prev-month,
+.dark .flatpickr-next-month { color: #8b90a8; fill: #8b90a8; }
+.dark .flatpickr-prev-month:hover,
+.dark .flatpickr-next-month:hover { color: #adc7f7; fill: #adc7f7; }
 
