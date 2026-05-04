@@ -14,65 +14,232 @@
   </div>
 
   <!-- Filtros -->
-  <form method="get" action=""
+  <form method="get" action="" id="filter-form"
         class="bg-white dark:bg-[#161929]
                border border-zinc-200 dark:border-zinc-700/60
-               rounded-xl p-4 mb-6 shadow-sm
-               flex flex-col sm:flex-row gap-3">
-    <div class="flex-1 relative">
-      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2
-                   text-zinc-400 dark:text-[#8b90a8] text-base">search</span>
-      <input type="text" name="q" value="{{ request.GET.q|default:'' }}"
-             placeholder="Buscar actividades…"
-             class="w-full pl-9 pr-4 py-2.5 text-sm
-                    border border-zinc-200 dark:border-zinc-700
-                    rounded-lg
-                    bg-zinc-50 dark:bg-[#111420]
-                    text-[#1b1b1e] dark:text-[#e2e4ef]
-                    placeholder-zinc-400 dark:placeholder-[#4a4f68]
-                    focus:outline-none focus:ring-2 focus:ring-primary/30 dark:focus:ring-[#adc7f7]/20
-                    focus:border-primary dark:focus:border-[#adc7f7]/50
-                    transition" />
+               rounded-xl p-4 mb-6 shadow-sm space-y-3">
+
+    <!-- Fila 1: búsqueda -->
+    <div class="flex gap-3">
+      <div class="flex-1 relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2
+                     text-zinc-400 dark:text-[#8b90a8] text-base pointer-events-none">search</span>
+        <input type="text" name="q" value="{{ request.GET.q|default:'' }}"
+               placeholder="Buscar actividades…"
+               class="w-full pl-9 pr-4 py-2.5 text-sm
+                      border border-zinc-200 dark:border-zinc-700
+                      rounded-lg
+                      bg-zinc-50 dark:bg-[#111420]
+                      text-[#1b1b1e] dark:text-[#e2e4ef]
+                      placeholder-zinc-400 dark:placeholder-[#4a4f68]
+                      focus:outline-none focus:ring-2 focus:ring-primary/30 dark:focus:ring-[#adc7f7]/20
+                      focus:border-primary dark:focus:border-[#adc7f7]/50
+                      transition" />
+      </div>
     </div>
-    <select name="dept"
-            class="sm:w-48 px-3 py-2.5 text-sm
-                   border border-zinc-200 dark:border-zinc-700
-                   rounded-lg
-                   bg-zinc-50 dark:bg-[#111420]
-                   text-[#43474e] dark:text-[#c4c6cf]
-                   focus:outline-none focus:ring-2 focus:ring-primary/30 dark:focus:ring-[#adc7f7]/20
-                   focus:border-primary dark:focus:border-[#adc7f7]/50
-                   transition">
-      <option value="">Todos los departamentos</option>
-      {% for dept in departments %}
-      <option value="{{ dept.slug }}" {% if request.GET.dept == dept.slug %}selected{% endif %}>
-        {{ dept.name }}
-      </option>
-      {% endfor %}
-    </select>
-    <button type="submit"
-            class="px-5 py-2.5 bg-primary dark:bg-[#1e3a5f]
-                   text-white text-sm font-semibold
-                   rounded-lg hover:opacity-90 transition-opacity shrink-0">
-      Filtrar
-    </button>
-    {% if request.GET.q or request.GET.dept %}
-    <a href="{% url 'calendar_app:event_list' %}"
-       class="px-4 py-2.5 border border-zinc-200 dark:border-zinc-700
-              text-[#5d5e66] dark:text-[#8b90a8]
-              text-sm font-medium rounded-lg
-              hover:bg-zinc-50 dark:hover:bg-white/[0.04]
-              transition-colors shrink-0">
-      Limpiar
-    </a>
-    {% endif %}
+
+    <!-- Fila 2: selectores + acciones -->
+    <div class="flex flex-wrap gap-3 items-center">
+
+      <!-- Departamento (dropdown visual) -->
+      <div class="relative" id="dept-wrapper">
+        <button type="button" id="dept-btn"
+                class="flex items-center gap-2 px-3 py-2.5 text-sm
+                       border border-zinc-200 dark:border-zinc-700
+                       rounded-lg min-w-[180px] justify-between
+                       bg-zinc-50 dark:bg-[#111420]
+                       text-[#43474e] dark:text-[#c4c6cf]
+                       focus:outline-none focus:ring-2 focus:ring-primary/30 dark:focus:ring-[#adc7f7]/20
+                       transition">
+          <span class="flex items-center gap-2">
+            <span id="dept-dot" class="w-2.5 h-2.5 rounded-full bg-zinc-300 dark:bg-zinc-600 shrink-0"></span>
+            <span id="dept-label">Departamento</span>
+          </span>
+          <span class="material-symbols-outlined text-base text-zinc-400 dark:text-[#8b90a8]">expand_more</span>
+        </button>
+        <!-- Panel dropdown -->
+        <div id="dept-panel"
+             class="hidden absolute z-50 top-full left-0 mt-1
+                    bg-white dark:bg-[#1a1d2e]
+                    border border-zinc-200 dark:border-zinc-700/60
+                    rounded-xl shadow-lg w-56 py-1.5 overflow-y-auto max-h-72">
+          <button type="button" data-dept="" data-color="" data-name="Todos los departamentos"
+                  class="dept-opt w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left
+                         hover:bg-zinc-50 dark:hover:bg-white/[0.04]
+                         text-[#43474e] dark:text-[#c4c6cf] transition-colors">
+            <span class="w-2.5 h-2.5 rounded-full bg-zinc-300 dark:bg-zinc-500 shrink-0"></span>
+            Todos los departamentos
+          </button>
+          {% for dept in departments %}
+          <button type="button"
+                  data-dept="{{ dept.slug }}" data-color="{{ dept.color }}" data-name="{{ dept.name }}"
+                  class="dept-opt w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left
+                         hover:bg-zinc-50 dark:hover:bg-white/[0.04]
+                         text-[#43474e] dark:text-[#c4c6cf] transition-colors
+                         {% if request.GET.dept == dept.slug %}bg-primary/5 dark:bg-[#adc7f7]/5 font-semibold{% endif %}">
+            <span class="w-2.5 h-2.5 rounded-full shrink-0"
+                  style="background-color:{{ dept.color }}"></span>
+            {{ dept.name }}
+          </button>
+          {% endfor %}
+        </div>
+        <input type="hidden" name="dept" id="dept-hidden" value="{{ request.GET.dept|default:'' }}" />
+      </div>
+
+      <!-- Año -->
+      <select name="year"
+              class="px-3 py-2.5 text-sm
+                     border border-zinc-200 dark:border-zinc-700
+                     rounded-lg
+                     bg-zinc-50 dark:bg-[#111420]
+                     text-[#43474e] dark:text-[#c4c6cf]
+                     focus:outline-none focus:ring-2 focus:ring-primary/30 dark:focus:ring-[#adc7f7]/20
+                     transition">
+        <option value="">Año</option>
+        {% for y in year_range %}
+        <option value="{{ y }}" {% if request.GET.year == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- Mes -->
+      <select name="month"
+              class="px-3 py-2.5 text-sm
+                     border border-zinc-200 dark:border-zinc-700
+                     rounded-lg
+                     bg-zinc-50 dark:bg-[#111420]
+                     text-[#43474e] dark:text-[#c4c6cf]
+                     focus:outline-none focus:ring-2 focus:ring-primary/30 dark:focus:ring-[#adc7f7]/20
+                     transition">
+        <option value="">Mes</option>
+        {% for i in "123456789101112"|make_list %}{% endfor %}
+        <option value="1"  {% if request.GET.month == "1"  %}selected{% endif %}>Enero</option>
+        <option value="2"  {% if request.GET.month == "2"  %}selected{% endif %}>Febrero</option>
+        <option value="3"  {% if request.GET.month == "3"  %}selected{% endif %}>Marzo</option>
+        <option value="4"  {% if request.GET.month == "4"  %}selected{% endif %}>Abril</option>
+        <option value="5"  {% if request.GET.month == "5"  %}selected{% endif %}>Mayo</option>
+        <option value="6"  {% if request.GET.month == "6"  %}selected{% endif %}>Junio</option>
+        <option value="7"  {% if request.GET.month == "7"  %}selected{% endif %}>Julio</option>
+        <option value="8"  {% if request.GET.month == "8"  %}selected{% endif %}>Agosto</option>
+        <option value="9"  {% if request.GET.month == "9"  %}selected{% endif %}>Septiembre</option>
+        <option value="10" {% if request.GET.month == "10" %}selected{% endif %}>Octubre</option>
+        <option value="11" {% if request.GET.month == "11" %}selected{% endif %}>Noviembre</option>
+        <option value="12" {% if request.GET.month == "12" %}selected{% endif %}>Diciembre</option>
+      </select>
+
+      <!-- Alcance -->
+      <select name="scope"
+              class="px-3 py-2.5 text-sm
+                     border border-zinc-200 dark:border-zinc-700
+                     rounded-lg
+                     bg-zinc-50 dark:bg-[#111420]
+                     text-[#43474e] dark:text-[#c4c6cf]
+                     focus:outline-none focus:ring-2 focus:ring-primary/30 dark:focus:ring-[#adc7f7]/20
+                     transition">
+        <option value="">Alcance</option>
+        {% for val, label in scope_options %}
+        <option value="{{ val }}" {% if request.GET.scope == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- Separador flexible -->
+      <div class="flex-1"></div>
+
+      <!-- Botones de acción -->
+      <div class="flex items-center gap-2 shrink-0">
+        {% if request.GET.q or request.GET.dept or request.GET.year or request.GET.month or request.GET.scope %}
+        <a href="{% url 'calendar_app:event_list' %}"
+           class="px-3 py-2.5 border border-zinc-200 dark:border-zinc-700
+                  text-[#5d5e66] dark:text-[#8b90a8]
+                  text-sm font-medium rounded-lg
+                  hover:bg-zinc-50 dark:hover:bg-white/[0.04]
+                  transition-colors flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-base">close</span>
+          Limpiar
+        </a>
+        {% endif %}
+        <button type="submit"
+                class="px-4 py-2.5 bg-primary dark:bg-[#1e3a5f]
+                       text-white text-sm font-semibold
+                       rounded-lg hover:opacity-90 transition-opacity
+                       flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-base">filter_list</span>
+          Filtrar
+        </button>
+        <a href="{% url 'calendar_app:event_list_export' %}{% if filter_querystring %}?{{ filter_querystring }}{% endif %}"
+           class="px-4 py-2.5
+                  border border-zinc-200 dark:border-zinc-700
+                  text-[#5d5e66] dark:text-[#8b90a8]
+                  text-sm font-medium rounded-lg
+                  hover:bg-zinc-50 dark:hover:bg-white/[0.04]
+                  transition-colors flex items-center gap-1.5 shrink-0"
+           title="Descargar lista como Excel/CSV">
+          <span class="material-symbols-outlined text-base">download</span>
+          Exportar
+        </a>
+      </div>
+    </div>
   </form>
+
+  <script>
+  (function() {
+    var btn = document.getElementById('dept-btn');
+    var panel = document.getElementById('dept-panel');
+    var hidden = document.getElementById('dept-hidden');
+    var dot = document.getElementById('dept-dot');
+    var label = document.getElementById('dept-label');
+
+    // Inicializar estado desde valor actual
+    var currentVal = hidden.value;
+    if (currentVal) {
+      var activeOpt = panel.querySelector('.dept-opt[data-dept="' + currentVal + '"]');
+      if (activeOpt) {
+        label.textContent = activeOpt.dataset.name;
+        dot.style.backgroundColor = activeOpt.dataset.color;
+        dot.style.background = activeOpt.dataset.color;
+        dot.className = 'w-2.5 h-2.5 rounded-full shrink-0';
+      }
+    } else {
+      label.textContent = 'Departamento';
+    }
+
+    // Toggle panel
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      panel.classList.toggle('hidden');
+    });
+
+    // Seleccionar opción
+    panel.querySelectorAll('.dept-opt').forEach(function(opt) {
+      opt.addEventListener('click', function() {
+        hidden.value = opt.dataset.dept;
+        label.textContent = opt.dataset.name || 'Departamento';
+        if (opt.dataset.color) {
+          dot.style.backgroundColor = opt.dataset.color;
+          dot.className = 'w-2.5 h-2.5 rounded-full shrink-0';
+        } else {
+          dot.style.backgroundColor = '';
+          dot.className = 'w-2.5 h-2.5 rounded-full bg-zinc-300 dark:bg-zinc-600 shrink-0';
+        }
+        panel.classList.add('hidden');
+        // Enviar el formulario automáticamente
+        document.getElementById('filter-form').submit();
+      });
+    });
+
+    // Cerrar al clicar fuera
+    document.addEventListener('click', function(e) {
+      if (!document.getElementById('dept-wrapper').contains(e.target)) {
+        panel.classList.add('hidden');
+      }
+    });
+  })();
+  </script>
 
   <!-- Lista de eventos -->
   {% if events %}
   <div class="flex flex-col gap-4">
     {% for event in events %}
-    {% include "calendar_app/partials/event_card.html" %}
+    {% include "calendar_app/partials/event_card.html" with from_list=True %}
     {% endfor %}
   </div>
 
@@ -80,7 +247,7 @@
   {% if events.has_other_pages %}
   <nav class="flex items-center justify-center gap-2 mt-8">
     {% if events.has_previous %}
-    <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.dept %}dept={{ request.GET.dept }}&{% endif %}page={{ events.previous_page_number }}"
+    <a href="?{{ filter_querystring }}&page={{ events.previous_page_number }}"
        class="flex items-center gap-1 px-4 py-2.5
               border border-zinc-200 dark:border-zinc-700
               text-sm font-medium
@@ -95,7 +262,7 @@
       Página {{ events.number }} de {{ events.paginator.num_pages }}
     </span>
     {% if events.has_next %}
-    <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.dept %}dept={{ request.GET.dept }}&{% endif %}page={{ events.next_page_number }}"
+    <a href="?{{ filter_querystring }}&page={{ events.next_page_number }}"
        class="flex items-center gap-1 px-4 py-2.5
               border border-zinc-200 dark:border-zinc-700
               text-sm font-medium

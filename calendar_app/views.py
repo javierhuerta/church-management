@@ -1,6 +1,10 @@
 import calendar
 from datetime import date, datetime, timedelta, timezone as dt_timezone
+from io import BytesIO
 from urllib.parse import urlencode
+
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
@@ -106,17 +110,40 @@ def calendar_view(request):
     })
 
 
+def _build_event_list_qs(fd):
+    """Aplica los filtros del EventListFilterForm a un queryset de eventos publicados."""
+    qs = Event.objects.filter(is_published=True).select_related('department').order_by('start_datetime')
+    if fd.get('q'):
+        qs = qs.filter(
+            Q(title__icontains=fd['q']) |
+            Q(description__icontains=fd['q']) |
+            Q(location__icontains=fd['q'])
+        )
+    if fd.get('dept'):
+        qs = qs.filter(department__slug=fd['dept'])
+    if fd.get('year'):
+        qs = qs.filter(start_datetime__year=fd['year'])
+    if fd.get('month'):
+        qs = qs.filter(start_datetime__month=fd['month'])
+    if fd.get('scope'):
+        qs = qs.filter(scope=fd['scope'])
+    return qs
+
+
 def event_list(request):
     filters = EventListFilterForm(request.GET)
     filters.is_valid()
     fd = filters.cleaned_data
 
-    qs = Event.objects.filter(is_published=True).select_related('department').order_by('start_datetime')
+    qs = _build_event_list_qs(fd)
 
-    if fd.get('q'):
-        qs = qs.filter(Q(title__icontains=fd['q']) | Q(description__icontains=fd['q']) | Q(location__icontains=fd['q']))
-    if fd.get('dept'):
-        qs = qs.filter(department__slug=fd['dept'])
+    # Rango de años disponibles (eventos existentes ± margen)
+    today = date.today()
+    year_range = list(range(today.year - 2, today.year + 3))
+
+    # Querystring sin 'page' para paginación y exportación
+    filter_params = {k: v for k, v in request.GET.items() if k != 'page'}
+    filter_querystring = urlencode(filter_params)
 
     paginator = Paginator(qs, 20)
     events = paginator.get_page(request.GET.get('page'))
@@ -125,7 +152,97 @@ def event_list(request):
         'events': events,
         'filters': filters,
         'departments': Department.objects.filter(is_active=True),
+        'year_range': year_range,
+        'filter_querystring': filter_querystring,
+        'scope_options': Event.ScopeChoices.choices,
+        'month_names': MONTH_NAMES,
     })
+
+
+def event_list_export(request):
+    """Exporta la lista de actividades filtrada como Excel .xlsx."""
+    filters = EventListFilterForm(request.GET)
+    filters.is_valid()
+    fd = filters.cleaned_data
+
+    qs = _build_event_list_qs(fd)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Actividades'
+
+    # ── Estilo encabezado ──────────────────────────────────────────────
+    header_fill = PatternFill('solid', fgColor='002045')
+    header_font = Font(bold=True, color='FFFFFF', size=11)
+    header_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+    headers = [
+        ('Título', 40),
+        ('Departamento', 22),
+        ('Fecha inicio', 15),
+        ('Hora inicio', 13),
+        ('Fecha término', 15),
+        ('Hora término', 13),
+        ('Todo el día', 13),
+        ('Lugar', 30),
+        ('Alcance', 15),
+        ('Tipo', 18),
+        ('Público', 18),
+        ('Requiere inscripción', 20),
+        ('URL inscripción', 35),
+        ('Publicado', 13),
+    ]
+
+    for col_idx, (title, width) in enumerate(headers, start=1):
+        cell = ws.cell(row=1, column=col_idx, value=title)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_align
+        ws.column_dimensions[
+            openpyxl.utils.get_column_letter(col_idx)
+        ].width = width
+
+    ws.row_dimensions[1].height = 28
+    ws.freeze_panes = 'A2'
+
+    # ── Filas de datos ─────────────────────────────────────────────────
+    alt_fill = PatternFill('solid', fgColor='EFF4FF')
+    data_align = Alignment(vertical='center', wrap_text=False)
+
+    for row_idx, event in enumerate(qs, start=2):
+        row_data = [
+            event.title,
+            event.department.name if event.department else '',
+            event.start_datetime.strftime('%d/%m/%Y'),
+            '' if event.is_all_day else event.start_datetime.strftime('%H:%M'),
+            event.end_datetime.strftime('%d/%m/%Y') if event.end_datetime else '',
+            '' if (event.is_all_day or not event.end_datetime) else event.end_datetime.strftime('%H:%M'),
+            'Sí' if event.is_all_day else 'No',
+            event.location,
+            event.get_scope_display(),
+            event.get_event_type_display(),
+            event.get_audience_display(),
+            'Sí' if event.requires_registration else 'No',
+            event.registration_url,
+            'Sí' if event.is_published else 'No',
+        ]
+        for col_idx, value in enumerate(row_data, start=1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=value)
+            cell.alignment = data_align
+            if row_idx % 2 == 0:
+                cell.fill = alt_fill
+
+    # ── Enviar respuesta ───────────────────────────────────────────────
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    response = HttpResponse(
+        buffer.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = 'attachment; filename="actividades.xlsx"'
+    return response
 
 
 def event_detail(request, slug):

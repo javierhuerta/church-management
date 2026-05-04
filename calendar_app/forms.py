@@ -87,12 +87,16 @@ class EventListFilterForm(forms.Form):
 
     q = forms.CharField(required=False)
     dept = forms.ChoiceField(required=False, choices=[])
+    year = forms.IntegerField(required=False)
+    month = forms.IntegerField(required=False, min_value=1, max_value=12)
+    scope = forms.ChoiceField(required=False, choices=[])
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['dept'].choices = [('', 'Todos')] + [
             (d.slug, d.name) for d in Department.objects.filter(is_active=True)
         ]
+        self.fields['scope'].choices = [('', 'Todos')] + list(Event.ScopeChoices.choices)
 
 
 class AdminPanelFilterForm(forms.Form):

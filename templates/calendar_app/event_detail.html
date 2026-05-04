@@ -12,12 +12,21 @@
 
   <!-- Breadcrumb + acciones -->
   <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+    {% if request.GET.back == 'list' %}
+    <a href="{% url 'calendar_app:event_list' %}"
+       class="flex items-center gap-1.5 text-sm text-[#74777f] dark:text-[#8b90a8]
+              hover:text-primary dark:hover:text-[#adc7f7] transition-colors">
+      <span class="material-symbols-outlined text-base">arrow_back</span>
+      Volver a Actividades
+    </a>
+    {% else %}
     <a href="{% url 'calendar_app:calendar' %}"
        class="flex items-center gap-1.5 text-sm text-[#74777f] dark:text-[#8b90a8]
               hover:text-primary dark:hover:text-[#adc7f7] transition-colors">
       <span class="material-symbols-outlined text-base">arrow_back</span>
       Volver al Calendario
     </a>
+    {% endif %}
     <div class="flex items-center gap-2">
       {% if user.is_authenticated and user.is_staff %}
       <button type="button" onclick="openEditModal({{ event.pk }})"

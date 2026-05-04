@@ -39,7 +39,7 @@
   </div>
 
   <!-- Contenido -->
-  <a href="{% url 'calendar_app:event_detail' event.slug %}"
+  <a href="{% url 'calendar_app:event_detail' event.slug %}{% if from_list %}?back=list{% endif %}"
      class="flex items-center gap-4 px-5 py-4 group">
     <div class="flex-1 min-w-0">
       <h3 class="font-bold text-[#1b1b1e] dark:text-[#e2e4ef] text-base leading-snug mb-2 group-hover:text-primary dark:group-hover:text-[#adc7f7] transition-colors"
