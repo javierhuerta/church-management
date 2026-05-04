@@ -5,6 +5,7 @@ app_name = 'calendar_app'
 
 urlpatterns = [
     path('', views.calendar_view, name='calendar'),
+    path('pdf/', views.calendar_pdf_view, name='calendar_pdf'),
     path('actividades/', views.event_list, name='event_list'),
     path('actividades/exportar/', views.event_list_export, name='event_list_export'),
     path('actividades/<slug:slug>/', views.event_detail, name='event_detail'),

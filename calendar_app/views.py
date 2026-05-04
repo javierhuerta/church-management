@@ -5,6 +5,9 @@ from urllib.parse import urlencode
 
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.colors import HexColor, white
+from reportlab.pdfgen import canvas as rl_canvas
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
@@ -159,8 +162,223 @@ def event_list(request):
     })
 
 
+def calendar_pdf_view(request):
+    """Genera y descarga el calendario mensual como PDF usando ReportLab."""
+    today = date.today()
+
+    filters = CalendarFilterForm(request.GET)
+    filters.is_valid()
+    fd = filters.cleaned_data
+
+    year = fd.get('year') or today.year
+    month = fd.get('month') or today.month
+    if month < 1:
+        month, year = 12, year - 1
+    elif month > 12:
+        month, year = 1, year + 1
+
+    dept_filters  = fd.get('dept', [])
+    scope_filters = fd.get('scope', [])
+    type_filters  = fd.get('type', [])
+
+    events_qs = (
+        Event.objects.filter(
+            start_datetime__year=year,
+            start_datetime__month=month,
+            is_published=True,
+        )
+        .select_related('department')
+        .order_by('start_datetime')
+    )
+    if dept_filters:
+        events_qs = events_qs.filter(department__slug__in=dept_filters)
+    if scope_filters:
+        events_qs = events_qs.filter(scope__in=scope_filters)
+    if type_filters:
+        events_qs = events_qs.filter(event_type__in=type_filters)
+
+    events_by_day = {}
+    for ev in events_qs:
+        d = timezone.localtime(ev.start_datetime).day
+        events_by_day.setdefault(d, []).append(ev)
+
+    cal_weeks = calendar.Calendar(firstweekday=6).monthdayscalendar(year, month)
+
+    # ── PDF setup ──────────────────────────────────────────────────────
+    buffer = BytesIO()
+    page_w, page_h = landscape(A4)   # 841.89 x 595.28 pts
+    c = rl_canvas.Canvas(buffer, pagesize=(page_w, page_h))
+    c.setTitle(f'Calendario {MONTH_NAMES[month]} {year}')
+    c.setAuthor('Iglesia Adventista Osorno Central')
+
+    MX       = 18   # horizontal margin
+    MT       = 16   # top margin
+    MB       = 10   # bottom margin
+    HEADER_H = 42
+    DAYROW_H = 18
+
+    usable_w  = page_w - 2 * MX
+    col_w     = usable_w / 7
+    num_rows  = len(cal_weeks)
+    grid_h    = page_h - MT - MB - HEADER_H - DAYROW_H
+    row_h     = grid_h / num_rows
+
+    # ── Colors ─────────────────────────────────────────────────────────
+    C_PRIMARY    = HexColor('#002045')
+    C_TODAY_BG   = HexColor('#dde6f5')
+    C_OFF_BG     = HexColor('#f4f5f7')
+    C_BORDER     = HexColor('#d8dae4')
+    C_DAYROW_BG  = HexColor('#eef0f5')
+    C_TEXT_DARK  = HexColor('#1b1b1e')
+    C_TEXT_MID   = HexColor('#74777f')
+    C_TEXT_LIGHT = HexColor('#a8aab4')
+    C_PILL_BG    = HexColor('#eff1f7')
+
+    # ── Header ─────────────────────────────────────────────────────────
+    base_y = page_h - MT
+
+    c.setFont('Helvetica-Bold', 9)
+    c.setFillColor(C_PRIMARY)
+    c.drawString(MX, base_y - 11, 'CALENDARIO IGLESIA ADVENTISTA OSORNO CENTRAL')
+
+    c.setFont('Helvetica-Bold', 20)
+    c.setFillColor(C_PRIMARY)
+    c.drawString(MX, base_y - 32, f'{MONTH_NAMES[month]} {year}')
+
+    c.setFont('Helvetica', 6.5)
+    c.setFillColor(C_TEXT_LIGHT)
+    c.drawRightString(page_w - MX, base_y - 10, f'Generado el {today.strftime("%d/%m/%Y")}')
+
+    sep_y = base_y - HEADER_H
+    c.setStrokeColor(C_BORDER)
+    c.setLineWidth(0.5)
+    c.line(MX, sep_y, page_w - MX, sep_y)
+
+    # ── Day names row ──────────────────────────────────────────────────
+    dayrow_y = sep_y - DAYROW_H
+    c.setFillColor(C_DAYROW_BG)
+    c.rect(MX, dayrow_y, usable_w, DAYROW_H, fill=1, stroke=0)
+
+    for i, dn in enumerate(['DOM', 'LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB']):
+        cx = MX + i * col_w + col_w / 2
+        c.setFillColor(C_PRIMARY if i in (0, 6) else C_TEXT_MID)
+        c.setFont('Helvetica-Bold', 7)
+        c.drawCentredString(cx, dayrow_y + 5, dn)
+
+    # ── Calendar cells ─────────────────────────────────────────────────
+    PILL_H   = 11
+    PILL_GAP = 1.5
+    FONT_EV  = 7
+
+    for ri, week in enumerate(cal_weeks):
+        for ci, day in enumerate(week):
+            cx = MX + ci * col_w
+            cy = dayrow_y - (ri + 1) * row_h
+            in_month = day != 0
+            is_today = in_month and date(year, month, day) == today
+            is_wend  = ci in (0, 6)
+
+            if not in_month:
+                bg = C_OFF_BG
+            elif is_today:
+                bg = C_TODAY_BG
+            else:
+                bg = white
+
+            c.setFillColor(bg)
+            c.setStrokeColor(C_BORDER)
+            c.setLineWidth(0.4)
+            c.rect(cx, cy, col_w, row_h, fill=1, stroke=1)
+
+            if not in_month:
+                continue
+
+            # Day number circle
+            NUM_R  = 7.5
+            num_cx = cx + col_w - NUM_R - 3
+            num_cy = cy + row_h - NUM_R - 3
+
+            if is_today:
+                c.setFillColor(C_PRIMARY)
+                c.circle(num_cx, num_cy, NUM_R, fill=1, stroke=0)
+                c.setFillColor(white)
+            else:
+                c.setFillColor(C_PRIMARY if is_wend else C_TEXT_MID)
+
+            c.setFont('Helvetica-Bold', 7.5)
+            c.drawCentredString(num_cx, num_cy - 3, str(day))
+
+            # Events
+            evs       = events_by_day.get(day, [])
+            pill_x    = cx + 3
+            pill_w    = col_w - 6
+            avail_h   = row_h - NUM_R * 2 - 9
+            max_pills = max(1, int(avail_h / (PILL_H + PILL_GAP)))
+            shown     = evs[:max_pills]
+            overflow  = len(evs) - len(shown)
+            pill_top  = cy + row_h - NUM_R * 2 - 8
+
+            for pi, ev in enumerate(shown):
+                py = pill_top - pi * (PILL_H + PILL_GAP) - PILL_H
+
+                color_hex = ev.department.color if ev.department else '#94a3b8'
+                try:
+                    ev_color = HexColor(color_hex)
+                except Exception:
+                    ev_color = HexColor('#94a3b8')
+
+                # Pill background
+                c.setFillColor(C_PILL_BG)
+                c.rect(pill_x, py, pill_w, PILL_H, fill=1, stroke=0)
+
+                # Colored left stripe
+                c.setFillColor(ev_color)
+                c.rect(pill_x, py, 3, PILL_H, fill=1, stroke=0)
+
+                # Event text
+                local_dt = timezone.localtime(ev.start_datetime)
+                prefix   = '' if ev.is_all_day else local_dt.strftime('%H:%M') + ' '
+                text     = prefix + ev.title
+
+                c.setFont('Helvetica', FONT_EV)
+                max_w = pill_w - 7
+                total_w = c.stringWidth(text, 'Helvetica', FONT_EV)
+                if total_w > max_w and len(text) > 3:
+                    cutoff = max(1, int(len(text) * max_w / total_w) - 1)
+                    text = text[:cutoff].rstrip() + '...'
+                    # corrección de un paso por si el estimado se pasó levemente
+                    while len(text) > 4 and c.stringWidth(text, 'Helvetica', FONT_EV) > max_w:
+                        text = text[:-4] + '...'
+
+                c.setFillColor(C_TEXT_DARK)
+                c.drawString(pill_x + 5, py + 2, text)
+
+            if overflow > 0:
+                ov_y = pill_top - len(shown) * (PILL_H + PILL_GAP) - 7
+                c.setFont('Helvetica', 5)
+                c.setFillColor(C_TEXT_LIGHT)
+                c.drawString(pill_x + 2, ov_y, f'+{overflow} mas')
+
+    # ── Outer border ───────────────────────────────────────────────────
+    outer_h = DAYROW_H + num_rows * row_h
+    c.setStrokeColor(HexColor('#b0b4c4'))
+    c.setLineWidth(0.8)
+    c.rect(MX, dayrow_y - num_rows * row_h, usable_w, outer_h, fill=0, stroke=1)
+
+    c.save()
+
+    month_ascii = (
+        MONTH_NAMES[month].lower()
+        .replace('é', 'e').replace('á', 'a').replace('ú', 'u')
+        .replace('ó', 'o').replace('í', 'i')
+    )
+    filename = f'calendario-{month_ascii}-{year}.pdf'
+    response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
 def event_list_export(request):
-    """Exporta la lista de actividades filtrada como Excel .xlsx."""
     filters = EventListFilterForm(request.GET)
     filters.is_valid()
     fd = filters.cleaned_data

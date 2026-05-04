@@ -1,5 +1,5 @@
 <!-- Grilla del calendario -->
-<div class="bg-white dark:bg-[#111420] border border-zinc-200 dark:border-zinc-700/50 rounded-xl overflow-hidden shadow-sm dark:shadow-black/30">
+<div id="cal-print-area" class="bg-white dark:bg-[#111420] border border-zinc-200 dark:border-zinc-700/50 rounded-xl overflow-hidden shadow-sm dark:shadow-black/30">
 
   <!-- Días de la semana -->
   <div class="grid grid-cols-7 border-b border-zinc-200 dark:border-zinc-700/50 bg-zinc-50/60 dark:bg-[#0f1121]">
@@ -15,7 +15,7 @@
   {% for week in calendar_weeks %}
   <div class="grid grid-cols-7 border-b border-zinc-100 dark:border-zinc-700/40 last:border-b-0">
     {% for cell in week %}
-    <div class="min-h-[64px] sm:min-h-[110px] lg:min-h-[calc((100vh-14rem)/6)] border-r border-zinc-100 dark:border-zinc-700/40 last:border-r-0 p-1 sm:p-1.5
+    <div class="min-h-[80px] sm:min-h-[110px] lg:min-h-[calc((100vh-14rem)/6)] border-r border-zinc-100 dark:border-zinc-700/40 last:border-r-0 p-1 sm:p-1.5
                 {% if not cell.in_month %}
                   bg-zinc-50/60 dark:bg-black/20
                 {% elif cell.is_today %}
@@ -31,18 +31,19 @@
         {{ cell.day }}
       </p>
 
-      <!-- Mobile: barras de color -->
-      <ul class="sm:hidden flex flex-col gap-0.5">
-        {% for ev in cell.events|slice:":3" %}
+      <!-- Mobile: título truncado con borde de color -->
+      <ul class="sm:hidden flex flex-col gap-0.5 mt-0.5">
+        {% for ev in cell.events|slice:":2" %}
         <li>
           <a href="{% url 'calendar_app:event_detail' ev.slug %}"
-             class="block w-full h-1.5 rounded"
-             style="background-color:{{ ev.department.color|default:'#94a3b8' }};"
-             title="{{ ev.title }}"></a>
+             class="block w-full rounded px-1 py-0.5 text-[10px] font-semibold leading-tight truncate text-[#1b1b1e] dark:text-[#e2e4ef]"
+             style="border-left: 2px solid {{ ev.department.color|default:'#94a3b8' }};
+                    background-color: {{ ev.department.color|default:'#94a3b8' }}22;"
+             title="{{ ev.title }}">{{ ev.title }}</a>
         </li>
         {% endfor %}
-        {% if cell.events|length > 3 %}
-        <li class="text-[9px] text-zinc-400 dark:text-[#8b90a8] leading-none px-0.5">+{{ cell.events|length|add:"-3" }}</li>
+        {% if cell.events|length > 2 %}
+        <li class="text-[9px] text-zinc-400 dark:text-[#8b90a8] leading-none px-1">+{{ cell.events|length|add:"-2" }} más</li>
         {% endif %}
       </ul>
 
