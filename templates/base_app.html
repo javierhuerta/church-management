@@ -37,7 +37,7 @@
       <nav class="flex items-center h-full gap-0">
         <a href="{% url 'calendar_app:calendar' %}"
            class="h-full flex items-center gap-1.5 px-4 text-sm font-medium transition-colors
-                  {% if request.resolver_match.url_name == 'calendar' or request.resolver_match.url_name == 'agenda' %}text-primary border-b-2 border-primary font-semibold{% else %}text-zinc-500 hover:text-primary{% endif %}">
+                  {% if request.resolver_match.url_name == 'calendar' %}text-primary border-b-2 border-primary font-semibold{% else %}text-zinc-500 hover:text-primary{% endif %}">
           <span class="material-symbols-outlined text-base">calendar_month</span>Calendario
         </a>
         <a href="{% url 'calendar_app:event_list' %}"
@@ -124,16 +124,14 @@
 
   <!-- ═══════════════════════════════════════════════════════════
        BOTTOM NAV MOBILE — visible solo en mobile, oculto md+
-       Calendario y Agenda son la misma sección en mobile:
-       el tab "Calendario" lleva a la vista de agenda (lista)
   ══════════════════════════════════════════════════════════════ -->
   <nav class="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-zinc-200 flex h-16 safe-bottom">
 
-    <!-- Calendario (→ agenda en mobile) -->
-    <a href="{% url 'calendar_app:agenda' %}"
+    <!-- Calendario -->
+    <a href="{% url 'calendar_app:calendar' %}"
        class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
-              {% if request.resolver_match.url_name == 'calendar' or request.resolver_match.url_name == 'agenda' %}text-primary{% else %}text-zinc-400 hover:text-zinc-600{% endif %}">
-      <span class="material-symbols-outlined" style="font-size:22px; font-variation-settings:'FILL' {% if request.resolver_match.url_name == 'calendar' or request.resolver_match.url_name == 'agenda' %}1{% else %}0{% endif %},'wght' 400,'GRAD' 0,'opsz' 24">calendar_month</span>
+              {% if request.resolver_match.url_name == 'calendar' %}text-primary{% else %}text-zinc-400 hover:text-zinc-600{% endif %}">
+      <span class="material-symbols-outlined" style="font-size:22px; font-variation-settings:'FILL' {% if request.resolver_match.url_name == 'calendar' %}1{% else %}0{% endif %},'wght' 400,'GRAD' 0,'opsz' 24">calendar_month</span>
       <span class="text-[10px] font-semibold">Calendario</span>
     </a>
 

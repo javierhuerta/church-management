@@ -1,0 +1,229 @@
+{% load tz %}
+<!-- ── Modal Editar Evento (reutilizable) ── -->
+<!-- Requiere: departments, responsibles en contexto; flatpickr + flowbite cargados -->
+
+<div class="bg-black/40 fixed inset-0 z-40 top-16" aria-hidden="true" style="display:none;"></div>
+
+<div id="editModal" tabindex="-1" aria-hidden="true"
+     class="hidden overflow-x-hidden overflow-y-auto fixed top-0 right-0 left-0 z-[200] justify-center items-center w-full h-full inset-0 pt-16">
+  <div class="relative p-4 w-full max-w-2xl mx-auto my-auto flex items-center min-h-[calc(100%-4rem)]">
+    <div class="relative bg-white rounded-2xl shadow-2xl flex flex-col max-h-[calc(100vh-5.5rem)] w-full overflow-hidden">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 shrink-0 rounded-t-2xl">
+        <div>
+          <h2 class="text-lg font-bold text-primary" style="font-family:'Noto Serif',serif;">Editar Actividad</h2>
+          <p class="text-xs text-zinc-400 mt-0.5">Modifica los datos del evento</p>
+        </div>
+        <button type="button" onclick="closeEditModal()"
+                class="p-2 rounded-lg hover:bg-zinc-100 transition-colors text-zinc-500"
+                aria-label="Cerrar">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <!-- Formulario con scroll -->
+      <form id="editForm" class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        {% csrf_token %}
+        <input type="hidden" id="e_pk" name="pk" value="" />
+
+        <!-- Información básica -->
+        <div class="space-y-4">
+          <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 pb-2 border-b border-zinc-100">Información básica</p>
+          <div>
+            <label for="e_title" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">
+              Título <span class="text-red-500">*</span>
+            </label>
+            <input id="e_title" name="title" type="text" required autocomplete="off"
+                   class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors" />
+          </div>
+          <div>
+            <label for="e_description" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Descripción</label>
+            <textarea id="e_description" name="description" rows="2"
+                      class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors resize-none"></textarea>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="e_department" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Departamento</label>
+              <select id="e_department" name="department"
+                      class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary transition-colors">
+                <option value="">Sin departamento</option>
+                {% for dept in departments %}
+                <option value="{{ dept.pk }}">{{ dept.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label for="e_responsible" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Responsable</label>
+              <select id="e_responsible" name="responsible"
+                      class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary transition-colors">
+                <option value="">Sin asignar</option>
+                {% for r in responsibles %}
+                <option value="{{ r.pk }}">{{ r.full_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label for="e_location" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Lugar</label>
+            <input id="e_location" name="location" type="text" autocomplete="off"
+                   class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors" />
+          </div>
+        </div>
+
+        <!-- Fecha y hora -->
+        <div class="space-y-4">
+          <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 pb-2 border-b border-zinc-100">Fecha y hora</p>
+          <label class="flex items-center gap-3 cursor-pointer select-none">
+            <input type="checkbox" id="e_all_day" name="is_all_day" value="1"
+                   class="w-4 h-4 accent-primary" onchange="toggleAllDayEdit(this)" />
+            <span class="text-sm text-zinc-700">Actividad de día completo (o varios días)</span>
+          </label>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="e_start_date" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">
+                Fecha inicio <span class="text-red-500">*</span>
+              </label>
+              <input id="e_start_date" name="start_date" type="text" readonly required
+                     placeholder="dd/mm/aaaa"
+                     class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors cursor-pointer" />
+            </div>
+            <div id="eStartTimeWrap">
+              <label for="e_start_time" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Hora inicio</label>
+              <input id="e_start_time" name="start_time" type="text" readonly
+                     placeholder="09:00"
+                     class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors cursor-pointer" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="e_end_date" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Fecha término</label>
+              <input id="e_end_date" name="end_date" type="text" readonly
+                     placeholder="dd/mm/aaaa"
+                     class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors cursor-pointer" />
+            </div>
+            <div id="eEndTimeWrap">
+              <label for="e_end_time" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Hora término</label>
+              <input id="e_end_time" name="end_time" type="text" readonly
+                     placeholder="11:00"
+                     class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors cursor-pointer" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Clasificación -->
+        <div class="space-y-4">
+          <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 pb-2 border-b border-zinc-100">Clasificación</p>
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label for="e_event_type" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Tipo</label>
+              <select id="e_event_type" name="event_type"
+                      class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary transition-colors">
+                <option value="service">Culto</option>
+                <option value="seminar">Seminario</option>
+                <option value="meeting">Reunión</option>
+                <option value="social">Social</option>
+                <option value="youth">Jóvenes</option>
+                <option value="children">Infantil</option>
+                <option value="outreach">Evangelismo</option>
+                <option value="other">Otro</option>
+              </select>
+            </div>
+            <div>
+              <label for="e_scope" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Alcance</label>
+              <select id="e_scope" name="scope"
+                      class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary transition-colors">
+                <option value="local">Local</option>
+                <option value="association">Asociación</option>
+                <option value="union">Unión</option>
+                <option value="general">General</option>
+              </select>
+            </div>
+            <div>
+              <label for="e_audience" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Público</label>
+              <select id="e_audience" name="audience"
+                      class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-primary transition-colors">
+                <option value="all">Todo público</option>
+                <option value="members">Miembros</option>
+                <option value="leaders">Directivos</option>
+                <option value="youth">Jóvenes</option>
+                <option value="juveniles">Juveniles</option>
+                <option value="children">Niños</option>
+                <option value="women">Mujeres</option>
+                <option value="men">Varones</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Opciones -->
+        <div class="space-y-4">
+          <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 pb-2 border-b border-zinc-100">Opciones</p>
+          <div>
+            <label for="e_bible_verse" class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Versículo bíblico</label>
+            <input id="e_bible_verse" name="bible_verse" type="text" autocomplete="off"
+                   class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors" />
+          </div>
+          <div class="flex flex-wrap gap-6">
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" id="e_is_published" name="is_published" value="1" class="w-4 h-4 accent-primary" />
+              <span class="text-sm text-zinc-700">Publicar inmediatamente</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" id="e_is_featured" name="is_featured" value="1" class="w-4 h-4 accent-primary" />
+              <span class="text-sm text-zinc-700">Destacar en inicio</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Error inline -->
+        <div id="editModalError" style="display:none;"
+             class="flex items-center gap-2 px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-red-800 text-sm">
+          <span class="material-symbols-outlined text-base shrink-0">error</span>
+          <span id="editModalErrorText"></span>
+        </div>
+      </form>
+
+      <!-- Footer: botón eliminar a la izquierda, guardar a la derecha -->
+      <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-zinc-100 shrink-0 bg-zinc-50 rounded-b-2xl">
+        <button type="button" id="deleteEventBtn" onclick="deleteEvent()"
+                class="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
+          <span class="material-symbols-outlined text-base">delete</span>
+          Eliminar
+        </button>
+        <div class="flex items-center gap-3">
+          <button type="button" onclick="closeEditModal()"
+                  class="px-4 py-2 text-sm font-semibold text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors">
+            Cancelar
+          </button>
+          <button type="button" id="submitEditBtn" onclick="submitEditForm()"
+                  class="flex items-center gap-2 px-5 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60">
+            <span class="material-symbols-outlined text-base">save</span>
+            <span id="submitEditBtnText">Guardar cambios</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Toasts ── -->
+<div id="toastSuccess" style="display:none;"
+     class="fixed bottom-6 right-4 z-[400] flex items-center gap-3 bg-white border border-green-200 text-green-800 text-sm font-semibold px-5 py-3 rounded-xl shadow-lg">
+  <span class="material-symbols-outlined text-green-600 text-base">check_circle</span>
+  <span id="toastSuccessText">Operación exitosa</span>
+  <a id="toastSuccessLink" href="#" class="underline ml-1 text-green-700">Ver</a>
+  <button onclick="hideToast('toastSuccess')" class="ml-2 text-green-400 hover:text-green-700">
+    <span class="material-symbols-outlined text-sm">close</span>
+  </button>
+</div>
+<!-- Toast error -->
+<div id="toastError" style="display:none;"
+     class="fixed bottom-6 right-4 z-[400] flex items-center gap-3 bg-white border border-red-200 text-red-800 text-sm font-semibold px-5 py-3 rounded-xl shadow-lg">
+  <span class="material-symbols-outlined text-red-500 text-base">error</span>
+  <span id="toastErrorText">Error</span>
+  <button onclick="hideToast('toastError')" class="ml-2 text-red-400 hover:text-red-700">
+    <span class="material-symbols-outlined text-sm">close</span>
+  </button>
+</div>

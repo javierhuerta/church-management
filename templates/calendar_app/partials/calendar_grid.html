@@ -1,0 +1,82 @@
+<!-- Grilla del calendario -->
+<div class="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
+
+  <!-- Días de la semana -->
+  <div class="grid grid-cols-7 border-b border-zinc-200 bg-zinc-50/60">
+    {% for day_name in day_names %}
+    <div class="py-2.5 text-center text-xs font-bold uppercase tracking-widest border-r border-zinc-100 last:border-r-0
+                {% if forloop.counter0 >= 5 %}text-zinc-600{% else %}text-zinc-400{% endif %}">
+      {{ day_name }}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Semanas -->
+  {% for week in calendar_weeks %}
+  <div class="grid grid-cols-7 border-b border-zinc-100 last:border-b-0">
+    {% for cell in week %}
+    <div class="min-h-[52px] sm:min-h-[100px] lg:min-h-[calc((100vh-14rem)/6)] border-r border-zinc-100 last:border-r-0 p-1 sm:p-1.5
+                {% if not cell.in_month %}bg-zinc-50/60{% elif cell.is_today %}bg-blue-50/60{% elif forloop.counter0 >= 5 %}bg-zinc-50/30{% endif %}">
+      {% if cell.in_month %}
+      <p class="text-[11px] sm:text-xs font-bold mb-0.5 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full
+                 {% if cell.is_today %}bg-primary text-white{% else %}text-zinc-500{% endif %}">
+        {{ cell.day }}
+      </p>
+
+      <!-- Mobile: barras de color -->
+      <ul class="sm:hidden flex flex-col gap-0.5">
+        {% for ev in cell.events|slice:":3" %}
+        <li>
+          <a href="{% url 'calendar_app:event_detail' ev.slug %}"
+             class="block w-full h-1.5 rounded"
+             style="background-color:{{ ev.department.color|default:'#94a3b8' }};"
+             title="{{ ev.title }}"></a>
+        </li>
+        {% endfor %}
+        {% if cell.events|length > 3 %}
+        <li class="text-[9px] text-zinc-400 leading-none px-0.5">+{{ cell.events|length|add:"-3" }}</li>
+        {% endif %}
+      </ul>
+
+      <!-- Desktop: píldoras con texto y tooltip -->
+      <ul class="hidden sm:flex flex-col gap-0.5 overflow-hidden">
+        {% for ev in cell.events|slice:":4" %}
+        <li>
+          <a href="{% url 'calendar_app:event_detail' ev.slug %}"
+             class="ev-pill flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] leading-tight hover:opacity-80 transition-opacity"
+             style="border-left: 2px solid {{ ev.department.color|default:'#94a3b8' }};
+                    background-color: {{ ev.department.color|default:'#94a3b8' }}22;"
+             data-ev-title="{{ ev.title|escapejs }}"
+             data-ev-color="{{ ev.department.color|default:'#94a3b8' }}"
+             data-ev-dept="{{ ev.department.name|default:''|escapejs }}"
+             data-ev-time="{% if ev.is_all_day %}Todo el día{% else %}{{ ev.start_datetime|time:'H:i' }} hrs{% endif %}"
+             data-ev-location="{{ ev.location|default:''|escapejs }}"
+             data-ev-type="{{ ev.get_event_type_display|escapejs }}">
+            {% if not ev.is_all_day %}<span class="shrink-0 text-[10px] text-zinc-400 tabular-nums">{{ ev.start_datetime|time:'H:i' }}</span>{% endif %}
+            <span class="font-semibold text-zinc-800 truncate">{{ ev.title }}</span>
+          </a>
+        </li>
+        {% endfor %}
+        {% if cell.events|length > 4 %}
+        <li class="text-[10px] text-zinc-400 px-1.5 font-medium">+{{ cell.events|length|add:"-4" }} más</li>
+        {% endif %}
+      </ul>
+
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+</div>
+
+<!-- Tooltip flotante (se posiciona con JS) -->
+<div id="cal-ev-tooltip"
+     class="hidden fixed z-[400] pointer-events-none bg-white rounded-xl shadow-xl border border-zinc-200 w-64 overflow-hidden"
+     style="top:0;left:0">
+  <div id="cal-ev-tooltip-bar" class="h-1"></div>
+  <div class="p-3.5">
+    <p id="cal-ev-tooltip-title" class="font-bold text-sm text-zinc-900 leading-snug mb-2"></p>
+    <div id="cal-ev-tooltip-meta" class="space-y-1.5 text-xs text-zinc-500"></div>
+  </div>
+</div>

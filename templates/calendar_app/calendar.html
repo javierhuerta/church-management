@@ -2,154 +2,83 @@
 {% block title %}Calendario {{ month_name }} {{ year }} — Iglesia Adventista Osorno Central{% endblock %}
 
 {% block content %}
-<div class="flex flex-col lg:flex-row gap-6">
-
-  <!-- ── Sidebar ── -->
-  <aside class="lg:w-64 xl:w-72 shrink-0 flex flex-col gap-4">
-
-    <!-- Departamentos -->
-    <div class="bg-white border border-zinc-200 rounded-xl p-5">
-      <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-3">Departamentos</p>
-      <ul class="flex flex-col gap-1">
-        <li>
-          <a href="?year={{ year }}&month={{ month }}{% if scope_filter %}&scope={{ scope_filter }}{% endif %}"
-             class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
-                    {% if not dept_filter %}bg-zinc-100 text-primary font-semibold{% else %}text-zinc-600 hover:bg-zinc-50{% endif %}">
-            <span class="w-2.5 h-2.5 rounded-full bg-zinc-400 shrink-0"></span>Todos
-          </a>
-        </li>
-        {% for dept in departments %}
-        <li>
-          <a href="?year={{ year }}&month={{ month }}&dept={{ dept.slug }}{% if scope_filter %}&scope={{ scope_filter }}{% endif %}"
-             class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
-                    {% if dept_filter == dept.slug %}bg-zinc-100 text-primary font-semibold{% else %}text-zinc-600 hover:bg-zinc-50{% endif %}">
-            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color:{{ dept.color }}"></span>
-            {{ dept.name }}
-          </a>
-        </li>
-        {% endfor %}
-      </ul>
-    </div>
-
-    <!-- Alcance -->
-    <div class="bg-white border border-zinc-200 rounded-xl p-5">
-      <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-3">Alcance</p>
-      <ul class="flex flex-col gap-1">
-        {% for val, label, icon in scope_options %}
-        <li>
-          <a href="?year={{ year }}&month={{ month }}{% if dept_filter %}&dept={{ dept_filter }}{% endif %}{% if val %}&scope={{ val }}{% endif %}"
-             class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
-                    {% if scope_filter == val %}bg-zinc-100 text-primary font-semibold{% else %}text-zinc-600 hover:bg-zinc-50{% endif %}">
-            <span class="material-symbols-outlined text-base">{{ icon }}</span>
-            {{ label }}
-          </a>
-        </li>
-        {% endfor %}
-      </ul>
-    </div>
-
-    <!-- Próximos eventos -->
-    {% if upcoming_events %}
-    <div class="bg-white border border-zinc-200 rounded-xl p-5">
-      <p class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-3">Próximos</p>
-      <ul class="flex flex-col gap-3">
-        {% for ev in upcoming_events %}
-        <li>
-          <a href="{% url 'calendar_app:event_detail' ev.slug %}" class="block group">
-            <p class="text-xs text-zinc-400 mb-0.5">{{ ev.start_datetime|date:"j N, G:i" }} hrs</p>
-            <p class="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors leading-snug">{{ ev.title }}</p>
-            {% if ev.department %}
-            <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-bold text-white"
-                  style="background-color:{{ ev.department.color }}">{{ ev.department.name }}</span>
-            {% endif %}
-          </a>
-        </li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-
-  </aside>
-
-  <!-- ── Calendario principal ── -->
-  <div class="flex-1 min-w-0">
-
-    <!-- Encabezado mes + navegación -->
-    <div class="flex items-center justify-between mb-5">
-      <div>
-        <h1 class="text-2xl font-bold text-primary leading-none" style="font-family:'Noto Serif',serif">
-          {{ month_name }} {{ year }}
-        </h1>
-      </div>
-      <div class="flex items-center gap-1">
-        <a href="?year={{ prev_year }}&month={{ prev_month }}{% if dept_filter %}&dept={{ dept_filter }}{% endif %}{% if scope_filter %}&scope={{ scope_filter }}{% endif %}"
-           class="p-2 rounded-lg hover:bg-zinc-100 transition-colors text-zinc-600" aria-label="Mes anterior">
-          <span class="material-symbols-outlined">chevron_left</span>
-        </a>
-        <a href="?{% if dept_filter %}dept={{ dept_filter }}&{% endif %}{% if scope_filter %}scope={{ scope_filter }}&{% endif %}"
-           class="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-600 border border-zinc-200 hover:bg-zinc-50 transition-colors">
-          Hoy
-        </a>
-        <a href="?year={{ next_year }}&month={{ next_month }}{% if dept_filter %}&dept={{ dept_filter }}{% endif %}{% if scope_filter %}&scope={{ scope_filter }}{% endif %}"
-           class="p-2 rounded-lg hover:bg-zinc-100 transition-colors text-zinc-600" aria-label="Mes siguiente">
-          <span class="material-symbols-outlined">chevron_right</span>
-        </a>
-      </div>
-    </div>
-
-    <!-- Grilla -->
-    <div class="bg-white border border-zinc-200 rounded-xl overflow-hidden">
-
-      <!-- Días de la semana -->
-      <div class="grid grid-cols-7 border-b border-zinc-200">
-        {% for day_name in day_names %}
-        <div class="py-2.5 text-center text-xs font-bold uppercase tracking-widest text-zinc-400 border-r border-zinc-100 last:border-r-0">
-          {{ day_name }}
-        </div>
-        {% endfor %}
-      </div>
-
-      <!-- Semanas -->
-      {% for week in calendar_weeks %}
-      <div class="grid grid-cols-7 border-b border-zinc-100 last:border-b-0">
-        {% for cell in week %}
-        <div class="min-h-[90px] sm:min-h-[110px] border-r border-zinc-100 last:border-r-0 p-1.5 sm:p-2
-                    {% if not cell.in_month %}bg-zinc-50/60{% elif cell.is_today %}bg-blue-50/60{% endif %}">
-          {% if cell.in_month %}
-          <p class="text-xs font-bold mb-1 w-6 h-6 flex items-center justify-center rounded-full
-                     {% if cell.is_today %}bg-primary text-white{% else %}text-zinc-500{% endif %}">
-            {{ cell.day }}
-          </p>
-          <ul class="flex flex-col gap-0.5">
-            {% for ev in cell.events %}
-            <li>
-              <a href="{% url 'calendar_app:event_detail' ev.slug %}"
-                 class="block rounded px-1.5 py-0.5 text-xs leading-snug text-on-surface hover:opacity-80 transition-opacity truncate"
-                 style="border-left: 3px solid {{ ev.department.color|default:'#94a3b8' }};
-                        background-color: {{ ev.department.color|default:'#94a3b8' }}18;"
-                 title="{{ ev.title }}{% if not ev.is_all_day %} — {{ ev.start_datetime|time:'G:i' }} hrs{% endif %}">
-                <span class="font-medium">{{ ev.title }}</span>
-              </a>
-            </li>
-            {% endfor %}
-          </ul>
-          {% endif %}
-        </div>
-        {% endfor %}
-      </div>
-      {% endfor %}
-
-    </div><!-- /grilla -->
-
-  </div><!-- /main -->
+<div class="px-3 md:px-0">
+  <form method="get" id="filter-form">
+    <input type="hidden" name="year" id="form-year" value="{{ year }}">
+    <input type="hidden" name="month" id="form-month" value="{{ month }}">
+    {% include "calendar_app/partials/calendar_filter_bar.html" %}
+    {% include "calendar_app/partials/calendar_grid.html" %}
+  </form>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
 <script>
-  // En mobile redirigir a la vista de agenda (más adecuada para pantallas pequeñas)
-  if (window.innerWidth < 768) {
-    location.replace('{% url "calendar_app:agenda" %}');
+  /* ── Navegación de mes ── */
+  function navigateMonth(delta) {
+    let year = parseInt(document.getElementById('form-year').value);
+    let month = parseInt(document.getElementById('form-month').value);
+    month += delta;
+    if (month < 1)  { month = 12; year--; }
+    if (month > 12) { month = 1;  year++; }
+    document.getElementById('form-year').value = year;
+    document.getElementById('form-month').value = month;
+    document.getElementById('filter-form').submit();
   }
+
+  function goToday() {
+    const t = new Date();
+    document.getElementById('form-year').value  = t.getFullYear();
+    document.getElementById('form-month').value = t.getMonth() + 1;
+    document.getElementById('filter-form').submit();
+  }
+
+  function clearFilter(name) {
+    document.querySelectorAll(`#filter-form input[name="${name}"]`).forEach(cb => cb.checked = false);
+    document.getElementById('filter-form').submit();
+  }
+
+  function clearAllFilters() {
+    document.querySelectorAll('#filter-form input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.getElementById('filter-form').submit();
+  }
+
+  /* ── Tooltip flotante para eventos del calendario ── */
+  const TT       = document.getElementById('cal-ev-tooltip');
+  const TT_BAR   = document.getElementById('cal-ev-tooltip-bar');
+  const TT_TITLE = document.getElementById('cal-ev-tooltip-title');
+  const TT_META  = document.getElementById('cal-ev-tooltip-meta');
+  const TT_W     = 256; // w-64
+
+  function showTooltip(e, pill) {
+    TT_TITLE.textContent = pill.dataset.evTitle;
+    TT_BAR.style.backgroundColor = pill.dataset.evColor;
+
+    const rows = [];
+    if (pill.dataset.evTime)     rows.push(`<span class="material-symbols-outlined" style="font-size:13px;vertical-align:-2px">schedule</span> ${pill.dataset.evTime}`);
+    if (pill.dataset.evDept)     rows.push(`<span class="material-symbols-outlined" style="font-size:13px;vertical-align:-2px">groups</span> ${pill.dataset.evDept}`);
+    if (pill.dataset.evLocation) rows.push(`<span class="material-symbols-outlined" style="font-size:13px;vertical-align:-2px">location_on</span> ${pill.dataset.evLocation}`);
+    if (pill.dataset.evType)     rows.push(`<span class="material-symbols-outlined" style="font-size:13px;vertical-align:-2px">category</span> ${pill.dataset.evType}`);
+
+    TT_META.innerHTML = rows.map(r => `<div class="flex items-start gap-1.5">${r}</div>`).join('');
+    TT.classList.remove('hidden');
+    positionTooltip(e);
+  }
+
+  function positionTooltip(e) {
+    const x = e.clientX + 18;
+    const y = e.clientY - 10;
+    TT.style.left = (x + TT_W > window.innerWidth  ? e.clientX - TT_W - 8 : x) + 'px';
+    TT.style.top  = Math.min(y, window.innerHeight - 220) + 'px';
+  }
+
+  function hideTooltip() { TT.classList.add('hidden'); }
+
+  document.querySelectorAll('.ev-pill').forEach(pill => {
+    pill.addEventListener('mouseenter', e => showTooltip(e, pill));
+    pill.addEventListener('mousemove',  positionTooltip);
+    pill.addEventListener('mouseleave', hideTooltip);
+  });
 </script>
 {% endblock %}

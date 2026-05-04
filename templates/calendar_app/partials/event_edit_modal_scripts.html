@@ -1,0 +1,185 @@
+{% comment %}
+Partial: event_edit_modal_scripts.html
+Requiere que antes estén cargados: flatpickr JS + flatpickr l10n/es + flowbite JS
+Para cambiar el comportamiento post-eliminación, definir antes del include:
+  window._editModalDeleteRedirect = '/ruta/';   → redirige al eliminar
+  (omitir para el comportamiento predeterminado: location.reload())
+{% endcomment %}
+<script>
+(function () {
+  'use strict';
+
+  const _fpOpts     = { locale: { ...flatpickr.l10ns.es, firstDayOfWeek: 0 }, dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y', allowInput: false };
+  const _fpTimeOpts = { enableTime: true, noCalendar: true, dateFormat: 'H:i', time_24hr: true, allowInput: false };
+
+  const fpEditStartDate = flatpickr('#e_start_date', _fpOpts);
+  const fpEditStartTime = flatpickr('#e_start_time', _fpTimeOpts);
+  const fpEditEndDate   = flatpickr('#e_end_date',   _fpOpts);
+  const fpEditEndTime   = flatpickr('#e_end_time',   _fpTimeOpts);
+
+  document.getElementById('e_start_date')._flatpickr.config.onChange.push(function (dates) {
+    if (dates[0]) fpEditEndDate.set('minDate', dates[0]);
+  });
+
+  // ── Toggle todo el día (edición) ────────────────────────────────
+  window.toggleAllDayEdit = function (cb) {
+    document.getElementById('eStartTimeWrap').style.display = cb.checked ? 'none' : '';
+    document.getElementById('eEndTimeWrap').style.display   = cb.checked ? 'none' : '';
+  };
+
+  // ── Reset ────────────────────────────────────────────────────────
+  function resetEditModal() {
+    document.getElementById('editForm').reset();
+    fpEditStartDate.clear(); fpEditStartTime.clear();
+    fpEditEndDate.clear();   fpEditEndTime.clear();
+    document.getElementById('editModalError').style.display = 'none';
+    document.getElementById('eStartTimeWrap').style.display = '';
+    document.getElementById('eEndTimeWrap').style.display   = '';
+  }
+
+  // ── Instancia Flowbite Modal ─────────────────────────────────────
+  const editModal = new Modal(document.getElementById('editModal'), {
+    backdrop: 'dynamic',
+    backdropClasses: 'bg-black/40 fixed inset-0 z-40 top-16',
+    closable: true,
+    onHide: resetEditModal,
+  });
+
+  // ── Abrir y poblar modal ─────────────────────────────────────────
+  window.openEditModal = async function (pk) {
+    resetEditModal();
+    document.getElementById('e_pk').value = pk;
+    try {
+      const resp = await fetch('/secretaria/evento/' + pk + '/get/');
+      const d = await resp.json();
+      if (!d.ok) { showToastError('No se pudo cargar el evento.'); return; }
+      document.getElementById('e_title').value        = d.title        || '';
+      document.getElementById('e_description').value  = d.description  || '';
+      document.getElementById('e_department').value   = d.department   || '';
+      document.getElementById('e_responsible').value  = d.responsible  || '';
+      document.getElementById('e_location').value     = d.location     || '';
+      document.getElementById('e_all_day').checked    = !!d.is_all_day;
+      toggleAllDayEdit(document.getElementById('e_all_day'));
+      if (d.start_date) fpEditStartDate.setDate(d.start_date, false);
+      if (d.start_time) fpEditStartTime.setDate(d.start_time, false);
+      if (d.end_date)   fpEditEndDate.setDate(d.end_date, false);
+      if (d.end_time)   fpEditEndTime.setDate(d.end_time, false);
+      document.getElementById('e_event_type').value   = d.event_type   || 'service';
+      document.getElementById('e_scope').value        = d.scope        || 'local';
+      document.getElementById('e_audience').value     = d.audience     || 'all';
+      document.getElementById('e_bible_verse').value  = d.bible_verse  || '';
+      document.getElementById('e_is_published').checked = !!d.is_published;
+      document.getElementById('e_is_featured').checked  = !!d.is_featured;
+      editModal.show();
+      setTimeout(function () { document.getElementById('e_title').focus(); }, 100);
+    } catch (err) {
+      showToastError('Error de conexión al cargar el evento.');
+    }
+  };
+
+  window.closeEditModal = function () { editModal.hide(); };
+
+  // ── Guardar cambios ──────────────────────────────────────────────
+  window.submitEditForm = async function () {
+    var pk      = document.getElementById('e_pk').value;
+    var btn     = document.getElementById('submitEditBtn');
+    var txt     = document.getElementById('submitEditBtnText');
+    var errBox  = document.getElementById('editModalError');
+    var errText = document.getElementById('editModalErrorText');
+    errBox.style.display = 'none';
+
+    var form = document.getElementById('editForm');
+    var data = new FormData(form);
+
+    if (!data.get('title').trim()) {
+      errText.textContent = 'El título es obligatorio.';
+      errBox.style.display = 'flex';
+      document.getElementById('e_title').focus();
+      return;
+    }
+    if (!data.get('start_date')) {
+      errText.textContent = 'La fecha de inicio es obligatoria.';
+      errBox.style.display = 'flex';
+      return;
+    }
+
+    btn.disabled = true;
+    txt.textContent = 'Guardando...';
+    try {
+      var resp = await fetch('/secretaria/evento/' + pk + '/editar/', {
+        method: 'POST',
+        body: data,
+        headers: { 'X-CSRFToken': data.get('csrfmiddlewaretoken') },
+      });
+      var json = await resp.json();
+      if (json.ok) {
+        closeEditModal();
+        showToastSuccess('"' + json.title + '" actualizada', json.detail_url);
+        setTimeout(function () { location.reload(); }, 5500);
+      } else {
+        errText.textContent = json.error || 'Error al guardar.';
+        errBox.style.display = 'flex';
+      }
+    } catch (err) {
+      errText.textContent = 'Error de conexión.';
+      errBox.style.display = 'flex';
+    } finally {
+      btn.disabled = false;
+      txt.textContent = 'Guardar cambios';
+    }
+  };
+
+  // ── Eliminar evento ──────────────────────────────────────────────
+  window.deleteEvent = async function () {
+    var pk    = document.getElementById('e_pk').value;
+    var title = document.getElementById('e_title').value;
+    if (!confirm('¿Eliminar "' + title + '"? Esta acción no se puede deshacer.')) return;
+
+    var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    try {
+      var resp = await fetch('/secretaria/evento/' + pk + '/eliminar/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'csrfmiddlewaretoken=' + csrfToken,
+      });
+      var json = await resp.json();
+      if (json.ok) {
+        closeEditModal();
+        showToastSuccess('"' + json.title + '" eliminada', null);
+        var redirect = window._editModalDeleteRedirect || null;
+        setTimeout(function () {
+          if (redirect) { window.location.href = redirect; }
+          else { location.reload(); }
+        }, 2000);
+      } else {
+        showToastError('No se pudo eliminar el evento.');
+      }
+    } catch (err) {
+      showToastError('Error de conexión al eliminar.');
+    }
+  };
+
+  // ── Toast helpers ────────────────────────────────────────────────
+  window.showToastSuccess = function (text, url) {
+    document.getElementById('toastSuccessText').textContent = text;
+    var link = document.getElementById('toastSuccessLink');
+    if (url) { link.href = url; link.style.display = ''; }
+    else      { link.style.display = 'none'; }
+    var t = document.getElementById('toastSuccess');
+    t.style.display = 'flex';
+    setTimeout(function () { t.style.display = 'none'; }, 5000);
+  };
+
+  window.showToastError = function (text) {
+    document.getElementById('toastErrorText').textContent = text;
+    var t = document.getElementById('toastError');
+    t.style.display = 'flex';
+    setTimeout(function () { t.style.display = 'none'; }, 5000);
+  };
+
+  window.hideToast = function (id) {
+    document.getElementById(id).style.display = 'none';
+  };
+
+}());
+</script>
