@@ -69,7 +69,16 @@ def _spread_multiday_events(events_qs, year, month):
     return events_by_day
 
 
+def _is_mobile(request):
+    ua = request.META.get('HTTP_USER_AGENT', '').lower()
+    mobile_keywords = ('mobile', 'android', 'iphone', 'ipad', 'ipod', 'blackberry', 'windows phone', 'opera mini', 'opera mobi')
+    return any(kw in ua for kw in mobile_keywords)
+
+
 def calendar_view(request):
+    if _is_mobile(request):
+        return redirect(reverse('calendar_app:event_list') + ('?' + request.GET.urlencode() if request.GET else ''))
+
     today = date.today()
 
     filters = CalendarFilterForm(request.GET)
