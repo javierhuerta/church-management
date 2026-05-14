@@ -26,6 +26,16 @@ node_modules/
 theme/static_src/node_modules/
 theme/static_src/dist/
 
+# Backend
+backend/node_modules/
+backend/dist/
+backend/.env
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
 # Editor
 .vscode/
 .idea/
@@ -38,3 +48,7 @@ Thumbs.db
 
 # Vercel
 .vercel/
+
+# OpenSpec (local dev artifacts)
+.openspec/
+.claude/

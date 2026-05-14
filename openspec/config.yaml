@@ -1,0 +1,71 @@
+schema: spec-driven
+
+context: |
+  ## Proyecto
+  Sistema de gestión para la Iglesia Adventista del Séptimo Día de Osorno Central.
+  La aplicación apoya las tareas administrativas, misioneras y litúrgicas de la iglesia.
+  El sistema está diseñado para crecer modularmente; cada módulo es una capacidad independiente.
+
+  ## Stack tecnológico
+  ### Backend
+  - Runtime: Node.js con NestJS (arquitectura modular)
+  - ORM: TypeORM con PostgreSQL
+  - API: REST con OpenAPI (Swagger) — los schemas OpenAPI se usan para generar servicios y DTOs en el frontend automáticamente
+  - Autenticación: JWT con roles
+  - Lenguaje: TypeScript
+
+  ### Frontend
+  - Framework: React con Vite
+  - UI: shadcn/ui + Tailwind CSS
+  - Generación de servicios/DTOs: desde OpenAPI spec del backend
+  - Lenguaje: TypeScript
+
+  ## Arquitectura general
+  - Monorepo o repos separados (por definir), pero backend y frontend son proyectos independientes
+  - El backend expone una API REST documentada con OpenAPI
+  - El frontend consume la API usando clientes generados automáticamente desde el schema OpenAPI
+  - Cada módulo de negocio en el backend es un NestJS Module independiente
+
+  ## Dominio
+  La iglesia adventista tiene una estructura organizacional con roles específicos y departamentos.
+
+  ### Roles de usuario
+  - **Pastor**: líder principal de la iglesia
+  - **Anciano**: líder laico, apoya al pastor
+  - **Coordinador Misionero**: responsable de actividades de evangelismo y misión
+  - **Director de Departamento**: responsable de un departamento específico (ej. jóvenes, familia)
+  - **Secretaria de Iglesia**: gestión administrativa, registros de membresía
+  - **Maestro de Clase (Escuela Sabática)**: responsable de una clase de Escuela Sabática
+
+  ### Glosario del dominio
+  - **Escuela Sabática**: estudio bíblico que ocupa la primera parte del culto del sábado
+  - **Culto**: servicio religioso (puede ser sabático, vespertino, semana de oración, etc.)
+  - **Parte del culto**: segmento asignado dentro de un culto (oración, lectura, sermón, etc.)
+  - **Programa de iglesia**: calendario de actividades planificadas
+  - **Miembro**: persona registrada como miembro de la iglesia
+  - **Departamento**: área de ministerio dentro de la iglesia (Jóvenes, Familia, Misionero, etc.)
+
+  ### Módulos planificados
+  - **Calendario**: programación de actividades y eventos de la iglesia (módulo inicial, ya existente en sistema legacy)
+  - **Cultos**: gestión de cultos, definición de partes y asignación de responsables
+  - **Misión**: gestión misionera, seguimiento de actividades evangelísticas
+  - (más módulos se agregarán a futuro)
+
+  ## Convenciones de desarrollo
+  - Conventional Commits: feat, fix, chore, docs, refactor, test
+  - Cada módulo NestJS tiene su propia carpeta con controllers, services, entities, DTOs
+  - Los DTOs del backend son la fuente de verdad; el frontend los consume desde el schema generado
+  - Las specs se escriben orientadas a capacidades, no a módulos técnicos
+
+rules:
+  proposal:
+    - Incluir siempre una sección "Fuera del alcance" para delimitar el scope
+    - Mencionar qué módulo NestJS se ve afectado o creado
+    - Considerar impacto en roles y permisos
+  tasks:
+    - Las tareas deben ser accionables y completables en una sesión de trabajo
+    - Incluir siempre tareas para: entidad/schema, DTOs, service, controller, tests básicos, frontend (si aplica)
+    - Ordenar tareas de backend a frontend
+  spec:
+    - Escribir specs desde la perspectiva del usuario con su rol
+    - Incluir reglas de negocio del dominio adventista cuando sean relevantes
