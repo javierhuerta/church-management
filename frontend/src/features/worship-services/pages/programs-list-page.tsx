@@ -54,7 +54,7 @@ export function ProgramsListPage() {
 }
 
 function ProgramCard({ program }: { program: any }) {
-  const formattedDate = format(new Date(program.date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })
+  const formattedDate = format(new Date(program.date + 'T12:00:00'), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })
   const isPublished = program.status === 'PUBLISHED'
 
   return (

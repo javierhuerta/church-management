@@ -70,6 +70,10 @@ export class ProgramService {
   ): Promise<ServiceProgram[]> {
     return this.programRepo
       .createQueryBuilder('program')
+      .leftJoinAndSelect('program.template', 'template')
+      .leftJoinAndSelect('program.groups', 'groups')
+      .leftJoinAndSelect('groups.sections', 'groupSections')
+      .leftJoinAndSelect('program.sections', 'sections')
       .where('program.date >= :startDate', { startDate })
       .andWhere('program.date <= :endDate', { endDate })
       .orderBy('program.date', 'ASC')

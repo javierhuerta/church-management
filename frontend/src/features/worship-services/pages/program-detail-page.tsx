@@ -50,7 +50,7 @@ export function ProgramDetailPage() {
     }
   }
 
-  const formattedDate = format(new Date(program.date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })
+  const formattedDate = format(new Date(program.date + 'T12:00:00'), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })
 
   return (
     <div className="space-y-6">
