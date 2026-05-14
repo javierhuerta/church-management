@@ -3,6 +3,11 @@ import { IsString, IsOptional, IsNumber, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateSectionDto {
+  @ApiPropertyOptional({ example: 'Canto de apertura' })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
   @ApiPropertyOptional({ example: '09:00' })
   @IsOptional()
   @IsString()

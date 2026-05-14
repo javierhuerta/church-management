@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type UpdateSectionDto = {
+    name?: string;
     startTime?: string;
     duration?: number;
     responsible?: string;

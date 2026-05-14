@@ -246,6 +246,18 @@ export class ProgramService {
     }
 
     const changes: string[] = [];
+    if (dto.name !== undefined && dto.name !== section.name) {
+      changes.push(`nombre: ${section.name || 'sin definir'} → ${dto.name}`);
+      await this.createLog(
+        program.id,
+        userId,
+        sectionId,
+        'cambió nombre de sección',
+        section.name,
+        dto.name,
+      );
+      section.name = dto.name;
+    }
     if (dto.startTime !== undefined && dto.startTime !== section.startTime) {
       changes.push(
         `hora: ${section.startTime || 'sin definir'} → ${dto.startTime}`,

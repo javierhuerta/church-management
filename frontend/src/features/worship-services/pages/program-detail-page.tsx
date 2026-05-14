@@ -217,20 +217,14 @@ export function ProgramDetailPage() {
 
           {program.sections?.filter(s => !s.groupId).map((section) => (
             <div key={section.id} className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
-              <div className="px-4 py-3 border-b border-neutral-100">
-                <h3 className="font-semibold text-neutral-900">
-                  {section.templateSection?.name ?? 'Sección'}
-                </h3>
-              </div>
-              <div className="p-4">
-                <SectionRow
-                  section={section}
-                  canEdit={canEdit}
-                  isEditing={editingSection === section.id}
-                  onEdit={() => setEditingSection(section.id)}
-                  onCancel={() => setEditingSection(null)}
-                />
-              </div>
+              <SectionRow
+                section={section}
+                canEdit={canEdit}
+                isEditing={editingSection === section.id}
+                onEdit={() => setEditingSection(section.id)}
+                onCancel={() => setEditingSection(null)}
+                sectionName={section.templateSection?.name ?? undefined}
+              />
             </div>
           ))}
         </div>
@@ -334,6 +328,7 @@ function GroupEditForm({ group, onSave, onCancel }: GroupEditFormProps) {
 
 interface Section {
   id: string
+  name?: string | null
   startTime?: string | null
   duration?: number | null
   responsible?: string | null
@@ -353,7 +348,9 @@ interface SectionRowProps {
 }
 
 function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, sectionName }: SectionRowProps) {
+  const displayName = section.name ?? sectionName ?? ''
   const [formData, setFormData] = useState({
+    name: displayName,
     startTime: section.startTime || '',
     duration: section.duration || '',
     responsible: section.responsible || '',
@@ -369,8 +366,12 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, sectionName
     setIsSaving(true)
     try {
       await WorshipServicesProgramsService.programControllerUpdateSection(section.id, {
-        ...formData,
+        name: formData.name || undefined,
+        startTime: formData.startTime || undefined,
         duration: formData.duration ? Number(formData.duration) : undefined,
+        responsible: formData.responsible || undefined,
+        hymnText: formData.hymnText || undefined,
+        notes: formData.notes || undefined,
       })
       window.location.reload()
     } finally {
@@ -381,6 +382,14 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, sectionName
   if (isEditing) {
     return (
       <div className="p-4 space-y-4">
+        <div className="space-y-1">
+          <Label className="text-xs">Nombre de la sección</Label>
+          <Input
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="Nombre de la sección"
+          />
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <Label className="text-xs">Hora inicio</Label>
@@ -468,8 +477,8 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, sectionName
   return (
     <div className="p-4 flex items-start justify-between gap-4">
       <div className="flex-1 space-y-2">
-        {sectionName && (
-          <p className="text-xs font-semibold text-neutral-700 uppercase tracking-wide">{sectionName}</p>
+        {displayName && (
+          <p className="text-xs font-semibold text-neutral-700 uppercase tracking-wide">{displayName}</p>
         )}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           {section.startTime && (
