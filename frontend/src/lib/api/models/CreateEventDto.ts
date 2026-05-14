@@ -12,6 +12,9 @@ export type CreateEventDto = {
     meetingUrl?: string;
     meetingType?: CreateEventDto.meetingType;
     location?: string;
+    /**
+     * List of user IDs that organize the event
+     */
     organizerIds?: Array<string>;
 };
 export namespace CreateEventDto {
@@ -39,3 +42,4 @@ export namespace CreateEventDto {
         OTHER = 'other',
     }
 }
+

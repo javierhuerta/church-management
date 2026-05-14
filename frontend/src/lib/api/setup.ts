@@ -1,6 +1,6 @@
 import { OpenAPI } from '@/lib/api'
 
-OpenAPI.BASE = '/api'
+OpenAPI.BASE = ''
 
 const stored = localStorage.getItem('token')
 if (stored) {

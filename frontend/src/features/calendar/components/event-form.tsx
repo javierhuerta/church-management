@@ -108,9 +108,9 @@ export function EventForm({ event, onSaved }: EventFormProps) {
           endDate: endIso,
           eventType: values.eventType as UpdateEventDto.eventType,
           department: (values.department || null) as UpdateEventDto.department | null,
-          meetingUrl: values.meetingUrl || null,
+          meetingUrl: values.meetingUrl || undefined,
           meetingType: (values.meetingType || null) as UpdateEventDto.meetingType | null,
-          location: values.location || null,
+          location: values.location || undefined,
           organizerIds,
         }
         const updated = await CalendarService.calendarControllerUpdate(

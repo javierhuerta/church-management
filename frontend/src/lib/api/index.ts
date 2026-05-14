@@ -7,20 +7,33 @@ export { CancelablePromise, CancelError } from './core/CancelablePromise';
 export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
+export type { AttachmentResponseDto } from './models/AttachmentResponseDto';
 export { CreateEventDto } from './models/CreateEventDto';
+export type { CreateProgramDto } from './models/CreateProgramDto';
+export { CreateTemplateDto } from './models/CreateTemplateDto';
+export { EventResponseDto } from './models/EventResponseDto';
+export type { GroupWithSectionsDto } from './models/GroupWithSectionsDto';
+export type { HymnAutocompleteResponseDto } from './models/HymnAutocompleteResponseDto';
+export type { HymnResponseDto } from './models/HymnResponseDto';
 export type { LoginDto } from './models/LoginDto';
+export type { OrganizerResponseDto } from './models/OrganizerResponseDto';
+export type { ProgramGroupResponseDto } from './models/ProgramGroupResponseDto';
+export type { ProgramLogResponseDto } from './models/ProgramLogResponseDto';
+export { ProgramSectionResponseDto } from './models/ProgramSectionResponseDto';
 export type { RefreshTokenDto } from './models/RefreshTokenDto';
+export type { SectionDto } from './models/SectionDto';
+export { ServiceProgramResponseDto } from './models/ServiceProgramResponseDto';
+export { ServiceTemplateResponseDto } from './models/ServiceTemplateResponseDto';
+export type { TemplateGroupResponseDto } from './models/TemplateGroupResponseDto';
+export { TemplateSectionResponseDto } from './models/TemplateSectionResponseDto';
 export { UpdateEventDto } from './models/UpdateEventDto';
-export type {
-    EventResponseDto,
-    AttachmentResponseDto,
-    OrganizerResponseDto,
-    PaginatedEventsResponse,
-    EventStatus,
-    EventType,
-    Department,
-    MeetingType,
-} from './models/EventResponseDto';
+export type { UpdateSectionDto } from './models/UpdateSectionDto';
+export { UpdateTemplateDto } from './models/UpdateTemplateDto';
+export type { UploadAttachmentDto } from './models/UploadAttachmentDto';
+export type { UserResponseDto } from './models/UserResponseDto';
 
 export { AuthService } from './services/AuthService';
 export { CalendarService } from './services/CalendarService';
+export { HymnsService } from './services/HymnsService';
+export { WorshipServicesProgramsService } from './services/WorshipServicesProgramsService';
+export { WorshipServicesTemplatesService } from './services/WorshipServicesTemplatesService';

@@ -230,7 +230,7 @@ export function EventDetailPage() {
 
         {event.meetingUrl && (
           <div className="pt-1">
-            <MeetingButton url={event.meetingUrl} type={event.meetingType} />
+            <MeetingButton url={event.meetingUrl} type={event.meetingType ?? null} />
           </div>
         )}
       </div>

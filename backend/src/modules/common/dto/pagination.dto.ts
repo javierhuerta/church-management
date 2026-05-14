@@ -1,4 +1,4 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -20,10 +20,15 @@ export class PaginationDto {
 }
 
 export class PaginatedResponseDto<T> {
+  @ApiProperty({ type: [Object] })
   data: T[];
+  @ApiProperty()
   total: number;
+  @ApiProperty()
   page: number;
+  @ApiProperty()
   limit: number;
+  @ApiProperty()
   totalPages: number;
 
   constructor(data: T[], total: number, page: number, limit: number) {

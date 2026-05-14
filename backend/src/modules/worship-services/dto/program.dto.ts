@@ -1,0 +1,79 @@
+import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsNumber, IsUUID } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export class UpdateSectionDto {
+  @ApiPropertyOptional({ example: '09:00' })
+  @IsOptional()
+  @IsString()
+  startTime?: string;
+
+  @ApiPropertyOptional({ example: 30 })
+  @IsOptional()
+  @IsNumber()
+  duration?: number;
+
+  @ApiPropertyOptional({ example: 'Pr. Juan Pérez' })
+  @IsOptional()
+  @IsString()
+  responsible?: string;
+
+  @ApiPropertyOptional({ example: 'Himno 125 - Gran Dios' })
+  @IsOptional()
+  @IsString()
+  hymnText?: string;
+
+  @ApiPropertyOptional({ example: 'Especial: ofrenda de cosecha' })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}
+
+export class UpdateGroupDto {
+  @ApiPropertyOptional({ example: 'Escuela Sabática' })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiPropertyOptional({ example: '09:00' })
+  @IsOptional()
+  @IsString()
+  startTime?: string;
+
+  @ApiPropertyOptional({ example: '10:30' })
+  @IsOptional()
+  @IsString()
+  endTime?: string;
+
+  @ApiPropertyOptional({ example: 1 })
+  @IsOptional()
+  @IsNumber()
+  order?: number;
+}
+
+export class UpdateProgramDto {
+  @ApiPropertyOptional({ example: '2026-05-30' })
+  @IsOptional()
+  @IsString()
+  date?: string;
+
+  @ApiPropertyOptional({ type: [UpdateGroupDto] })
+  @IsOptional()
+  @Type(() => UpdateGroupDto)
+  groups?: UpdateGroupDto[];
+
+  @ApiPropertyOptional({ type: [UpdateSectionDto] })
+  @IsOptional()
+  @Type(() => UpdateSectionDto)
+  sections?: UpdateSectionDto[];
+}
+
+export class CreateProgramDto {
+  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
+  @IsUUID()
+  templateId: string;
+
+  @ApiProperty({ example: '2026-05-30' })
+  @IsString()
+  date: string;
+}

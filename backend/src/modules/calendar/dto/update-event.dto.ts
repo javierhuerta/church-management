@@ -52,7 +52,7 @@ export class UpdateEventDto {
   @IsEnum(Department)
   department?: Department | null;
 
-  @ApiPropertyOptional({ example: 'https://zoom.us/j/123456789' })
+  @ApiPropertyOptional({ type: String, example: 'https://zoom.us/j/123456789' })
   @IsOptional()
   @IsUrl({ require_protocol: true })
   meetingUrl?: string | null;
@@ -62,7 +62,7 @@ export class UpdateEventDto {
   @IsEnum(MeetingType)
   meetingType?: MeetingType | null;
 
-  @ApiPropertyOptional({ example: 'Iglesia Adventista Osorno Central' })
+  @ApiPropertyOptional({ type: String, example: 'Iglesia Adventista Osorno Central' })
   @IsOptional()
   @IsString()
   @MaxLength(300)

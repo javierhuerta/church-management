@@ -22,6 +22,31 @@ const EventFormPage = lazy(() =>
     default: m.EventFormPage,
   })),
 )
+const TemplatesListPage = lazy(() =>
+  import('./features/worship-services/pages/templates-list-page').then((m) => ({
+    default: m.TemplatesListPage,
+  })),
+)
+const ProgramsListPage = lazy(() =>
+  import('./features/worship-services/pages/programs-list-page').then((m) => ({
+    default: m.ProgramsListPage,
+  })),
+)
+const TemplateFormPage = lazy(() =>
+  import('./features/worship-services/pages/template-form-page').then((m) => ({
+    default: m.TemplateFormPage,
+  })),
+)
+const ProgramCreatePage = lazy(() =>
+  import('./features/worship-services/pages/program-create-page').then((m) => ({
+    default: m.ProgramCreatePage,
+  })),
+)
+const ProgramDetailPage = lazy(() =>
+  import('./features/worship-services/pages/program-detail-page').then((m) => ({
+    default: m.ProgramDetailPage,
+  })),
+)
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token')
@@ -69,6 +94,12 @@ function App() {
                 path="calendario/:slug/editar"
                 element={<EventFormPage mode="edit" />}
               />
+              <Route path="cultos/plantillas" element={<TemplatesListPage />} />
+              <Route path="cultos/plantillas/nuevo" element={<TemplateFormPage />} />
+              <Route path="cultos/plantillas/:id/editar" element={<TemplateFormPage />} />
+              <Route path="cultos/programas" element={<ProgramsListPage />} />
+              <Route path="cultos/programas/nuevo" element={<ProgramCreatePage />} />
+              <Route path="cultos/programas/:id" element={<ProgramDetailPage />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

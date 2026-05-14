@@ -5,6 +5,7 @@ import {
   UseGuards,
   Get,
   Request,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -64,5 +65,17 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Current user info' })
   getProfile(@Request() req: RequestWithUser) {
     return req.user;
+  }
+
+  @Get('autocomplete')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Search users for autocomplete' })
+  @ApiResponse({ status: 200, description: 'User suggestions' })
+  async autocomplete(
+    @Request() req: RequestWithUser,
+    @Query('q') query: string,
+  ) {
+    return this.authService.searchUsers(query || '');
   }
 }

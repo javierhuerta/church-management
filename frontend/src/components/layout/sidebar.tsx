@@ -12,12 +12,13 @@ interface NavItem {
   label: string
   icon: React.ComponentType<{ className?: string }>
   path: string
+  matchPrefix?: string
   disabled?: boolean
 }
 
 const navItems: NavItem[] = [
   { id: 'calendario', label: 'Calendario', icon: Calendar, path: '/calendario' },
-  { id: 'cultos', label: 'Cultos', icon: FileText, path: '/cultos', disabled: true },
+  { id: 'cultos', label: 'Cultos', icon: FileText, path: '/cultos/programas', matchPrefix: '/cultos' },
   { id: 'mision', label: 'Misión', icon: Heart, path: '/mision', disabled: true },
 ]
 
@@ -94,7 +95,9 @@ export function Sidebar() {
               <div className="space-y-1">
                 {navItems.map((item) => {
                   const Icon = item.icon
-                  const isActive = location.pathname === item.path
+                  const isActive = item.matchPrefix
+                    ? location.pathname.startsWith(item.matchPrefix)
+                    : location.pathname === item.path
                   return (
                     <button
                       key={item.id}

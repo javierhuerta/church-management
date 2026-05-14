@@ -103,24 +103,27 @@ const AccordionTrigger = React.forwardRef<HTMLButtonElement, AccordionTriggerPro
 )
 AccordionTrigger.displayName = "AccordionTrigger"
 
-interface AccordionContentProps extends React.HTMLAttributes<HTMLDivElement> {
+interface AccordionContentProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onValueChange'> {
   isOpen?: boolean
 }
 
 const AccordionContent = React.forwardRef<HTMLDivElement, AccordionContentProps>(
-  ({ className, isOpen, children, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(
-        "overflow-hidden transition-all duration-200",
-        isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0",
-        className
-      )}
-      {...props}
-    >
-      <div className="pb-3 pt-1">{children}</div>
-    </div>
-  )
+  ({ className, isOpen, children, ...props }, ref) => {
+    const { onValueChange, ...restProps } = props as typeof props & { onValueChange?: unknown }
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "overflow-hidden transition-all duration-200",
+          isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0",
+          className
+        )}
+        {...restProps}
+      >
+        <div className="pb-3 pt-1">{children}</div>
+      </div>
+    )
+  }
 )
 AccordionContent.displayName = "AccordionContent"
 

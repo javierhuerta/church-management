@@ -10,9 +10,9 @@ export type UpdateEventDto = {
     eventType?: UpdateEventDto.eventType;
     status?: UpdateEventDto.status;
     department?: UpdateEventDto.department | null;
-    meetingUrl?: string | null;
+    meetingUrl?: string;
     meetingType?: UpdateEventDto.meetingType | null;
-    location?: string | null;
+    location?: string;
     organizerIds?: Array<string>;
 };
 export namespace UpdateEventDto {
@@ -45,3 +45,4 @@ export namespace UpdateEventDto {
         OTHER = 'other',
     }
 }
+

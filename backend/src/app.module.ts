@@ -4,10 +4,21 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { AuthModule } from './modules/auth/auth.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
+import { WorshipServicesModule } from './modules/worship-services/worship-services.module';
 import { User } from './modules/auth/entities/user.entity';
 import { Event } from './modules/calendar/entities/event.entity';
 import { EventAttachment } from './modules/calendar/entities/event-attachment.entity';
 import { EventOrganizer } from './modules/calendar/entities/event-organizer.entity';
+import {
+  ServiceTemplate,
+  ServiceTemplateGroup,
+  ServiceTemplateSection,
+  ServiceProgram,
+  ServiceProgramGroup,
+  ServiceProgramSection,
+  ServiceProgramLog,
+  Hymn,
+} from './modules/worship-services/entities';
 
 @Module({
   imports: [
@@ -18,7 +29,20 @@ import { EventOrganizer } from './modules/calendar/entities/event-organizer.enti
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_DATABASE || 'church_management',
-      entities: [User, Event, EventAttachment, EventOrganizer],
+      entities: [
+        User,
+        Event,
+        EventAttachment,
+        EventOrganizer,
+        ServiceTemplate,
+        ServiceTemplateGroup,
+        ServiceTemplateSection,
+        ServiceProgram,
+        ServiceProgramGroup,
+        ServiceProgramSection,
+        ServiceProgramLog,
+        Hymn,
+      ],
       synchronize: false,
       migrationsRun: false,
     }),
@@ -28,6 +52,7 @@ import { EventOrganizer } from './modules/calendar/entities/event-organizer.enti
     }),
     AuthModule,
     CalendarModule,
+    WorshipServicesModule,
   ],
 })
 export class AppModule {}

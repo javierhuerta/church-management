@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  CalendarService,
-  type Department,
-  type EventStatus,
-  type EventType,
-} from '@/lib/api'
+import { CalendarService, EventResponseDto } from '@/lib/api'
+
+export type EventType = EventResponseDto.eventType
+export type Department = EventResponseDto.department
+export type EventStatus = EventResponseDto.status
 
 export interface CalendarFilters {
   startDate?: string
@@ -12,6 +11,14 @@ export interface CalendarFilters {
   eventType?: EventType
   department?: Department
   status?: EventStatus
+}
+
+interface PaginatedResponse<T> {
+  data: T[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
 }
 
 export function useCalendar(filters: CalendarFilters) {
@@ -26,14 +33,14 @@ export function useCalendar(filters: CalendarFilters) {
         filters.eventType,
         filters.department,
         filters.status,
-      ),
+      ) as Promise<PaginatedResponse<EventResponseDto>>,
   })
 }
 
 export function useEventBySlug(slug: string) {
   return useQuery({
     queryKey: ['calendar', 'slug', slug],
-    queryFn: () => CalendarService.calendarControllerFindBySlug(slug),
+    queryFn: () => CalendarService.calendarControllerFindBySlug(slug) as Promise<EventResponseDto>,
     enabled: !!slug,
   })
 }
@@ -41,7 +48,7 @@ export function useEventBySlug(slug: string) {
 export function useEvent(id: string | undefined) {
   return useQuery({
     queryKey: ['calendar', 'id', id],
-    queryFn: () => CalendarService.calendarControllerFindOne(id!),
+    queryFn: () => CalendarService.calendarControllerFindOne(id!) as Promise<EventResponseDto>,
     enabled: !!id,
   })
 }

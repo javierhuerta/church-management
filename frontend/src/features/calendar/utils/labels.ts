@@ -1,4 +1,7 @@
-import type { Department, EventStatus, EventType, MeetingType } from '@/lib/api'
+import type { Department, EventStatus, EventType } from '../hooks/use-calendar'
+import type { EventResponseDto } from '@/lib/api'
+
+export type MeetingType = EventResponseDto.meetingType
 
 export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   local: 'Local',

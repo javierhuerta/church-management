@@ -1,7 +1,6 @@
 import { Video } from 'lucide-react'
-import type { MeetingType } from '@/lib/api'
 import { Button } from '@/components/ui/button'
-import { MEETING_TYPE_LABELS } from '../utils/labels'
+import { MEETING_TYPE_LABELS, type MeetingType } from '../utils/labels'
 
 interface MeetingButtonProps {
   url: string

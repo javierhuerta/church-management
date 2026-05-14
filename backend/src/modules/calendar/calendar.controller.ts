@@ -33,6 +33,7 @@ import {
   OrganizerResponseDto,
 } from './dto/event-response.dto';
 import { PaginatedResponseDto } from '../common/dto/pagination.dto';
+import { UploadAttachmentDto } from './dto/upload-attachment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -89,7 +90,7 @@ export class CalendarController {
   @ApiOperation({
     summary: 'Get event by share slug (public for published events)',
   })
-  @ApiResponse({ status: 404, description: 'Event not found' })
+  @ApiResponse({ status: 200, description: 'Event not found', type: EventResponseDto })
   findBySlug(
     @Param('slug') slug: string,
     @Request() req: RequestWithUser,
@@ -100,7 +101,7 @@ export class CalendarController {
   @Get(':id')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: 'Get event by ID (public for published events)' })
-  @ApiResponse({ status: 404, description: 'Event not found' })
+  @ApiResponse({ status: 200, description: 'Event not found', type: EventResponseDto })
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: RequestWithUser,
@@ -185,15 +186,7 @@ export class CalendarController {
   @Roles(...EDITOR_ROLES)
   @UseInterceptors(FileInterceptor('file', multerConfig))
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: { type: 'string', format: 'binary' },
-        isCover: { type: 'boolean' },
-      },
-    },
-  })
+  @ApiBody({ type: UploadAttachmentDto })
   @ApiOperation({ summary: 'Upload an attachment to an event (editor only)' })
   uploadAttachment(
     @Param('id', ParseUUIDPipe) id: string,

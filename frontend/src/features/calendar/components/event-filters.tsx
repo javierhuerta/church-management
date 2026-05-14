@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import type { Department, EventType } from '@/lib/api'
+import type { Department, EventType } from '../hooks/use-calendar'
 import {
   Select,
   SelectContent,

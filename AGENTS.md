@@ -31,7 +31,33 @@
 - El backend es la fuente de verdad para los schemas
 - Cuando crees/modifiques endpoints, usar decoradores OpenAPI completos
 - No hardcodear URLs del frontend — usar variables de entorno
-- Generar el schema con `npm run generate:api` o similar (por definir)
+
+### OpenAPI Client Generation (Frontend)
+
+**Comando para regenerar:**
+```bash
+npm run generate:api
+```
+
+**Flujo correcto:**
+1. Asegurarse que el backend esté corriendo (`npm run start:dev`)
+2. El schema se genera en `http://localhost:3000/api-json`
+3. El comando descarga el schema y genera los tipos en `src/lib/api/`
+4. **Importante**: Si `request.ts` queda vacío después de regenerar, restaurarlo con:
+   ```bash
+   git checkout src/lib/api/core/request.ts
+   ```
+
+**Reglas para DTOs del backend (evitar tipos incorrectos en el schema):**
+- Para campos opcionales con `string | null`, usar: `@ApiPropertyOptional({ type: String, nullable: true })`
+- Para campos requeridos con `string`, usar: `@ApiProperty({ type: String })`
+- **No usar** `@ApiPropertyOptional({ nullable: true })` sin `type: String` — genera `Record<string, any>` en vez de `string`
+- Para uploads de archivos, crear un DTO formal con `@ApiProperty({ type: 'string' })` — no usar `@ApiBody({ schema: ... })` inline
+
+**Solución de problemas:**
+- Si el codegen genera tipos `Record<string, any>` en vez de `string`, revisar los `@ApiProperty` en el backend
+- Si el build pasa pero hay errores de runtime en浏览器, puede ser `request.ts` corrupto — restaurar con git
+- El archivo `setup.ts` configura `OpenAPI.BASE = ''` — las rutas en los servicios ya incluyen `/api/`
 
 ## Convenciones de codigo
 

@@ -13,11 +13,10 @@ const quickActions = [
   {
     id: 'cultos',
     title: 'Cultos',
-    description: 'Gestión de cultos y partes del servicio',
+    description: 'Programas y plantillas de servicios de adoración',
     icon: FileText,
     color: 'emerald',
-    path: '/cultos',
-    disabled: true,
+    path: '/cultos/programas',
   },
   {
     id: 'mision',

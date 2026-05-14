@@ -51,7 +51,7 @@ export class EventResponseDto {
   @ApiProperty()
   title: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   description: string | null;
 
   @ApiProperty()
@@ -69,13 +69,13 @@ export class EventResponseDto {
   @ApiPropertyOptional({ enum: Department, nullable: true })
   department: Department | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   meetingUrl: string | null;
 
   @ApiPropertyOptional({ enum: MeetingType, nullable: true })
   meetingType: MeetingType | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   location: string | null;
 
   @ApiProperty()
@@ -90,12 +90,12 @@ export class EventResponseDto {
   @ApiProperty({ type: [OrganizerResponseDto] })
   organizers: OrganizerResponseDto[];
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   coverImageUrl: string | null;
 
   @ApiProperty()
   createdAt: Date;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Date, nullable: true })
   updatedAt: Date | null;
 }

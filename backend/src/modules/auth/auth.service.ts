@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { UserRole } from '../common/entities/user-role.enum';
@@ -113,5 +113,19 @@ export class AuthService {
       role,
     });
     return this.userRepository.save(user);
+  }
+
+  async searchUsers(
+    query: string,
+  ): Promise<{ id: string; name: string; email: string }[]> {
+    if (!query || query.length < 1) {
+      return [];
+    }
+    const users = await this.userRepository.find({
+      where: { name: Like(`%${query}%`) },
+      select: ['id', 'name', 'email'],
+      take: 10,
+    });
+    return users;
   }
 }

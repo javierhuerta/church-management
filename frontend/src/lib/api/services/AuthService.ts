@@ -19,7 +19,7 @@ export class AuthService {
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/auth/login',
+            url: '/api/auth/login',
             body: requestBody,
             mediaType: 'application/json',
             errors: {
@@ -38,7 +38,7 @@ export class AuthService {
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/auth/refresh',
+            url: '/api/auth/refresh',
             body: requestBody,
             mediaType: 'application/json',
             errors: {
@@ -54,7 +54,7 @@ export class AuthService {
     public static authControllerLogout(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/auth/logout',
+            url: '/api/auth/logout',
         });
     }
     /**
@@ -65,7 +65,24 @@ export class AuthService {
     public static authControllerGetProfile(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/auth/me',
+            url: '/api/auth/me',
+        });
+    }
+    /**
+     * Search users for autocomplete
+     * @param q
+     * @returns any User suggestions
+     * @throws ApiError
+     */
+    public static authControllerAutocomplete(
+        q: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/auth/autocomplete',
+            query: {
+                'q': q,
+            },
         });
     }
 }
