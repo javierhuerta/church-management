@@ -164,17 +164,60 @@ async function runSeeders() {
     },
   ];
 
+  const groupRepo = dataSource.getRepository(ServiceTemplateGroup);
+  const sectionRepo = dataSource.getRepository(ServiceTemplateSection);
+
   for (const templateData of templateSeeds) {
-    const existing = await templateRepo.findOne({ where: { name: templateData.name } });
-    if (!existing) {
-      const template = templateRepo.create(templateData);
-      await templateRepo.save(template);
-      template.groups.forEach((g: any) => { g.templateId = template.id; });
-      template.sections.forEach((s: any) => { s.templateId = template.id; });
-      await templateRepo.save(template);
+    let template = await templateRepo.findOne({ where: { name: templateData.name } });
+
+    if (!template) {
+      template = templateRepo.create({
+        name: templateData.name,
+        description: templateData.description,
+        type: templateData.type,
+        isActive: templateData.isActive,
+      });
+      template = await templateRepo.save(template);
       console.log(`Created template: ${templateData.name}`);
     } else {
-      console.log(`Template already exists: ${templateData.name}`);
+      const existingGroups = await groupRepo.count({ where: { templateId: template.id } });
+      if (existingGroups > 0) {
+        console.log(`Template already seeded: ${templateData.name}`);
+        continue;
+      }
+      console.log(`Seeding groups/sections for existing template: ${templateData.name}`);
+    }
+
+    for (const groupData of templateData.groups) {
+      const group = groupRepo.create({
+        name: groupData.name,
+        startTime: groupData.startTime,
+        endTime: groupData.endTime,
+        order: groupData.order,
+        templateId: template.id,
+      });
+      const savedGroup = await groupRepo.save(group);
+
+      for (const sectionData of groupData.sections) {
+        const section = sectionRepo.create({
+          name: sectionData.name,
+          order: sectionData.order,
+          targetType: TemplateSectionTargetType.GROUP,
+          groupId: savedGroup.id,
+          templateId: template.id,
+        });
+        await sectionRepo.save(section);
+      }
+    }
+
+    for (const sectionData of templateData.sections) {
+      const section = sectionRepo.create({
+        name: sectionData.name,
+        order: sectionData.order,
+        targetType: TemplateSectionTargetType.TEMPLATE,
+        templateId: template.id,
+      });
+      await sectionRepo.save(section);
     }
   }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Clock, ChevronRight } from 'lucide-react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { WorshipServicesProgramsService } from '@/lib/api'
+import type { ServiceTemplateResponseDto } from '@/lib/api/models/ServiceTemplateResponseDto'
 
 const formSchema = z.object({
   templateId: z.string().min(1, 'Selecciona una plantilla'),
@@ -25,12 +26,89 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
+const templateTypeLabels: Record<ServiceTemplateType, string> = {
+  CULTO_SABATICO: 'Culto Sabático',
+  CULTO_JA: 'Culto JA',
+  CULTO_ORACION: 'Culto de Oración',
+  OTRO: 'Otro',
+}
+
+function TemplatePreview({ template }: { template: ServiceTemplateResponseDto }) {
+  const sortedGroups = [...template.groups].sort((a, b) => a.order - b.order)
+  const topSections = template.sections
+
+  return (
+    <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 space-y-3">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-sm font-semibold text-blue-900">{template.name}</p>
+          {template.description && (
+            <p className="text-xs text-blue-700 mt-0.5">{template.description}</p>
+          )}
+        </div>
+        <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+          {templateTypeLabels[template.type]}
+        </span>
+      </div>
+
+      {topSections.length > 0 && (
+        <div className="space-y-1">
+          {topSections.map((s) => (
+            <div key={s.id} className="flex items-center gap-1.5 text-xs text-blue-800">
+              <ChevronRight className="h-3 w-3 shrink-0 text-blue-400" />
+              {s.name}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {sortedGroups.length > 0 && (
+        <div className="space-y-2">
+          {sortedGroups.map((group) => (
+            <div key={group.id} className="rounded-lg border border-blue-100 bg-white/70 p-3 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold text-neutral-700 uppercase tracking-wide">
+                  {group.name}
+                </p>
+                {(group.startTime || group.endTime) && (
+                  <span className="flex items-center gap-1 text-xs text-neutral-500">
+                    <Clock className="h-3 w-3" />
+                    {group.startTime}
+                    {group.endTime ? ` – ${group.endTime}` : ''}
+                  </span>
+                )}
+              </div>
+              {group.sections.length > 0 && (
+                <div className="space-y-0.5">
+                  {[...group.sections]
+                    .sort((a, b) => a.order - b.order)
+                    .map((s) => (
+                      <div key={s.id} className="flex items-center gap-1.5 text-xs text-neutral-600">
+                        <ChevronRight className="h-3 w-3 shrink-0 text-neutral-300" />
+                        {s.name}
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {sortedGroups.length === 0 && topSections.length === 0 && (
+        <p className="text-xs text-blue-600 italic">Esta plantilla no tiene secciones definidas.</p>
+      )}
+    </div>
+  )
+}
+
 export function ProgramCreatePage() {
   const navigate = useNavigate()
   const user = useAuthUser()
   const canCreate = ['Admin', 'Pastor', 'Anciano', 'DirectorDepartamento'].includes(user?.role || '')
   const [serverError, setServerError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState<ServiceTemplateResponseDto | null>(null)
 
   const { data: templates, isLoading } = useTemplates()
 
@@ -72,13 +150,6 @@ export function ProgramCreatePage() {
     )
   }
 
-  const templateTypeLabels: Record<ServiceTemplateType, string> = {
-    CULTO_SABATICO: 'Culto Sabático',
-    CULTO_JA: 'Culto JA',
-    CULTO_ORACION: 'Culto de Oración',
-    OTRO: 'Otro',
-  }
-
   return (
     <div className="max-w-xl mx-auto space-y-6">
       <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
@@ -116,7 +187,14 @@ export function ProgramCreatePage() {
               control={control}
               name="templateId"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={(val) => {
+                    field.onChange(val)
+                    const t = templates?.find((x) => x.id === val) ?? null
+                    setSelectedTemplate(t)
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar plantilla" />
                   </SelectTrigger>
@@ -140,6 +218,8 @@ export function ProgramCreatePage() {
               <p className="text-xs text-red-500">{errors.templateId.message}</p>
             )}
           </div>
+
+          {selectedTemplate && <TemplatePreview template={selectedTemplate} />}
 
           {templates && templates.length === 0 && (
             <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-700">
