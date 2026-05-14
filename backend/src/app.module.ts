@@ -15,7 +15,7 @@ import { Event } from './modules/calendar/entities/event.entity';
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_DATABASE || 'church_management',
       entities: [User, Event],
-      synchronize: true,
+      synchronize: process.env.NODE_ENV !== 'production',
     }),
     AuthModule,
     CalendarModule,

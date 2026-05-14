@@ -1,0 +1,35 @@
+{
+  "name": "church-management",
+  "version": "0.0.1",
+  "description": "Church Management System for Iglesia Adventista del Séptimo Día de Osorno Central",
+  "private": true,
+  "scripts": {
+    "dev:backend": "cd backend && npm run start:dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:all": "npm-run-all -p dev:backend dev:frontend",
+
+    "test:backend": "cd backend && npm run test",
+    "test:frontend": "echo 'Tests pending - framework not configured yet'",
+    "test:all": "npm-run-all test:backend test:frontend",
+
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:all": "npm-run-all lint:backend lint:frontend",
+
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "build:all": "npm-run-all -p build:backend build:frontend",
+
+    "api:generate": "cd frontend && npm run generate:api",
+
+    "db:up": "docker-compose up -d",
+    "db:down": "docker-compose down",
+    "db:logs": "docker-compose logs -f",
+    "db:migrate": "cd backend && npm run migration:run",
+    "db:migrate:revert": "cd backend && npm run migration:revert",
+    "db:seed": "cd backend && npm run seed:run"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  }
+}

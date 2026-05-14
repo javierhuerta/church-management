@@ -8,7 +8,7 @@ export class Event extends BaseEntity {
   @Column()
   title: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'text' })
   description: string | null;
 
   @Column({ name: 'start_date' })

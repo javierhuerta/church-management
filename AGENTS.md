@@ -9,20 +9,8 @@
 
 ## OpenSpec Workflow
 
-- Antes de crear archivos de codigo, verificar si existe una spec o change activa
-- Para nueva funcionalidad: crear spec primero → luego change proposal → luego implementation
-- No implementar features que no esten en una spec aprobada
-- Mantener las specs actualizadas si el scope cambia durante implementacion
-- Para refactorear: crear change primero, no atacar el codigo directamente
-
-## Flujo de cambios
-
-Para usar openspec-propose:
-1. El usuario indica "avancemos con X" o similar
-2. Yo ejecuto `openspec new change "<nombre>"` y luego creo todos los artifacts
-3. No pregunto en cada paso — solo muestro progreso con "Creado: <artifact>"
-4. Al final muestro `openspec status --change "<nombre>"` con el resumen
-5. El usuario decide si implementar o no
+- Usar los comandos: `/opsx-propose`, `/opsx-apply`, `/opsx-archive`
+- Las skills manejan el flujo automáticamente
 
 ## Stack Tecnologico — Reglas estrictas
 
@@ -79,9 +67,10 @@ Para usar openspec-propose:
 - Trabajar sobre main para tareas de refactor o cleanup
 
 ### Reglas de versionado
-- Para tareas destructivas o refactors mayores, crear rama dedicada desde main
-- No hacer merge a main hasta que esté validado (por el usuario o por tests)
-- Una vez completada la tarea, volver a main y continuar desde ahi
+- Para tareas destructivas o refactors mayores, crear rama dedicada desde development
+- No hacer merge a development hasta que esté validado (por el usuario o por tests)
+- Una vez completada la tarea, volver a development y continuar desde ahi
+- **Nota**: main tiene el sistema legacy que está corriendo. No tocar main hasta que se complete la actualización del stack.
 
 ## Estructura de proyecto (por definir agreed)
 

@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
+import { UserRole } from '../common/entities/user-role.enum';
 import { LoginDto } from './dto/login.dto';
 
 interface TokenPayload {
@@ -58,9 +59,9 @@ export class AuthService {
     };
   }
 
-  async refresh(refreshToken: string) {
+  async refresh(refreshTokenDto: { refreshToken: string }) {
     try {
-      const payload = this.jwtService.verify<TokenPayload>(refreshToken);
+      const payload = this.jwtService.verify<TokenPayload>(refreshTokenDto.refreshToken);
 
       const user = await this.userRepository.findOne({
         where: { id: payload.sub },
@@ -97,7 +98,7 @@ export class AuthService {
     email: string,
     password: string,
     name: string,
-    role: string,
+    role: UserRole,
   ) {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = this.userRepository.create({
