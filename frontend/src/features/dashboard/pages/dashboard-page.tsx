@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Calendar, FileText, Heart, ArrowRight } from 'lucide-react'
 
 const quickActions = [
@@ -71,20 +72,22 @@ export function DashboardPage() {
         {quickActions.map((action) => {
           const Icon = action.icon
           const colors = colorStyles[action.color]
-          return (
-            <div
-              key={action.id}
-              className={`
-                relative overflow-hidden rounded-2xl border ${colors.bg} ${colors.border}
-                p-6 transition-all duration-200 ${action.disabled ? 'opacity-60' : colors.hover + ' cursor-pointer shadow-sm'}
-              `}
-            >
+          const className = `
+            relative overflow-hidden rounded-2xl border ${colors.bg} ${colors.border}
+            p-6 transition-all duration-200 block ${action.disabled ? 'opacity-60 cursor-not-allowed' : colors.hover + ' cursor-pointer shadow-sm'}
+          `
+          const content = (
+            <>
               <div className={`absolute top-4 right-4 ${colors.icon}`}>
                 <Icon className="h-8 w-8" />
               </div>
               <div className="relative">
-                <h3 className="text-lg font-semibold text-neutral-900">{action.title}</h3>
-                <p className="text-sm text-neutral-500 mt-1">{action.description}</p>
+                <h3 className="text-lg font-semibold text-neutral-900">
+                  {action.title}
+                </h3>
+                <p className="text-sm text-neutral-500 mt-1">
+                  {action.description}
+                </p>
                 {!action.disabled && (
                   <div className="flex items-center gap-1 mt-4 text-sm font-medium text-blue-600">
                     <span>Acceder</span>
@@ -99,7 +102,20 @@ export function DashboardPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </>
+          )
+
+          if (action.disabled) {
+            return (
+              <div key={action.id} className={className} aria-disabled="true">
+                {content}
+              </div>
+            )
+          }
+          return (
+            <Link key={action.id} to={action.path} className={className}>
+              {content}
+            </Link>
           )
         })}
       </div>

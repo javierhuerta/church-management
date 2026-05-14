@@ -11,6 +11,16 @@ export { CreateEventDto } from './models/CreateEventDto';
 export type { LoginDto } from './models/LoginDto';
 export type { RefreshTokenDto } from './models/RefreshTokenDto';
 export { UpdateEventDto } from './models/UpdateEventDto';
+export type {
+    EventResponseDto,
+    AttachmentResponseDto,
+    OrganizerResponseDto,
+    PaginatedEventsResponse,
+    EventStatus,
+    EventType,
+    Department,
+    MeetingType,
+} from './models/EventResponseDto';
 
 export { AuthService } from './services/AuthService';
 export { CalendarService } from './services/CalendarService';

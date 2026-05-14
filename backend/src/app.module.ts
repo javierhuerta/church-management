@@ -1,9 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { AuthModule } from './modules/auth/auth.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
 import { User } from './modules/auth/entities/user.entity';
 import { Event } from './modules/calendar/entities/event.entity';
+import { EventAttachment } from './modules/calendar/entities/event-attachment.entity';
+import { EventOrganizer } from './modules/calendar/entities/event-organizer.entity';
 
 @Module({
   imports: [
@@ -14,8 +18,13 @@ import { Event } from './modules/calendar/entities/event.entity';
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_DATABASE || 'church_management',
-      entities: [User, Event],
-      synchronize: process.env.NODE_ENV !== 'production',
+      entities: [User, Event, EventAttachment, EventOrganizer],
+      synchronize: false,
+      migrationsRun: false,
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
     }),
     AuthModule,
     CalendarModule,

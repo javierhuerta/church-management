@@ -8,16 +8,40 @@ export type UpdateEventDto = {
     startDate?: string;
     endDate?: string;
     eventType?: UpdateEventDto.eventType;
+    status?: UpdateEventDto.status;
+    department?: UpdateEventDto.department | null;
+    meetingUrl?: string | null;
+    meetingType?: UpdateEventDto.meetingType | null;
+    location?: string | null;
+    organizerIds?: Array<string>;
 };
 export namespace UpdateEventDto {
     export enum eventType {
-        CULTO_SABATICO = 'CultoSabatico',
-        ESCUELA_SABATICA = 'EscuelaSabatica',
-        CULTO_VESPERTINO = 'CultoVespertino',
-        SEMANA_ORACION = 'SemanaOracion',
-        EVENTO_MISIONAL = 'EventoMisional',
-        JUNTA_ADMINISTRACION = 'JuntaAdministracion',
-        OTRO = 'Otro',
+        LOCAL = 'local',
+        ASACH = 'asach',
+        DISTRITAL = 'distrital',
+    }
+    export enum status {
+        DRAFT = 'draft',
+        PUBLISHED = 'published',
+        ARCHIVED = 'archived',
+    }
+    export enum department {
+        JOVENES = 'jovenes',
+        ADOLESCENTES = 'adolescentes',
+        FAMILIA = 'familia',
+        MISION = 'mision',
+        ESCUELA_SABATICA = 'escuela_sabatica',
+        MUSICA = 'musica',
+        CONDUCTORES_JOVENES = 'conductores_jovenes',
+        MINISTERIOS = 'ministerios',
+        SALUD = 'salud',
+        COMUNICACIONES = 'comunicaciones',
+    }
+    export enum meetingType {
+        ZOOM = 'zoom',
+        MEET = 'meet',
+        TEAMS = 'teams',
+        OTHER = 'other',
     }
 }
-

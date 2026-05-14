@@ -6,9 +6,9 @@ export function AppLayout() {
   const { textSizeClass } = useTextSize()
 
   return (
-    <div className={`flex h-screen ${textSizeClass}`}>
+    <div className={`flex h-screen overflow-hidden ${textSizeClass}`}>
       <Sidebar />
-      <div className="flex flex-col flex-1 min-h-screen bg-neutral-50">
+      <div className="flex flex-col flex-1 overflow-y-auto bg-neutral-50">
         <main className="flex-1 container mx-auto px-6 py-6">
           <Outlet />
         </main>

@@ -1,4 +1,5 @@
 export enum UserRole {
+  Admin = 'Admin',
   Pastor = 'Pastor',
   Anciano = 'Anciano',
   CoordinadorMisionero = 'CoordinadorMisionero',

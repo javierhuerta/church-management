@@ -32,9 +32,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const onSubmit = async (data: LoginInput) => {
     try {
       setError(null)
-      const response = await AuthService.authControllerLogin(data)
-      OpenAPI.TOKEN = response.access_token
-      localStorage.setItem('token', response.access_token)
+      const response = (await AuthService.authControllerLogin(data)) as {
+        accessToken?: string
+        access_token?: string
+      }
+      const token = response.accessToken ?? response.access_token ?? ''
+      OpenAPI.TOKEN = token
+      localStorage.setItem('token', token)
       onSuccess?.()
     } catch (err: any) {
       setError(err.body?.message || 'Error al iniciar sesión')

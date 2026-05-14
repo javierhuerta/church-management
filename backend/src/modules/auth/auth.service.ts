@@ -11,6 +11,7 @@ interface TokenPayload {
   sub: string;
   email: string;
   role: string;
+  name: string;
 }
 
 @Injectable()
@@ -43,6 +44,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
+      name: user.name,
     };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
@@ -61,7 +63,9 @@ export class AuthService {
 
   async refresh(refreshTokenDto: { refreshToken: string }) {
     try {
-      const payload = this.jwtService.verify<TokenPayload>(refreshTokenDto.refreshToken);
+      const payload = this.jwtService.verify<TokenPayload>(
+        refreshTokenDto.refreshToken,
+      );
 
       const user = await this.userRepository.findOne({
         where: { id: payload.sub },
@@ -75,6 +79,7 @@ export class AuthService {
         sub: user.id,
         email: user.email,
         role: user.role,
+        name: user.name,
       };
       const accessToken = this.jwtService.sign(newPayload, {
         expiresIn: '15m',

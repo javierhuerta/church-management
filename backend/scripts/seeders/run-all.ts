@@ -3,8 +3,13 @@ import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
 import { User } from '../../src/modules/auth/entities/user.entity';
 import { Event } from '../../src/modules/calendar/entities/event.entity';
+import { EventAttachment } from '../../src/modules/calendar/entities/event-attachment.entity';
+import { EventOrganizer } from '../../src/modules/calendar/entities/event-organizer.entity';
 import { UserRole } from '../../src/modules/common/entities/user-role.enum';
 import { EventType } from '../../src/modules/calendar/entities/event-type.enum';
+import { EventStatus } from '../../src/modules/calendar/entities/event-status.enum';
+import { Department } from '../../src/modules/calendar/entities/department.enum';
+import { generateShareSlug } from '../../src/modules/calendar/utils/slug';
 
 async function runSeeders() {
   const dataSource = new DataSource({
@@ -14,7 +19,7 @@ async function runSeeders() {
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'postgres',
     database: process.env.DB_DATABASE || 'church_management',
-    entities: [User, Event],
+    entities: [User, Event, EventAttachment, EventOrganizer],
   });
 
   await dataSource.initialize();
@@ -23,9 +28,30 @@ async function runSeeders() {
 
   const userRepo = dataSource.getRepository(User);
   const users = [
-    { email: 'pastor@iglesia.cl', password: 'password123', name: 'Roberto Hernández', role: UserRole.Pastor },
-    { email: 'anciano@iglesia.cl', password: 'password123', name: 'Carlos Muñoz', role: UserRole.Anciano },
-    { email: 'secretaria@iglesia.cl', password: 'password123', name: 'María López', role: UserRole.Secretaria },
+    {
+      email: 'admin@iglesia.cl',
+      password: 'password123',
+      name: 'Administrador',
+      role: UserRole.Admin,
+    },
+    {
+      email: 'pastor@iglesia.cl',
+      password: 'password123',
+      name: 'Roberto Hernández',
+      role: UserRole.Pastor,
+    },
+    {
+      email: 'anciano@iglesia.cl',
+      password: 'password123',
+      name: 'Carlos Muñoz',
+      role: UserRole.Anciano,
+    },
+    {
+      email: 'secretaria@iglesia.cl',
+      password: 'password123',
+      name: 'María López',
+      role: UserRole.Secretaria,
+    },
   ];
 
   const createdUsers: User[] = [];
@@ -44,23 +70,44 @@ async function runSeeders() {
   }
 
   const eventRepo = dataSource.getRepository(Event);
-  const pastorUser = createdUsers[0];
+  const pastorUser =
+    createdUsers.find((u) => u.role === UserRole.Pastor) ?? createdUsers[0];
 
-  const events = [
+  const eventSeeds = [
     {
       title: 'Culto de Adoración Sabática',
-      description: 'Servicio principal del sábado por la mañana',
+      description: '<p>Servicio principal del sábado por la mañana</p>',
       startDate: new Date('2026-05-16T10:00:00'),
       endDate: new Date('2026-05-16T12:00:00'),
-      eventType: EventType.CultoSabatico,
-      creatorId: pastorUser.id,
+      eventType: EventType.Local,
+      status: EventStatus.Published,
+      department: null,
+      meetingUrl: null,
+      meetingType: null,
+      location: 'Iglesia Adventista Osorno Central',
+    },
+    {
+      title: 'Campamento Regional de Jóvenes',
+      description: '<p>Campamento de jóvenes a nivel ASACH</p>',
+      startDate: new Date('2026-06-12T18:00:00'),
+      endDate: new Date('2026-06-14T18:00:00'),
+      eventType: EventType.Asach,
+      status: EventStatus.Published,
+      department: Department.Jovenes,
+      meetingUrl: null,
+      meetingType: null,
+      location: 'Campamento Las Vertientes',
     },
   ];
 
-  for (const eventData of events) {
+  for (const eventData of eventSeeds) {
     const existing = await eventRepo.findOne({ where: { title: eventData.title } });
     if (!existing) {
-      const event = eventRepo.create(eventData);
+      const event = eventRepo.create({
+        ...eventData,
+        creatorId: pastorUser.id,
+        shareSlug: generateShareSlug(eventData.title, eventData.startDate),
+      });
       await eventRepo.save(event);
       console.log(`Created event: ${eventData.title}`);
     } else {
