@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { API_URL } from '@/lib/api-client'
+import { AuthService, OpenAPI } from '@/lib/api'
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -31,22 +31,12 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const onSubmit = async (data: LoginInput) => {
     try {
       setError(null)
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        const result = await response.json()
-        throw new Error(result.message || 'Credenciales inválidas')
-      }
-
-      const result = await response.json()
-      localStorage.setItem('token', result.access_token)
+      const response = await AuthService.authControllerLogin(data)
+      OpenAPI.TOKEN = response.access_token
+      localStorage.setItem('token', response.access_token)
       onSuccess?.()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesión')
+    } catch (err: any) {
+      setError(err.body?.message || 'Error al iniciar sesión')
     }
   }
 
