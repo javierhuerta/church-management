@@ -68,6 +68,12 @@ export class UpdateProgramDto {
   sections?: UpdateSectionDto[];
 }
 
+export class UpdateProgramDateDto {
+  @ApiProperty({ example: '2026-05-30' })
+  @IsString()
+  date: string;
+}
+
 export class CreateProgramDto {
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   @IsUUID()

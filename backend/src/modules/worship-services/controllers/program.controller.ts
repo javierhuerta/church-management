@@ -18,7 +18,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { ProgramService } from '../services/program.service';
-import { CreateProgramDto, UpdateSectionDto } from '../dto/program.dto';
+import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto } from '../dto/program.dto';
 import { ServiceProgramResponseDto, ProgramLogResponseDto } from '../dto/program-response.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -51,10 +51,10 @@ export class ProgramController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    if (startDate && endDate) {
-      return this.programService.findByDateRange(startDate, endDate);
-    }
-    return this.programService.findAll();
+    const programs = startDate && endDate
+      ? await this.programService.findByDateRange(startDate, endDate)
+      : await this.programService.findAll();
+    return programs;
   }
 
   @Get(':id')
@@ -133,5 +133,48 @@ export class ProgramController {
   async delete(@Param('id') id: string, @Request() req: RequestWithUser) {
     await this.programService.delete(id, req.user!.role);
     return { message: 'Program deleted' };
+  }
+
+  @Patch('groups/:groupId')
+  @Roles(
+    UserRole.Admin,
+    UserRole.Pastor,
+    UserRole.Anciano,
+    UserRole.DirectorDepartamento,
+  )
+  @ApiOperation({ summary: 'Update a program group' })
+  @ApiResponse({ status: 200, description: 'Group updated' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Group not found' })
+  async updateGroup(
+    @Param('groupId') groupId: string,
+    @Body() dto: UpdateGroupDto,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.programService.updateGroup(
+      groupId,
+      dto,
+      req.user!.userId,
+      req.user!.role,
+    );
+  }
+
+  @Patch(':id')
+  @Roles(
+    UserRole.Admin,
+    UserRole.Pastor,
+    UserRole.Anciano,
+    UserRole.DirectorDepartamento,
+  )
+  @ApiOperation({ summary: 'Update program date' })
+  @ApiResponse({ status: 200, description: 'Program date updated' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Program not found' })
+  async updateProgram(
+    @Param('id') id: string,
+    @Body() dto: UpdateProgramDateDto,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.programService.updateProgram(id, dto, req.user!.userId, req.user!.role);
   }
 }

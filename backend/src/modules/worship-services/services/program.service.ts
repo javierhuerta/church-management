@@ -18,7 +18,7 @@ import {
 } from '../entities';
 import { ProgramStatus } from '../entities/service-template-type.enum';
 import { UserRole } from '../../common/entities/user-role.enum';
-import { CreateProgramDto, UpdateSectionDto } from '../dto/program.dto';
+import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto } from '../dto/program.dto';
 
 @Injectable()
 export class ProgramService {
@@ -262,6 +262,101 @@ export class ProgramService {
     }
 
     return this.sectionRepo.save(section);
+  }
+
+  async updateGroup(
+    groupId: string,
+    dto: UpdateGroupDto,
+    userId: string,
+    userRole: UserRole,
+  ) {
+    const group = await this.programGroupRepo.findOne({
+      where: { id: groupId },
+    });
+    if (!group) {
+      throw new NotFoundException(`Group ${groupId} not found`);
+    }
+
+    const program = await this.programRepo.findOne({
+      where: { id: group.programId },
+    });
+    if (!program) {
+      throw new NotFoundException(`Program not found`);
+    }
+
+    if (!this.canEditProgram(program, userId, userRole)) {
+      throw new ForbiddenException('Not authorized to edit this program');
+    }
+
+    if (dto.name !== undefined && dto.name !== group.name) {
+      await this.createLog(
+        program.id,
+        userId,
+        null,
+        'cambió nombre de grupo',
+        group.name,
+        dto.name,
+      );
+      group.name = dto.name;
+    }
+    if (dto.startTime !== undefined && dto.startTime !== group.startTime) {
+      await this.createLog(
+        program.id,
+        userId,
+        null,
+        'cambió hora de inicio de grupo',
+        group.startTime,
+        dto.startTime,
+      );
+      group.startTime = dto.startTime;
+    }
+    if (dto.endTime !== undefined && dto.endTime !== group.endTime) {
+      await this.createLog(
+        program.id,
+        userId,
+        null,
+        'cambió hora de fin de grupo',
+        group.endTime,
+        dto.endTime,
+      );
+      group.endTime = dto.endTime;
+    }
+    if (dto.order !== undefined && dto.order !== group.order) {
+      group.order = dto.order;
+    }
+
+    return this.programGroupRepo.save(group);
+  }
+
+  async updateProgram(
+    programId: string,
+    dto: { date: string },
+    userId: string,
+    userRole: UserRole,
+  ) {
+    const program = await this.programRepo.findOne({ where: { id: programId } });
+    if (!program) {
+      throw new NotFoundException(`Program ${programId} not found`);
+    }
+
+    if (!this.canEditProgram(program, userId, userRole)) {
+      throw new ForbiddenException('Not authorized to edit this program');
+    }
+
+    const oldDate = program.date;
+    program.date = dto.date;
+    await this.programRepo.save(program);
+
+    await this.createLog(
+      program.id,
+      userId,
+      null,
+      'cambió fecha del programa',
+      oldDate,
+      dto.date,
+    );
+
+    return this.findOne(programId);
   }
 
   async publish(

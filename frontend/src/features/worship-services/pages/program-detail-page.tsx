@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Clock, User, Music, FileText, Send, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Clock, User, Music, FileText, Send, CheckCircle, Trash2, Calendar } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useAuthUser } from '@/features/calendar/hooks/use-auth-user'
@@ -15,6 +15,8 @@ export function ProgramDetailPage() {
   const navigate = useNavigate()
   const user = useAuthUser()
   const [editingSection, setEditingSection] = useState<string | null>(null)
+  const [editingGroup, setEditingGroup] = useState<string | null>(null)
+  const [editingDate, setEditingDate] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
 
   const { data: program, isLoading } = useProgram(id || '')
@@ -59,9 +61,34 @@ export function ProgramDetailPage() {
           <Button variant="ghost" size="sm" onClick={() => navigate('/cultos/programas')}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Volver
           </Button>
-          <h2 className="text-3xl font-bold tracking-tight text-neutral-900 mt-2">
-            {formattedDate}
-          </h2>
+          {editingDate ? (
+            <div className="flex items-center gap-2 mt-2">
+              <Input
+                type="date"
+                value={program.date}
+                onChange={(e) => {
+                  const newDate = e.target.value
+                  WorshipServicesProgramsService.programControllerUpdateProgram(id || '', { date: newDate })
+                    .then(() => window.location.reload())
+                }}
+                className="w-40"
+              />
+              <Button variant="ghost" size="sm" onClick={() => setEditingDate(false)}>
+                Cancelar
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 mt-2">
+              <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+                {formattedDate}
+              </h2>
+              {canEdit && (
+                <Button variant="ghost" size="sm" onClick={() => setEditingDate(true)}>
+                  <Calendar className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
           <p className="text-neutral-500 mt-1">{program.template?.name}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -79,6 +106,20 @@ export function ProgramDetailPage() {
               <Send className="h-4 w-4 mr-1" /> {isPublishing ? 'Publicando...' : 'Publicar'}
             </Button>
           )}
+          {user?.role === 'Admin' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={async () => {
+                if (!confirm('¿Eliminar este programa? Esta acción no se puede deshacer.')) return
+                await WorshipServicesProgramsService.programControllerDelete(id || '')
+                navigate('/cultos/programas')
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+            </Button>
+          )}
         </div>
       </div>
 
@@ -88,14 +129,34 @@ export function ProgramDetailPage() {
             <div key={group.id} className="rounded-2xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
               <div className="bg-blue-50 px-4 py-3 border-b border-blue-100">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-blue-900">{group.name}</h3>
-                  {(group.startTime || group.endTime) && (
-                    <span className="text-xs text-blue-600 flex items-center">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {group.startTime && `${group.startTime}`}
-                      {group.startTime && group.endTime && ' - '}
-                      {group.endTime && `${group.endTime}`}
-                    </span>
+                  {editingGroup === group.id ? (
+                    <GroupEditForm
+                      group={group}
+                      onSave={async (data) => {
+                        await WorshipServicesProgramsService.programControllerUpdateGroup(group.id, data)
+                        window.location.reload()
+                      }}
+                      onCancel={() => setEditingGroup(null)}
+                    />
+                  ) : (
+                    <>
+                      <h3 className="font-semibold text-blue-900">{group.name}</h3>
+                      <div className="flex items-center gap-2">
+                        {(group.startTime || group.endTime) && (
+                          <span className="text-xs text-blue-600 flex items-center">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {group.startTime && `${group.startTime}`}
+                            {group.startTime && group.endTime && ' - '}
+                            {group.endTime && `${group.endTime}`}
+                          </span>
+                        )}
+                        {canEdit && (
+                          <Button variant="ghost" size="sm" onClick={() => setEditingGroup(group.id)}>
+                            Editar
+                          </Button>
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
@@ -164,6 +225,68 @@ export function ProgramDetailPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+interface Group {
+  id: string
+  name: string
+  startTime?: string | null
+  endTime?: string | null
+  order: number
+}
+
+interface GroupEditFormProps {
+  group: Group
+  onSave: (data: { name?: string; startTime?: string; endTime?: string }) => void
+  onCancel: () => void
+}
+
+function GroupEditForm({ group, onSave, onCancel }: GroupEditFormProps) {
+  const [formData, setFormData] = useState({
+    name: group.name,
+    startTime: group.startTime || '',
+    endTime: group.endTime || '',
+  })
+  const [isSaving, setIsSaving] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setIsSaving(true)
+    try {
+      await onSave(formData)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex-1 flex items-center gap-2">
+      <Input
+        value={formData.name}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        className="flex-1"
+        placeholder="Nombre del grupo"
+      />
+      <Input
+        type="time"
+        value={formData.startTime}
+        onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+        className="w-24"
+      />
+      <Input
+        type="time"
+        value={formData.endTime}
+        onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+        className="w-24"
+      />
+      <Button type="submit" size="sm" disabled={isSaving}>
+        {isSaving ? '...' : 'Guardar'}
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+        Cancelar
+      </Button>
+</form>
   )
 }
 

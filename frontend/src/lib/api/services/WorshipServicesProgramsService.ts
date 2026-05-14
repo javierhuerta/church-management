@@ -5,6 +5,8 @@
 import type { CreateProgramDto } from '../models/CreateProgramDto';
 import type { ProgramLogResponseDto } from '../models/ProgramLogResponseDto';
 import type { ServiceProgramResponseDto } from '../models/ServiceProgramResponseDto';
+import type { UpdateGroupDto } from '../models/UpdateGroupDto';
+import type { UpdateProgramDateDto } from '../models/UpdateProgramDateDto';
 import type { UpdateSectionDto } from '../models/UpdateSectionDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -91,6 +93,31 @@ export class WorshipServicesProgramsService {
         });
     }
     /**
+     * Update program date
+     * @param id
+     * @param requestBody
+     * @returns any Program date updated
+     * @throws ApiError
+     */
+    public static programControllerUpdateProgram(
+        id: string,
+        requestBody: UpdateProgramDateDto,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/worship-services/programs/{id}',
+            path: {
+                'id': id,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                403: `Forbidden`,
+                404: `Program not found`,
+            },
+        });
+    }
+    /**
      * Get program audit logs
      * @param id
      * @returns ProgramLogResponseDto Program logs
@@ -150,6 +177,31 @@ export class WorshipServicesProgramsService {
             errors: {
                 403: `Forbidden`,
                 404: `Program not found`,
+            },
+        });
+    }
+    /**
+     * Update a program group
+     * @param groupId
+     * @param requestBody
+     * @returns any Group updated
+     * @throws ApiError
+     */
+    public static programControllerUpdateGroup(
+        groupId: string,
+        requestBody: UpdateGroupDto,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/worship-services/programs/groups/{groupId}',
+            path: {
+                'groupId': groupId,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                403: `Forbidden`,
+                404: `Group not found`,
             },
         });
     }

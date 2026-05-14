@@ -27,6 +27,8 @@ export { ServiceTemplateResponseDto } from './models/ServiceTemplateResponseDto'
 export type { TemplateGroupResponseDto } from './models/TemplateGroupResponseDto';
 export { TemplateSectionResponseDto } from './models/TemplateSectionResponseDto';
 export { UpdateEventDto } from './models/UpdateEventDto';
+export type { UpdateGroupDto } from './models/UpdateGroupDto';
+export type { UpdateProgramDateDto } from './models/UpdateProgramDateDto';
 export type { UpdateSectionDto } from './models/UpdateSectionDto';
 export { UpdateTemplateDto } from './models/UpdateTemplateDto';
 export type { UploadAttachmentDto } from './models/UploadAttachmentDto';
