@@ -44,4 +44,4 @@
 - [x] 6.1 Correr `openspec validate estructura-base` para verificar specs
 - [x] 6.2 Correr lint y typecheck en backend
 - [x] 6.3 Correr lint y typecheck en frontend
-- [ ] 6.4 Hacer commit de la estructura base
+- [x] 6.4 Hacer commit de la estructura base
