@@ -21,6 +21,52 @@
 - Controllers con documentacion OpenAPI decoradores (@ApiTags, @ApiOperation, etc.)
 - Modules independientes por capacidad
 
+#### TypeORM: `@JoinColumn` obligatorio en `@ManyToOne`
+
+**Toda relación `@ManyToOne` que tenga un `@Column` explícito para la FK debe llevar también `@JoinColumn({ name: '...' })` con el nombre snake_case de la columna.**
+
+Sin `@JoinColumn`, TypeORM genera automáticamente una columna camelCase adicional (p.ej. `programId`) separada de la columna snake_case declarada en `@Column({ name: 'program_id' })`. El resultado: los datos se guardan en `program_id` pero los JOINs operan sobre `programId` (siempre vacía), devolviendo todas las relaciones como `null` o `[]` sin ningún error visible.
+
+```typescript
+// MAL — TypeORM crea una columna "programId" separada en la BD
+@ManyToOne(() => ServiceProgram, ...)
+program: ServiceProgram;
+
+@Column({ name: 'program_id', type: 'uuid' })
+programId: string;
+
+// BIEN — @JoinColumn indica explícitamente qué columna usar para el JOIN
+@ManyToOne(() => ServiceProgram, ...)
+@JoinColumn({ name: 'program_id' })
+program: ServiceProgram;
+
+@Column({ name: 'program_id', type: 'uuid' })
+programId: string;
+```
+
+Si en la BD existen columnas duplicadas camelCase (p.ej. `programId` junto a `program_id`), crear una migración para eliminar las camelCase **después** de agregar `@JoinColumn` y confirmar que los datos están en la columna snake_case.
+
+#### TypeORM: Seeders — no confiar en cascade implícito
+
+No usar `cascade` de TypeORM en seeders a menos que esté declarado `cascade: true` en la entidad. Crear cada entidad hija explícitamente con su propio repositorio, pasando el FK manualmente:
+
+```typescript
+// MAL — los hijos se ignoran silenciosamente si la entidad no tiene cascade: true
+const template = templateRepo.create({ name, groups: [...] });
+await templateRepo.save(template);
+
+// BIEN — cada entidad hija se guarda con su repo propio
+const template = await templateRepo.save(templateRepo.create({ name }));
+for (const g of groupsData) {
+  const group = await groupRepo.save(groupRepo.create({ ...g, templateId: template.id }));
+  for (const s of g.sections) {
+    await sectionRepo.save(sectionRepo.create({ ...s, groupId: group.id, templateId: template.id }));
+  }
+}
+```
+
+Esto aplica también al runner `scripts/seeders/run-all.ts`: cada entidad del árbol necesita su repositorio y sus FKs explícitos.
+
 ### Frontend (React + Vite + shadcn/ui + Tailwind)
 - No usar CSS plano — usar componentes shadcn o Tailwind
 - No crear componentes fuera de `src/components/` o `src/features/`
@@ -58,6 +104,32 @@ npm run generate:api
 - Si el codegen genera tipos `Record<string, any>` en vez de `string`, revisar los `@ApiProperty` en el backend
 - Si el build pasa pero hay errores de runtime en浏览器, puede ser `request.ts` corrupto — restaurar con git
 - El archivo `setup.ts` configura `OpenAPI.BASE = ''` — las rutas en los servicios ya incluyen `/api/`
+
+## Diagnóstico: problemas frecuentes de desarrollo
+
+### Puerto 3000 ocupado por proceso zombie
+
+Si `nest start --watch` no arranca, devuelve 404 en rutas nuevas, o el servidor no refleja cambios recientes, es probable que haya un proceso viejo ocupando el puerto:
+
+```bash
+lsof -ti:3000 | xargs kill -9
+```
+
+Arrancar siempre con `nest start --watch` desde `backend/`. Si el problema persiste, matar también procesos nest huérfanos:
+
+```bash
+pkill -f "nest start"
+```
+
+### Migraciones: verificar columna antes de hacer DROP
+
+Antes de hacer `DROP COLUMN` en una migración que limpia duplicados, confirmar qué columna contiene los datos reales:
+
+```sql
+SELECT "program_id", "programId" FROM service_program_groups LIMIT 5;
+```
+
+Solo borrar la columna que esté vacía. Si hay datos en ambas, investigar antes de proceder.
 
 ## Convenciones de codigo
 
@@ -131,4 +203,4 @@ church-management/
 
 ---
 
-**Version**: 1.0 — 2025-05-14
+**Version**: 1.1 — 2026-05-14
