@@ -2,7 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { CreateGroupInProgramDto } from '../models/CreateGroupInProgramDto';
 import type { CreateProgramDto } from '../models/CreateProgramDto';
+import type { CreateSectionInGroupDto } from '../models/CreateSectionInGroupDto';
 import type { ProgramLogResponseDto } from '../models/ProgramLogResponseDto';
 import type { ServiceProgramResponseDto } from '../models/ServiceProgramResponseDto';
 import type { UpdateGroupDto } from '../models/UpdateGroupDto';
@@ -132,6 +134,48 @@ export class WorshipServicesProgramsService {
             path: {
                 'id': id,
             },
+        });
+    }
+    /**
+     * Add a group to a program
+     * @param id
+     * @param requestBody
+     * @returns any Group added
+     * @throws ApiError
+     */
+    public static programControllerAddGroup(
+        id: string,
+        requestBody: CreateGroupInProgramDto,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/worship-services/programs/{id}/groups',
+            path: {
+                'id': id,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+        });
+    }
+    /**
+     * Add a section to a group
+     * @param groupId
+     * @param requestBody
+     * @returns any Section added
+     * @throws ApiError
+     */
+    public static programControllerAddSectionToGroup(
+        groupId: string,
+        requestBody: CreateSectionInGroupDto,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/worship-services/programs/groups/{groupId}/sections',
+            path: {
+                'groupId': groupId,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
         });
     }
     /**

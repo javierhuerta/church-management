@@ -3,6 +3,7 @@ import {
   Column,
   ManyToOne,
   OneToMany,
+  JoinColumn,
   PrimaryGeneratedColumn,
   CreateDateColumn,
 } from 'typeorm';
@@ -29,6 +30,7 @@ export class ServiceProgramGroup {
   @ManyToOne(() => ServiceProgram, (program) => program.groups, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'program_id' })
   program: ServiceProgram;
 
   @Column({ name: 'program_id', type: 'uuid' })

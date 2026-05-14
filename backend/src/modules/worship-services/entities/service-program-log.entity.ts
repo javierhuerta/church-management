@@ -2,6 +2,7 @@ import {
   Entity,
   Column,
   ManyToOne,
+  JoinColumn,
   PrimaryGeneratedColumn,
   CreateDateColumn,
 } from 'typeorm';
@@ -15,18 +16,21 @@ export class ServiceProgramLog {
   id: string;
 
   @ManyToOne(() => ServiceProgram)
+  @JoinColumn({ name: 'program_id' })
   program: ServiceProgram;
 
   @Column({ name: 'program_id', type: 'uuid' })
   programId: string;
 
   @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
 
   @ManyToOne(() => ServiceProgramSection, { nullable: true })
+  @JoinColumn({ name: 'section_id' })
   section: ServiceProgramSection | null;
 
   @Column({ name: 'section_id', type: 'uuid', nullable: true })

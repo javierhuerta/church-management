@@ -9,7 +9,9 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AttachmentResponseDto } from './models/AttachmentResponseDto';
 export { CreateEventDto } from './models/CreateEventDto';
+export type { CreateGroupInProgramDto } from './models/CreateGroupInProgramDto';
 export type { CreateProgramDto } from './models/CreateProgramDto';
+export type { CreateSectionInGroupDto } from './models/CreateSectionInGroupDto';
 export { CreateTemplateDto } from './models/CreateTemplateDto';
 export { EventResponseDto } from './models/EventResponseDto';
 export type { GroupWithSectionsDto } from './models/GroupWithSectionsDto';
@@ -25,6 +27,7 @@ export type { SectionDto } from './models/SectionDto';
 export { ServiceProgramResponseDto } from './models/ServiceProgramResponseDto';
 export { ServiceTemplateResponseDto } from './models/ServiceTemplateResponseDto';
 export type { TemplateGroupResponseDto } from './models/TemplateGroupResponseDto';
+export type { TemplateSectionNameDto } from './models/TemplateSectionNameDto';
 export { TemplateSectionResponseDto } from './models/TemplateSectionResponseDto';
 export { UpdateEventDto } from './models/UpdateEventDto';
 export type { UpdateGroupDto } from './models/UpdateGroupDto';

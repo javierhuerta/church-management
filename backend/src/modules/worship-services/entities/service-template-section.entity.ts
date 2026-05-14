@@ -2,9 +2,9 @@ import {
   Entity,
   Column,
   ManyToOne,
+  JoinColumn,
   PrimaryGeneratedColumn,
   CreateDateColumn,
-  JoinColumn,
 } from 'typeorm';
 import { ServiceTemplate } from './service-template.entity';
 import { ServiceTemplateGroup } from './service-template-group.entity';
@@ -37,6 +37,7 @@ export class ServiceTemplateSection {
     onDelete: 'CASCADE',
     nullable: true,
   })
+  @JoinColumn({ name: 'template_id' })
   template: ServiceTemplate;
 
   @Column({ name: 'template_id', type: 'uuid', nullable: true })
@@ -46,6 +47,7 @@ export class ServiceTemplateSection {
     onDelete: 'CASCADE',
     nullable: true,
   })
+  @JoinColumn({ name: 'group_id' })
   group: ServiceTemplateGroup | null;
 
   @Column({ name: 'group_id', type: 'uuid', nullable: true })

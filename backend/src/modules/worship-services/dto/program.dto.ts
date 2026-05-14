@@ -74,6 +74,28 @@ export class UpdateProgramDateDto {
   date: string;
 }
 
+export class CreateGroupInProgramDto {
+  @ApiProperty({ example: 'Escuela Sabática' })
+  @IsString()
+  name: string;
+
+  @ApiPropertyOptional({ example: '09:00' })
+  @IsOptional()
+  @IsString()
+  startTime?: string;
+
+  @ApiPropertyOptional({ example: '10:30' })
+  @IsOptional()
+  @IsString()
+  endTime?: string;
+}
+
+export class CreateSectionInGroupDto {
+  @ApiProperty({ example: 'Canto de apertura' })
+  @IsString()
+  name: string;
+}
+
 export class CreateProgramDto {
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   @IsUUID()

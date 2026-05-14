@@ -18,7 +18,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { ProgramService } from '../services/program.service';
-import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto } from '../dto/program.dto';
+import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto, CreateGroupInProgramDto, CreateSectionInGroupDto } from '../dto/program.dto';
 import { ServiceProgramResponseDto, ProgramLogResponseDto } from '../dto/program-response.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -88,6 +88,40 @@ export class ProgramController {
       req.user!.userId,
       req.user!.role,
     );
+  }
+
+  @Post(':id/groups')
+  @Roles(
+    UserRole.Admin,
+    UserRole.Pastor,
+    UserRole.Anciano,
+    UserRole.DirectorDepartamento,
+  )
+  @ApiOperation({ summary: 'Add a group to a program' })
+  @ApiResponse({ status: 201, description: 'Group added' })
+  async addGroup(
+    @Param('id') id: string,
+    @Body() dto: CreateGroupInProgramDto,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.programService.addGroup(id, dto, req.user!.userId, req.user!.role);
+  }
+
+  @Post('groups/:groupId/sections')
+  @Roles(
+    UserRole.Admin,
+    UserRole.Pastor,
+    UserRole.Anciano,
+    UserRole.DirectorDepartamento,
+  )
+  @ApiOperation({ summary: 'Add a section to a group' })
+  @ApiResponse({ status: 201, description: 'Section added' })
+  async addSectionToGroup(
+    @Param('groupId') groupId: string,
+    @Body() dto: CreateSectionInGroupDto,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.programService.addSectionToGroup(groupId, dto, req.user!.userId, req.user!.role);
   }
 
   @Patch('sections/:sectionId')

@@ -3,6 +3,7 @@ import {
   Column,
   ManyToOne,
   OneToMany,
+  JoinColumn,
   PrimaryGeneratedColumn,
   CreateDateColumn,
 } from 'typeorm';
@@ -29,6 +30,7 @@ export class ServiceTemplateGroup {
   @ManyToOne(() => ServiceTemplate, (template) => template.groups, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'template_id' })
   template: ServiceTemplate;
 
   @Column({ name: 'template_id', type: 'uuid' })

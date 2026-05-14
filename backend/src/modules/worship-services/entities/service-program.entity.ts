@@ -3,6 +3,7 @@ import {
   Column,
   OneToMany,
   ManyToOne,
+  JoinColumn,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
@@ -30,18 +31,21 @@ export class ServiceProgram {
   status: ProgramStatus;
 
   @ManyToOne(() => ServiceTemplate)
+  @JoinColumn({ name: 'template_id' })
   template: ServiceTemplate;
 
   @Column({ name: 'template_id', type: 'uuid' })
   templateId: string;
 
   @ManyToOne(() => User)
+  @JoinColumn({ name: 'created_by_id' })
   createdBy: User;
 
   @Column({ name: 'created_by_id', type: 'uuid' })
   createdById: string;
 
   @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'published_by_id' })
   publishedBy: User | null;
 
   @Column({ name: 'published_by_id', type: 'uuid', nullable: true })

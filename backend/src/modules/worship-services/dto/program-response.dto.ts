@@ -3,9 +3,20 @@ import { ProgramStatus } from '../entities/service-template-type.enum';
 import { ProgramSectionTargetType } from '../entities/service-program-section.entity';
 import { ServiceTemplateResponseDto } from './template-response.dto';
 
+export class TemplateSectionNameDto {
+  @ApiProperty({ type: String })
+  id: string;
+
+  @ApiProperty({ type: String })
+  name: string;
+}
+
 export class ProgramSectionResponseDto {
   @ApiProperty({ type: String })
   id: string;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  name: string | null;
 
   @ApiPropertyOptional({ type: String, nullable: true })
   startTime: string | null;
@@ -36,6 +47,9 @@ export class ProgramSectionResponseDto {
 
   @ApiPropertyOptional({ type: String, nullable: true })
   templateSectionId: string | null;
+
+  @ApiPropertyOptional({ type: () => TemplateSectionNameDto, nullable: true })
+  templateSection: TemplateSectionNameDto | null;
 
   @ApiProperty({ type: Date })
   createdAt: Date;

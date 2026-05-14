@@ -18,7 +18,7 @@ import {
 } from '../entities';
 import { ProgramStatus } from '../entities/service-template-type.enum';
 import { UserRole } from '../../common/entities/user-role.enum';
-import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto } from '../dto/program.dto';
+import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto, CreateGroupInProgramDto, CreateSectionInGroupDto } from '../dto/program.dto';
 
 @Injectable()
 export class ProgramService {
@@ -52,7 +52,9 @@ export class ProgramService {
       relations: [
         'groups',
         'groups.sections',
+        'groups.sections.templateSection',
         'sections',
+        'sections.templateSection',
         'template',
         'createdBy',
         'publishedBy',
@@ -158,6 +160,61 @@ export class ProgramService {
     );
 
     return this.findOne(savedProgram.id);
+  }
+
+  async addGroup(
+    programId: string,
+    dto: CreateGroupInProgramDto,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<ServiceProgramGroup> {
+    const program = await this.programRepo.findOne({ where: { id: programId } });
+    if (!program) throw new NotFoundException(`Program ${programId} not found`);
+    if (!this.canEditProgram(program, userId, userRole)) {
+      throw new ForbiddenException('Not authorized to edit this program');
+    }
+
+    const count = await this.programGroupRepo.count({ where: { programId } });
+    const group = this.programGroupRepo.create({
+      name: dto.name,
+      startTime: dto.startTime ?? null,
+      endTime: dto.endTime ?? null,
+      order: count,
+      programId,
+    });
+    const saved = await this.programGroupRepo.save(group);
+
+    await this.createLog(programId, userId, null, 'agregó grupo', null, dto.name);
+    return saved;
+  }
+
+  async addSectionToGroup(
+    groupId: string,
+    dto: CreateSectionInGroupDto,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<ServiceProgramSection> {
+    const group = await this.programGroupRepo.findOne({ where: { id: groupId } });
+    if (!group) throw new NotFoundException(`Group ${groupId} not found`);
+
+    const program = await this.programRepo.findOne({ where: { id: group.programId } });
+    if (!program) throw new NotFoundException(`Program not found`);
+    if (!this.canEditProgram(program, userId, userRole)) {
+      throw new ForbiddenException('Not authorized to edit this program');
+    }
+
+    const count = await this.sectionRepo.count({ where: { groupId } });
+    const section = this.sectionRepo.create({
+      name: dto.name,
+      order: count,
+      targetType: ProgramSectionTargetType.GROUP,
+      groupId,
+      programId: group.programId,
+    });
+    const saved = await this.sectionRepo.save(section);
+
+    await this.createLog(program.id, userId, saved.id, 'agregó sección', null, dto.name);
+    return saved;
   }
 
   async updateSection(

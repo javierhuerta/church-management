@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Clock, User, Music, FileText, Send, CheckCircle, Trash2, Calendar } from 'lucide-react'
+import { ArrowLeft, Clock, User, Music, FileText, Send, CheckCircle, Trash2, Calendar, Plus } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useAuthUser } from '@/features/calendar/hooks/use-auth-user'
@@ -18,6 +18,8 @@ export function ProgramDetailPage() {
   const [editingGroup, setEditingGroup] = useState<string | null>(null)
   const [editingDate, setEditingDate] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
+  const [addingGroup, setAddingGroup] = useState(false)
+  const [addingSectionToGroup, setAddingSectionToGroup] = useState<string | null>(null)
 
   const { data: program, isLoading } = useProgram(id || '')
   const { data: logs } = useProgramLogs(id || '')
@@ -151,9 +153,18 @@ export function ProgramDetailPage() {
                           </span>
                         )}
                         {canEdit && (
-                          <Button variant="ghost" size="sm" onClick={() => setEditingGroup(group.id)}>
-                            Editar
-                          </Button>
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => setEditingGroup(group.id)}>
+                              Editar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setAddingSectionToGroup(addingSectionToGroup === group.id ? null : group.id)}
+                            >
+                              <Plus className="h-3.5 w-3.5 mr-1" /> Sección
+                            </Button>
+                          </>
                         )}
                       </div>
                     </>
@@ -169,16 +180,47 @@ export function ProgramDetailPage() {
                     isEditing={editingSection === section.id}
                     onEdit={() => setEditingSection(section.id)}
                     onCancel={() => setEditingSection(null)}
+                    sectionName={section.name ?? section.templateSection?.name}
                   />
                 ))}
+                {addingSectionToGroup === group.id && (
+                  <AddSectionForm
+                    onSave={async (name) => {
+                      await WorshipServicesProgramsService.programControllerAddSectionToGroup(group.id, { name })
+                      window.location.reload()
+                    }}
+                    onCancel={() => setAddingSectionToGroup(null)}
+                  />
+                )}
               </div>
             </div>
           ))}
 
+          {canEdit && (
+            addingGroup ? (
+              <AddGroupForm
+                onSave={async (data) => {
+                  await WorshipServicesProgramsService.programControllerAddGroup(id || '', data)
+                  window.location.reload()
+                }}
+                onCancel={() => setAddingGroup(false)}
+              />
+            ) : (
+              <button
+                onClick={() => setAddingGroup(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed border-neutral-200 text-sm text-neutral-500 hover:border-blue-300 hover:text-blue-600 transition-colors"
+              >
+                <Plus className="h-4 w-4" /> Agregar grupo
+              </button>
+            )
+          )}
+
           {program.sections?.filter(s => !s.groupId).map((section) => (
             <div key={section.id} className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
               <div className="px-4 py-3 border-b border-neutral-100">
-                <h3 className="font-semibold text-neutral-900">{section.templateSectionId}</h3>
+                <h3 className="font-semibold text-neutral-900">
+                  {section.templateSection?.name ?? 'Sección'}
+                </h3>
               </div>
               <div className="p-4">
                 <SectionRow
@@ -298,6 +340,7 @@ interface Section {
   hymnText?: string | null
   notes?: string | null
   order: number
+  templateSection?: { id: string; name: string } | null
 }
 
 interface SectionRowProps {
@@ -306,9 +349,10 @@ interface SectionRowProps {
   isEditing: boolean
   onEdit: () => void
   onCancel: () => void
+  sectionName?: string
 }
 
-function SectionRow({ section, canEdit, isEditing, onEdit, onCancel }: SectionRowProps) {
+function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, sectionName }: SectionRowProps) {
   const [formData, setFormData] = useState({
     startTime: section.startTime || '',
     duration: section.duration || '',
@@ -423,31 +467,36 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel }: SectionRo
 
   return (
     <div className="p-4 flex items-start justify-between gap-4">
-      <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-        {section.startTime && (
-          <div className="flex items-center gap-1 text-neutral-500">
-            <Clock className="h-3.5 w-3.5" />
-            {section.startTime}
-          </div>
+      <div className="flex-1 space-y-2">
+        {sectionName && (
+          <p className="text-xs font-semibold text-neutral-700 uppercase tracking-wide">{sectionName}</p>
         )}
-        {section.responsible && (
-          <div className="flex items-center gap-1">
-            <User className="h-3.5 w-3.5 text-neutral-400" />
-            {section.responsible}
-          </div>
-        )}
-        {section.hymnText && (
-          <div className="flex items-center gap-1">
-            <Music className="h-3.5 w-3.5 text-neutral-400" />
-            <span className="truncate">{section.hymnText}</span>
-          </div>
-        )}
-        {section.notes && (
-          <div className="flex items-center gap-1">
-            <FileText className="h-3.5 w-3.5 text-neutral-400" />
-            <span className="truncate">{section.notes}</span>
-          </div>
-        )}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          {section.startTime && (
+            <div className="flex items-center gap-1 text-neutral-500">
+              <Clock className="h-3.5 w-3.5" />
+              {section.startTime}
+            </div>
+          )}
+          {section.responsible && (
+            <div className="flex items-center gap-1">
+              <User className="h-3.5 w-3.5 text-neutral-400" />
+              {section.responsible}
+            </div>
+          )}
+          {section.hymnText && (
+            <div className="flex items-center gap-1">
+              <Music className="h-3.5 w-3.5 text-neutral-400" />
+              <span className="truncate">{section.hymnText}</span>
+            </div>
+          )}
+          {section.notes && (
+            <div className="flex items-center gap-1">
+              <FileText className="h-3.5 w-3.5 text-neutral-400" />
+              <span className="truncate">{section.notes}</span>
+            </div>
+          )}
+        </div>
       </div>
       {canEdit && (
         <Button variant="ghost" size="sm" onClick={onEdit}>
@@ -455,5 +504,105 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel }: SectionRo
         </Button>
       )}
     </div>
+  )
+}
+
+function AddGroupForm({
+  onSave,
+  onCancel,
+}: {
+  onSave: (data: { name: string; startTime?: string; endTime?: string }) => Promise<void>
+  onCancel: () => void
+}) {
+  const [formData, setFormData] = useState({ name: '', startTime: '', endTime: '' })
+  const [isSaving, setIsSaving] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!formData.name.trim()) return
+    setIsSaving(true)
+    try {
+      await onSave({
+        name: formData.name.trim(),
+        startTime: formData.startTime || undefined,
+        endTime: formData.endTime || undefined,
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border-2 border-blue-200 bg-blue-50 p-4">
+      <p className="text-sm font-medium text-blue-900 mb-3">Nuevo grupo</p>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <Input
+          autoFocus
+          placeholder="Nombre del grupo (ej: Escuela Sabática)"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        />
+        <div className="flex gap-2">
+          <Input
+            type="time"
+            placeholder="Hora inicio"
+            value={formData.startTime}
+            onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+            className="flex-1"
+          />
+          <Input
+            type="time"
+            placeholder="Hora fin"
+            value={formData.endTime}
+            onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+            className="flex-1"
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel}>Cancelar</Button>
+          <Button type="submit" size="sm" disabled={isSaving || !formData.name.trim()}>
+            {isSaving ? 'Guardando...' : 'Agregar grupo'}
+          </Button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+function AddSectionForm({
+  onSave,
+  onCancel,
+}: {
+  onSave: (name: string) => Promise<void>
+  onCancel: () => void
+}) {
+  const [name, setName] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!name.trim()) return
+    setIsSaving(true)
+    try {
+      await onSave(name.trim())
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="p-3 flex items-center gap-2 bg-neutral-50 border-t border-neutral-100">
+      <Input
+        autoFocus
+        placeholder="Nombre de la sección (ej: Canto de apertura)"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="flex-1"
+      />
+      <Button type="submit" size="sm" disabled={isSaving || !name.trim()}>
+        {isSaving ? '...' : 'Agregar'}
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onCancel}>Cancelar</Button>
+    </form>
   )
 }
