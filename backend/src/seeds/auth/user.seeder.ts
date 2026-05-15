@@ -9,6 +9,12 @@ export class UserSeeder implements Seeder {
 
     const users = [
       {
+        email: 'admin@iglesia.cl',
+        password: await bcrypt.hash('password123', 10),
+        name: 'Administrador',
+        role: UserRole.Admin,
+      },
+      {
         email: 'pastor@iglesia.cl',
         password: await bcrypt.hash('password123', 10),
         name: 'Roberto Hernández',

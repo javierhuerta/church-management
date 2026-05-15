@@ -4,10 +4,10 @@
 /* eslint-disable */
 export type UpdateSectionDto = {
     name?: string;
-    startTime?: string;
-    duration?: number;
-    responsible?: string;
-    hymnText?: string;
-    notes?: string;
+    startTime?: string | null;
+    duration?: number | null;
+    responsible?: string | null;
+    hymnText?: string | null;
+    notes?: string | null;
 };
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Clock, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Clock, ChevronRight, Timer } from 'lucide-react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select'
 import { WorshipServicesProgramsService } from '@/lib/api'
 import type { ServiceTemplateResponseDto } from '@/lib/api/models/ServiceTemplateResponseDto'
+import type { TemplateSectionResponseDto } from '@/lib/api/models/TemplateSectionResponseDto'
 
 const formSchema = z.object({
   templateId: z.string().min(1, 'Selecciona una plantilla'),
@@ -33,9 +34,52 @@ const templateTypeLabels: Record<ServiceTemplateType, string> = {
   OTRO: 'Otro',
 }
 
+function SectionPreviewRow({
+  section,
+  variant = 'group',
+}: {
+  section: TemplateSectionResponseDto
+  variant?: 'group' | 'standalone'
+}) {
+  const isStandalone = variant === 'standalone'
+  return (
+    <div className="flex items-center justify-between gap-2 text-xs">
+      <div className="flex items-center gap-1.5 min-w-0">
+        <ChevronRight
+          className={`h-3 w-3 shrink-0 ${isStandalone ? 'text-blue-400' : 'text-neutral-300'}`}
+        />
+        <span className={`truncate ${isStandalone ? 'text-blue-800' : 'text-neutral-700'}`}>
+          {section.name}
+        </span>
+      </div>
+      {(section.startTime || section.duration) && (
+        <div className="flex items-center gap-2 text-neutral-400 shrink-0">
+          {section.startTime && (
+            <span className="flex items-center gap-0.5">
+              <Clock className="h-2.5 w-2.5" />
+              {section.startTime}
+            </span>
+          )}
+          {section.duration && (
+            <span className="flex items-center gap-0.5">
+              <Timer className="h-2.5 w-2.5" />
+              {section.duration} min
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function TemplatePreview({ template }: { template: ServiceTemplateResponseDto }) {
   const sortedGroups = [...template.groups].sort((a, b) => a.order - b.order)
-  const topSections = template.sections
+  // Exclude sections that belong to a group — those appear inside the group card
+  const standaloneSections = [...template.sections]
+    .filter((s) => !s.groupId)
+    .sort((a, b) => a.order - b.order)
+
+  const hasContent = sortedGroups.length > 0 || standaloneSections.length > 0
 
   return (
     <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 space-y-3">
@@ -51,52 +95,50 @@ function TemplatePreview({ template }: { template: ServiceTemplateResponseDto })
         </span>
       </div>
 
-      {topSections.length > 0 && (
-        <div className="space-y-1">
-          {topSections.map((s) => (
-            <div key={s.id} className="flex items-center gap-1.5 text-xs text-blue-800">
-              <ChevronRight className="h-3 w-3 shrink-0 text-blue-400" />
-              {s.name}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {sortedGroups.length > 0 && (
-        <div className="space-y-2">
-          {sortedGroups.map((group) => (
-            <div key={group.id} className="rounded-lg border border-blue-100 bg-white/70 p-3 space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold text-neutral-700 uppercase tracking-wide">
-                  {group.name}
-                </p>
-                {(group.startTime || group.endTime) && (
-                  <span className="flex items-center gap-1 text-xs text-neutral-500">
-                    <Clock className="h-3 w-3" />
-                    {group.startTime}
-                    {group.endTime ? ` – ${group.endTime}` : ''}
-                  </span>
-                )}
-              </div>
-              {group.sections.length > 0 && (
-                <div className="space-y-0.5">
-                  {[...group.sections]
-                    .sort((a, b) => a.order - b.order)
-                    .map((s) => (
-                      <div key={s.id} className="flex items-center gap-1.5 text-xs text-neutral-600">
-                        <ChevronRight className="h-3 w-3 shrink-0 text-neutral-300" />
-                        {s.name}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {sortedGroups.length === 0 && topSections.length === 0 && (
+      {!hasContent && (
         <p className="text-xs text-blue-600 italic">Esta plantilla no tiene secciones definidas.</p>
+      )}
+
+      {sortedGroups.map((group) => (
+        <div
+          key={group.id}
+          className="rounded-lg border border-blue-100 bg-white/70 p-3 space-y-2"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-bold text-neutral-700 uppercase tracking-wide">
+              {group.name}
+            </p>
+            {(group.startTime || group.endTime) && (
+              <span className="flex items-center gap-1 text-xs text-neutral-500">
+                <Clock className="h-3 w-3" />
+                {group.startTime}
+                {group.endTime ? ` – ${group.endTime}` : ''}
+              </span>
+            )}
+          </div>
+          {group.sections.length === 0 ? (
+            <p className="text-xs text-neutral-400 italic">Sin secciones</p>
+          ) : (
+            <div className="space-y-1">
+              {[...group.sections]
+                .sort((a, b) => a.order - b.order)
+                .map((s) => (
+                  <SectionPreviewRow key={s.id} section={s} variant="group" />
+                ))}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {standaloneSections.length > 0 && (
+        <div className="space-y-1">
+          {sortedGroups.length > 0 && (
+            <p className="text-xs font-semibold text-blue-700 mb-1.5">Secciones adicionales</p>
+          )}
+          {standaloneSections.map((s) => (
+            <SectionPreviewRow key={s.id} section={s} variant="standalone" />
+          ))}
+        </div>
       )}
     </div>
   )

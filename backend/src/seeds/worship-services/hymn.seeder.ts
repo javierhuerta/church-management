@@ -126,6 +126,7 @@ export class HymnSeeder implements Seeder {
       { number: 117, name: 'No Sé Por Qué' },
       { number: 118, name: 'Cuando Estés Cansado y Abatido' },
       { number: 119, name: 'De Su Trono, Mi Jesús' },
+      { number: 120, name: '¡Cuánto Me Alegra!' },
       { number: 121, name: 'Es Jesucristo la Vida, la Luz' },
       { number: 122, name: 'Divino Pastor' },
       { number: 123, name: '¡Cuánto Nos Ama Jesús!' },

@@ -20,7 +20,16 @@ export async function runAllSeeders(): Promise<void> {
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'postgres',
     database: process.env.DB_DATABASE || 'church_management',
-    entities: [User, Event, EventAttachment, EventOrganizer, ServiceTemplate, ServiceTemplateGroup, ServiceTemplateSection, Hymn],
+    entities: [
+      User,
+      Event,
+      EventAttachment,
+      EventOrganizer,
+      ServiceTemplate,
+      ServiceTemplateGroup,
+      ServiceTemplateSection,
+      Hymn,
+    ],
   });
 
   await dataSource.initialize();

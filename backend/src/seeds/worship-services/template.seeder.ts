@@ -47,41 +47,42 @@ export class TemplateSeeder implements Seeder {
         groups: [
           {
             name: 'Escuela Sabática',
-            startTime: '09:00',
-            endTime: '10:30',
+            startTime: '09:45',
+            endTime: '11:00',
             order: 1,
             sections: [
               {
                 name: 'Oración inicial',
                 order: 1,
-                startTime: '09:00',
+                startTime: '09:45',
+                duration: 15,
               },
-              { name: 'Himnos inicial', order: 2 },
-              { name: 'Informe misionero', order: 3 },
-              { name: 'Repaso de la lección', order: 4 },
-              { name: 'Himno final', order: 5 },
-              { name: 'Oración de cierre', order: 6 },
+              { name: 'Himno inicial', order: 2, duration: 10 },
+              { name: 'Informe misionero', order: 3, duration: 15 },
+              { name: 'Repaso de la lección', order: 4, duration: 30 },
+              { name: 'Himno final', order: 5, duration: 10 },
+              { name: 'Oración de cierre', order: 6, duration: 10 },
             ],
           },
           {
             name: 'Culto Divino',
-            startTime: '10:45',
-            endTime: '12:00',
+            startTime: '11:00',
+            endTime: '12:30',
             order: 2,
             sections: [
-              { name: 'Doxología', order: 1 },
-              { name: 'Oración de invocación', order: 2 },
-              { name: 'Himno', order: 3 },
-              { name: 'Parte musical', order: 4 },
-              { name: 'Adoración infantil', order: 5 },
-              { name: 'Diezmos y ofrendas', order: 6 },
-              { name: 'Himno tema 1', order: 7 },
-              { name: 'Lectura bíblica', order: 8 },
-              { name: 'Oración intercesora', order: 9 },
-              { name: 'Sermón', order: 10 },
-              { name: 'Himno tema 2', order: 11 },
-              { name: 'Oración final', order: 12 },
-              { name: 'Himno de salida', order: 13 },
+              { name: 'Doxología', order: 1, duration: 5 },
+              { name: 'Oración de invocación', order: 2, duration: 5 },
+              { name: 'Himno', order: 3, duration: 5 },
+              { name: 'Parte musical', order: 4, duration: 15 },
+              { name: 'Adoración infantil', order: 5, duration: 10 },
+              { name: 'Diezmos y ofrendas', order: 6, duration: 15 },
+              { name: 'Himno tema 1', order: 7, duration: 5 },
+              { name: 'Lectura bíblica', order: 8, duration: 5 },
+              { name: 'Oración intercesora', order: 9, duration: 10 },
+              { name: 'Sermón', order: 10, duration: 35 },
+              { name: 'Himno tema 2', order: 11, duration: 5 },
+              { name: 'Oración final', order: 12, duration: 10 },
+              { name: 'Himno de salida', order: 13, duration: 5 },
             ],
           },
         ],
@@ -95,21 +96,21 @@ export class TemplateSeeder implements Seeder {
         groups: [
           {
             name: 'Culto JA',
-            startTime: '19:00',
-            endTime: '21:00',
+            startTime: '17:00',
+            endTime: '18:30',
             order: 1,
             sections: [
-              { name: 'Cantos JA congregacionales', order: 1 },
-              { name: 'Bienvenida general', order: 2 },
-              { name: 'Canto inicial', order: 3 },
-              { name: 'Oración de inicio', order: 4 },
-              { name: 'LATE JA', order: 5 },
-              { name: 'Ofrenda musical', order: 6 },
-              { name: 'Parte especial', order: 7 },
-              { name: 'Ofrenda', order: 8 },
-              { name: 'Tema principal', order: 9 },
-              { name: 'Oración de cierre', order: 10 },
-              { name: 'Invitación al próximo culto JA', order: 11 },
+              { name: 'Cantos JA congregacionales', order: 1, duration: 10 },
+              { name: 'Bienvenida general', order: 2, duration: 5 },
+              { name: 'Canto inicial', order: 3, duration: 5 },
+              { name: 'Oración de inicio', order: 4, duration: 5 },
+              { name: 'LATE JA', order: 5, duration: 20 },
+              { name: 'Ofrenda musical', order: 6, duration: 10 },
+              { name: 'Parte especial', order: 7, duration: 15 },
+              { name: 'Ofrenda', order: 8, duration: 10 },
+              { name: 'Tema principal', order: 9, duration: 30 },
+              { name: 'Oración de cierre', order: 10, duration: 10 },
+              { name: 'Invitación al próximo culto JA', order: 11, duration: 5 },
             ],
           },
         ],
@@ -123,17 +124,17 @@ export class TemplateSeeder implements Seeder {
         groups: [
           {
             name: 'Culto de Oración',
-            startTime: '19:00',
+            startTime: '19:30',
             endTime: '20:30',
             order: 1,
             sections: [
-              { name: 'Bienvenida', order: 1 },
-              { name: 'Himno inicial', order: 2 },
-              { name: 'Pedidos de oración', order: 3 },
-              { name: 'Tema', order: 4 },
-              { name: 'Himno final', order: 5 },
-              { name: 'Oración', order: 6 },
-              { name: 'Despedida', order: 7 },
+              { name: 'Bienvenida', order: 1, duration: 5 },
+              { name: 'Himno inicial', order: 2, duration: 5 },
+              { name: 'Pedidos de oración', order: 3, duration: 15 },
+              { name: 'Tema', order: 4, duration: 25 },
+              { name: 'Himno final', order: 5, duration: 5 },
+              { name: 'Oración', order: 6, duration: 15 },
+              { name: 'Despedida', order: 7, duration: 5 },
             ],
           },
         ],
@@ -157,7 +158,10 @@ export class TemplateSeeder implements Seeder {
         template = await templateRepo.save(template);
         console.log(`Created template: ${templateData.name}`);
       } else {
-        // Delete existing sections and groups to recreate with updated structure
+        template.description = templateData.description;
+        template.type = templateData.type;
+        template.isActive = templateData.isActive;
+        await templateRepo.save(template);
         await sectionRepo.delete({ templateId: template.id });
         await groupRepo.delete({ templateId: template.id });
         console.log(`Updated template: ${templateData.name}`);
@@ -180,6 +184,8 @@ export class TemplateSeeder implements Seeder {
             targetType: TemplateSectionTargetType.GROUP,
             groupId: savedGroup.id,
             templateId: template.id,
+            startTime: sectionData.startTime,
+            duration: sectionData.duration,
           });
           await sectionRepo.save(section);
         }
@@ -191,6 +197,8 @@ export class TemplateSeeder implements Seeder {
           order: sectionData.order,
           targetType: TemplateSectionTargetType.TEMPLATE,
           templateId: template.id,
+          startTime: sectionData.startTime,
+          duration: sectionData.duration,
         });
         await sectionRepo.save(section);
       }

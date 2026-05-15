@@ -36,30 +36,30 @@ export class UpdateSectionDto {
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ example: '09:00' })
+  @ApiPropertyOptional({ example: '09:00', nullable: true })
   @IsOptional()
   @IsString()
-  startTime?: string;
+  startTime?: string | null;
 
-  @ApiPropertyOptional({ example: 30 })
+  @ApiPropertyOptional({ example: 30, nullable: true })
   @IsOptional()
   @IsNumber()
-  duration?: number;
+  duration?: number | null;
 
-  @ApiPropertyOptional({ example: 'Pr. Juan Pérez' })
+  @ApiPropertyOptional({ example: 'Pr. Juan Pérez', nullable: true })
   @IsOptional()
   @IsString()
-  responsible?: string;
+  responsible?: string | null;
 
-  @ApiPropertyOptional({ example: 'Himno 125 - Gran Dios' })
+  @ApiPropertyOptional({ example: 'Himno 125 - Gran Dios', nullable: true })
   @IsOptional()
   @IsString()
-  hymnText?: string;
+  hymnText?: string | null;
 
-  @ApiPropertyOptional({ example: 'Especial: ofrenda de cosecha' })
+  @ApiPropertyOptional({ example: 'Especial: ofrenda de cosecha', nullable: true })
   @IsOptional()
   @IsString()
-  notes?: string;
+  notes?: string | null;
 }
 
 export class UpdateGroupDto {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Clock, User, Music, FileText, Send, CheckCircle, Trash2, Calendar, Plus, Archive, Download, GripVertical } from 'lucide-react'
@@ -37,6 +37,7 @@ import {
   useReorderSections,
 } from '../hooks/use-worship-services'
 import { downloadProgramPdf } from '../hooks/use-program-pdf'
+import { ProgramChangeHistory } from '../components/program-change-history'
 import { WorshipServicesProgramsService } from '@/lib/api'
 import { toast } from 'sonner'
 
@@ -62,6 +63,20 @@ export function ProgramDetailPage() {
 
   const { data: program, isLoading } = useProgram(id || '')
   const { data: logs } = useProgramLogs(id || '')
+
+  const groupToDelete = useMemo(
+    () => program?.groups?.find((g) => g.id === deleteGroupId) ?? null,
+    [program, deleteGroupId],
+  )
+
+  const sectionToDelete = useMemo(() => {
+    if (!deleteSectionId || !program) return null
+    for (const group of program.groups ?? []) {
+      const found = group.sections?.find((s) => s.id === deleteSectionId)
+      if (found) return found
+    }
+    return program.sections?.find((s) => s.id === deleteSectionId) ?? null
+  }, [program, deleteSectionId])
 
   const deleteProgram = useDeleteProgram()
   const archiveProgram = useArchiveProgram(id || '')
@@ -144,7 +159,7 @@ export function ProgramDetailPage() {
       <ConfirmDialog
         open={!!deleteGroupId}
         onOpenChange={(open) => !open && setDeleteGroupId(null)}
-        title="¿Eliminar este grupo?"
+        title={groupToDelete ? `¿Eliminar grupo "${groupToDelete.name}"?` : '¿Eliminar este grupo?'}
         description="Se eliminarán el grupo y todas sus secciones. Esta acción no se puede deshacer."
         confirmLabel="Eliminar grupo"
         variant="destructive"
@@ -158,7 +173,11 @@ export function ProgramDetailPage() {
       <ConfirmDialog
         open={!!deleteSectionId}
         onOpenChange={(open) => !open && setDeleteSectionId(null)}
-        title="¿Eliminar esta sección?"
+        title={
+          sectionToDelete
+            ? `¿Eliminar sección "${sectionToDelete.name ?? sectionToDelete.templateSection?.name ?? 'sin nombre'}"?`
+            : '¿Eliminar esta sección?'
+        }
         description="Esta acción no se puede deshacer."
         confirmLabel="Eliminar sección"
         variant="destructive"
@@ -350,34 +369,7 @@ export function ProgramDetailPage() {
         </div>
 
         <div className="lg:col-span-1">
-          <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm sticky top-6">
-            <div className="px-4 py-3 border-b border-neutral-100">
-              <h3 className="font-semibold text-neutral-900">Historial de cambios</h3>
-            </div>
-            <div className="divide-y divide-neutral-100 max-h-96 overflow-y-auto">
-              {logs?.map((log) => (
-                <div key={log.id} className="px-4 py-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-neutral-900">{log.user?.name}</span>
-                    <span className="text-xs text-neutral-500">
-                      {format(new Date(log.createdAt), 'HH:mm')}
-                    </span>
-                  </div>
-                  <p className="text-sm text-neutral-600 mt-0.5">{log.action}</p>
-                  {log.previousValue && log.newValue && (
-                    <div className="mt-1 text-xs text-neutral-400">
-                      {log.previousValue} → {log.newValue}
-                    </div>
-                  )}
-                </div>
-              ))}
-              {!logs?.length && (
-                <div className="px-4 py-6 text-center text-sm text-neutral-500">
-                  Sin cambios registrados
-                </div>
-              )}
-            </div>
-          </div>
+          <ProgramChangeHistory logs={logs} />
         </div>
       </div>
     </div>
@@ -490,11 +482,11 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, onDelete, o
     try {
       await WorshipServicesProgramsService.programControllerUpdateSection(section.id, {
         name: formData.name || undefined,
-        startTime: formData.startTime || undefined,
-        duration: formData.duration ? Number(formData.duration) : undefined,
-        responsible: formData.responsible || undefined,
-        hymnText: formData.hymnText || undefined,
-        notes: formData.notes || undefined,
+        startTime: formData.startTime || null,
+        duration: formData.duration ? Number(formData.duration) : null,
+        responsible: formData.responsible || null,
+        hymnText: formData.hymnText || null,
+        notes: formData.notes || null,
       })
       await onSaved()
       onCancel()

@@ -313,8 +313,8 @@ export class ProgramService {
         userId,
         sectionId,
         'cambió duración',
-        String(section.duration),
-        String(dto.duration),
+        section.duration != null ? String(section.duration) : null,
+        dto.duration != null ? String(dto.duration) : null,
       );
       section.duration = dto.duration;
     }
