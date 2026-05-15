@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Clock, User, Music, FileText, Send, CheckCircle, Trash2, Calendar, Plus, Archive } from 'lucide-react'
+import { ArrowLeft, Clock, User, Music, FileText, Send, CheckCircle, Trash2, Calendar, Plus, Archive, Download } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useAuthUser } from '@/features/calendar/hooks/use-auth-user'
@@ -19,6 +19,7 @@ import {
   useDeleteGroup,
   useDeleteSection,
 } from '../hooks/use-worship-services'
+import { downloadProgramPdf } from '../hooks/use-program-pdf'
 import { WorshipServicesProgramsService } from '@/lib/api'
 import { toast } from 'sonner'
 
@@ -35,6 +36,7 @@ export function ProgramDetailPage() {
   const [addingGroup, setAddingGroup] = useState(false)
   const [addingSectionToGroup, setAddingSectionToGroup] = useState<string | null>(null)
 
+  const [isDownloading, setIsDownloading] = useState(false)
   const [publishDialogOpen, setPublishDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false)
@@ -198,6 +200,24 @@ export function ProgramDetailPage() {
               Borrador
             </span>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isDownloading}
+            onClick={async () => {
+              setIsDownloading(true)
+              try {
+                await downloadProgramPdf(program)
+              } catch {
+                toast.error('No se pudo generar el PDF')
+              } finally {
+                setIsDownloading(false)
+              }
+            }}
+          >
+            <Download className="h-4 w-4 mr-1" />
+            {isDownloading ? 'Generando...' : 'Descargar PDF'}
+          </Button>
           {canPublish && (
             <Button onClick={() => setPublishDialogOpen(true)} disabled={isPublishing}>
               <Send className="h-4 w-4 mr-1" /> {isPublishing ? 'Publicando...' : 'Publicar'}
