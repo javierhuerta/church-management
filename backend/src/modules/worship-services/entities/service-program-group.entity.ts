@@ -1,20 +1,10 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  OneToMany,
-  JoinColumn,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { BaseEntity } from '../../common/entities/base.entity';
 import { ServiceProgram } from './service-program.entity';
 import { ServiceProgramSection } from './service-program-section.entity';
 
 @Entity('service_program_groups')
-export class ServiceProgramGroup {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class ServiceProgramGroup extends BaseEntity {
   @Column()
   name: string;
 
@@ -38,7 +28,4 @@ export class ServiceProgramGroup {
 
   @OneToMany(() => ServiceProgramSection, (section) => section.group)
   sections: ServiceProgramSection[];
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
 }

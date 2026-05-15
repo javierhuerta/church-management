@@ -1,11 +1,5 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { BaseEntity } from '../../common/entities/base.entity';
 import { ServiceTemplate } from './service-template.entity';
 import { ServiceTemplateGroup } from './service-template-group.entity';
 
@@ -15,10 +9,7 @@ export enum TemplateSectionTargetType {
 }
 
 @Entity('service_template_sections')
-export class ServiceTemplateSection {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class ServiceTemplateSection extends BaseEntity {
   @Column()
   name: string;
 
@@ -52,7 +43,4 @@ export class ServiceTemplateSection {
 
   @Column({ name: 'group_id', type: 'uuid', nullable: true })
   groupId: string | null;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
 }

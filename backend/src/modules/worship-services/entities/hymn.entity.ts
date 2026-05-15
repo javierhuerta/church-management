@@ -1,10 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column } from 'typeorm';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity('hymns')
-export class Hymn {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class Hymn extends BaseEntity {
   @Column({ unique: true })
   number: number;
 

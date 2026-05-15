@@ -4,10 +4,8 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
 } from 'typeorm';
+import { BaseEntity } from '../../common/entities/base.entity';
 import { ProgramStatus } from './service-template-type.enum';
 import { ServiceTemplate } from './service-template.entity';
 import { ServiceProgramGroup } from './service-program-group.entity';
@@ -15,10 +13,7 @@ import { ServiceProgramSection } from './service-program-section.entity';
 import { User } from '../../auth/entities/user.entity';
 
 @Entity('service_programs')
-export class ServiceProgram {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class ServiceProgram extends BaseEntity {
   @Column({ type: 'date' })
   date: string;
 
@@ -51,7 +46,7 @@ export class ServiceProgram {
   @Column({ name: 'published_by_id', type: 'uuid', nullable: true })
   publishedById: string | null;
 
-  @Column({ name: 'published_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'published_at', type: 'timestamptz', nullable: true })
   publishedAt: Date | null;
 
   @OneToMany(() => ServiceProgramGroup, (group) => group.program, {
@@ -63,10 +58,4 @@ export class ServiceProgram {
     cascade: true,
   })
   sections: ServiceProgramSection[];
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', nullable: true })
-  updatedAt: Date | null;
 }

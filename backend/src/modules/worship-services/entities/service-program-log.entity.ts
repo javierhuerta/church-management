@@ -1,20 +1,11 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { BaseEntity } from '../../common/entities/base.entity';
 import { ServiceProgram } from './service-program.entity';
 import { ServiceProgramSection } from './service-program-section.entity';
 import { User } from '../../auth/entities/user.entity';
 
 @Entity('service_program_logs')
-export class ServiceProgramLog {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class ServiceProgramLog extends BaseEntity {
   @ManyToOne(() => ServiceProgram)
   @JoinColumn({ name: 'program_id' })
   program: ServiceProgram;
@@ -44,7 +35,4 @@ export class ServiceProgramLog {
 
   @Column({ name: 'new_value', type: 'text', nullable: true })
   newValue: string | null;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
 }
