@@ -21,6 +21,19 @@ export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
   archived: 'Archivado',
 }
 
+export const DEPARTMENT_COLORS: Record<Department, { dot: string; bg: string; text: string }> = {
+  jovenes:             { dot: 'bg-orange-400',  bg: 'bg-orange-50',  text: 'text-orange-700' },
+  adolescentes:        { dot: 'bg-yellow-400',  bg: 'bg-yellow-50',  text: 'text-yellow-700' },
+  familia:             { dot: 'bg-green-500',   bg: 'bg-green-50',   text: 'text-green-700' },
+  mision:              { dot: 'bg-red-500',     bg: 'bg-red-50',     text: 'text-red-700' },
+  escuela_sabatica:    { dot: 'bg-sky-500',     bg: 'bg-sky-50',     text: 'text-sky-700' },
+  musica:              { dot: 'bg-purple-500',  bg: 'bg-purple-50',  text: 'text-purple-700' },
+  conductores_jovenes: { dot: 'bg-teal-500',   bg: 'bg-teal-50',    text: 'text-teal-700' },
+  ministerios:         { dot: 'bg-indigo-500',  bg: 'bg-indigo-50',  text: 'text-indigo-700' },
+  salud:               { dot: 'bg-lime-500',    bg: 'bg-lime-50',    text: 'text-lime-700' },
+  comunicaciones:      { dot: 'bg-cyan-500',    bg: 'bg-cyan-50',    text: 'text-cyan-700' },
+}
+
 export const DEPARTMENT_LABELS: Record<Department, string> = {
   jovenes: 'Jóvenes',
   adolescentes: 'Adolescentes',
