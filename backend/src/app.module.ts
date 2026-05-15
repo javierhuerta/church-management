@@ -5,7 +5,10 @@ import { join } from 'path';
 import { AuthModule } from './modules/auth/auth.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
 import { WorshipServicesModule } from './modules/worship-services/worship-services.module';
+import { UsersModule } from './modules/users/users.module';
+import { DepartmentsModule } from './modules/departments/departments.module';
 import { User } from './modules/auth/entities/user.entity';
+import { Department } from './modules/departments/entities/department.entity';
 import { Event } from './modules/calendar/entities/event.entity';
 import { EventAttachment } from './modules/calendar/entities/event-attachment.entity';
 import { EventOrganizer } from './modules/calendar/entities/event-organizer.entity';
@@ -31,6 +34,7 @@ import {
       database: process.env.DB_DATABASE || 'church_management',
       entities: [
         User,
+        Department,
         Event,
         EventAttachment,
         EventOrganizer,
@@ -53,6 +57,8 @@ import {
     AuthModule,
     CalendarModule,
     WorshipServicesModule,
+    UsersModule,
+    DepartmentsModule,
   ],
 })
 export class AppModule {}

@@ -54,6 +54,12 @@ export const MEETING_TYPE_LABELS: Record<MeetingType, string> = {
   other: 'Otra plataforma',
 }
 
+const DEFAULT_DEPT_COLORS = { dot: 'bg-neutral-400', bg: 'bg-neutral-50', text: 'text-neutral-700' }
+
+export function getDepartmentColors(name: string): { dot: string; bg: string; text: string } {
+  return DEPARTMENT_COLORS[name as Department] ?? DEFAULT_DEPT_COLORS
+}
+
 export const EDITOR_ROLES = ['Admin', 'Pastor', 'Secretaria'] as const
 
 export function isEditorRole(role: string | undefined | null): boolean {

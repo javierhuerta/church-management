@@ -28,7 +28,7 @@ export class CalendarService {
         startDate?: string,
         endDate?: string,
         eventType?: 'local' | 'asach' | 'distrital',
-        department?: 'jovenes' | 'adolescentes' | 'familia' | 'mision' | 'escuela_sabatica' | 'musica' | 'conductores_jovenes' | 'ministerios' | 'salud' | 'comunicaciones',
+        departmentId?: string,
         status?: 'draft' | 'published' | 'archived',
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
@@ -40,7 +40,7 @@ export class CalendarService {
                 'startDate': startDate,
                 'endDate': endDate,
                 'eventType': eventType,
-                'department': department,
+                'departmentId': departmentId,
                 'status': status,
             },
         });

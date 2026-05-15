@@ -9,7 +9,7 @@ export type UpdateEventDto = {
     endDate?: string;
     eventType?: UpdateEventDto.eventType;
     status?: UpdateEventDto.status;
-    department?: UpdateEventDto.department | null;
+    departmentId?: string | null;
     meetingUrl?: string;
     meetingType?: UpdateEventDto.meetingType | null;
     location?: string;
@@ -26,18 +26,6 @@ export namespace UpdateEventDto {
         PUBLISHED = 'published',
         ARCHIVED = 'archived',
     }
-    export enum department {
-        JOVENES = 'jovenes',
-        ADOLESCENTES = 'adolescentes',
-        FAMILIA = 'familia',
-        MISION = 'mision',
-        ESCUELA_SABATICA = 'escuela_sabatica',
-        MUSICA = 'musica',
-        CONDUCTORES_JOVENES = 'conductores_jovenes',
-        MINISTERIOS = 'ministerios',
-        SALUD = 'salud',
-        COMUNICACIONES = 'comunicaciones',
-    }
     export enum meetingType {
         ZOOM = 'zoom',
         MEET = 'meet',
@@ -45,4 +33,3 @@ export namespace UpdateEventDto {
         OTHER = 'other',
     }
 }
-

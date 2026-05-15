@@ -6,11 +6,12 @@ import { Event } from './entities/event.entity';
 import { EventAttachment } from './entities/event-attachment.entity';
 import { EventOrganizer } from './entities/event-organizer.entity';
 import { User } from '../auth/entities/user.entity';
+import { Department } from '../departments/entities/department.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Event, EventAttachment, EventOrganizer, User]),
+    TypeOrmModule.forFeature([Event, EventAttachment, EventOrganizer, User, Department]),
     AuthModule,
   ],
   controllers: [CalendarController],

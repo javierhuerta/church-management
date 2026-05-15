@@ -2,14 +2,16 @@ import { useQuery } from '@tanstack/react-query'
 import { CalendarService, EventResponseDto } from '@/lib/api'
 
 export type EventType = EventResponseDto.eventType
-export type Department = EventResponseDto.department
 export type EventStatus = EventResponseDto.status
+
+// Kept for color/label lookup in display components (maps to slug-based names stored in DB)
+export type Department = 'jovenes' | 'adolescentes' | 'familia' | 'mision' | 'escuela_sabatica' | 'musica' | 'conductores_jovenes' | 'ministerios' | 'salud' | 'comunicaciones'
 
 export interface CalendarFilters {
   startDate?: string
   endDate?: string
   eventType?: EventType
-  department?: Department
+  departmentId?: string
   status?: EventStatus
 }
 
@@ -31,7 +33,7 @@ export function useCalendar(filters: CalendarFilters) {
         filters.startDate,
         filters.endDate,
         filters.eventType,
-        filters.department,
+        filters.departmentId,
         filters.status,
       ) as Promise<PaginatedResponse<EventResponseDto>>,
   })

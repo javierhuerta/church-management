@@ -8,7 +8,7 @@ export type CreateEventDto = {
     startDate: string;
     endDate: string;
     eventType: CreateEventDto.eventType;
-    department?: CreateEventDto.department;
+    departmentId?: string;
     meetingUrl?: string;
     meetingType?: CreateEventDto.meetingType;
     location?: string;
@@ -23,18 +23,6 @@ export namespace CreateEventDto {
         ASACH = 'asach',
         DISTRITAL = 'distrital',
     }
-    export enum department {
-        JOVENES = 'jovenes',
-        ADOLESCENTES = 'adolescentes',
-        FAMILIA = 'familia',
-        MISION = 'mision',
-        ESCUELA_SABATICA = 'escuela_sabatica',
-        MUSICA = 'musica',
-        CONDUCTORES_JOVENES = 'conductores_jovenes',
-        MINISTERIOS = 'ministerios',
-        SALUD = 'salud',
-        COMUNICACIONES = 'comunicaciones',
-    }
     export enum meetingType {
         ZOOM = 'zoom',
         MEET = 'meet',
@@ -42,4 +30,3 @@ export namespace CreateEventDto {
         OTHER = 'other',
     }
 }
-

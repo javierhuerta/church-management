@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
+import { useQuery } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
   CalendarService,
   CreateEventDto,
   UpdateEventDto,
+  DepartmentsService,
   type AttachmentResponseDto,
   type EventResponseDto,
   type OrganizerResponseDto,
@@ -36,7 +38,7 @@ const formSchema = z
     startDate: z.string().min(1, 'La fecha de inicio es requerida'),
     endDate: z.string().min(1, 'La fecha de fin es requerida'),
     eventType: z.enum(['local', 'asach', 'distrital']),
-    department: z.string().optional(),
+    departmentId: z.string().optional(),
     meetingUrl: z
       .string()
       .url('Debe ser una URL válida (https://...)')
@@ -73,6 +75,11 @@ export function EventForm({ event, onSaved }: EventFormProps) {
   )
   const [serverError, setServerError] = useState<string | null>(null)
 
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => DepartmentsService.departmentsControllerFindAll(),
+  })
+
   const {
     register,
     handleSubmit,
@@ -86,12 +93,16 @@ export function EventForm({ event, onSaved }: EventFormProps) {
       startDate: event ? toDateTimeLocal(event.startDate) : '',
       endDate: event ? toDateTimeLocal(event.endDate) : '',
       eventType: (event?.eventType as 'local' | 'asach' | 'distrital') ?? 'local',
-      department: event?.department ?? '',
+      departmentId: event?.departmentId ?? '',
       meetingUrl: event?.meetingUrl ?? '',
       meetingType: event?.meetingType ?? '',
       location: event?.location ?? '',
     },
   })
+
+  function getDepartmentLabel(name: string): string {
+    return DEPARTMENT_LABELS[name as keyof typeof DEPARTMENT_LABELS] ?? name
+  }
 
   async function onSubmit(values: FormValues) {
     setServerError(null)
@@ -107,7 +118,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
           startDate: startIso,
           endDate: endIso,
           eventType: values.eventType as UpdateEventDto.eventType,
-          department: (values.department || null) as UpdateEventDto.department | null,
+          departmentId: values.departmentId || null,
           meetingUrl: values.meetingUrl || undefined,
           meetingType: (values.meetingType || null) as UpdateEventDto.meetingType | null,
           location: values.location || undefined,
@@ -125,9 +136,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
           startDate: startIso,
           endDate: endIso,
           eventType: values.eventType as CreateEventDto.eventType,
-          department: values.department
-            ? (values.department as CreateEventDto.department)
-            : undefined,
+          departmentId: values.departmentId || undefined,
           meetingUrl: values.meetingUrl || undefined,
           meetingType: values.meetingType
             ? (values.meetingType as CreateEventDto.meetingType)
@@ -227,7 +236,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
           <Label>Departamento</Label>
           <Controller
             control={control}
-            name="department"
+            name="departmentId"
             render={({ field }) => (
               <Select
                 value={field.value || 'none'}
@@ -238,9 +247,9 @@ export function EventForm({ event, onSaved }: EventFormProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Sin departamento</SelectItem>
-                  {Object.entries(DEPARTMENT_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {getDepartmentLabel(d.name)}
                     </SelectItem>
                   ))}
                 </SelectContent>

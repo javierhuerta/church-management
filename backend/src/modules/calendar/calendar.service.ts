@@ -83,7 +83,7 @@ export class CalendarService {
       startDate,
       endDate,
       eventType: createEventDto.eventType,
-      department: createEventDto.department ?? null,
+      departmentId: createEventDto.departmentId ?? null,
       meetingUrl: createEventDto.meetingUrl ?? null,
       meetingType:
         createEventDto.meetingType ??
@@ -113,7 +113,7 @@ export class CalendarService {
       startDate,
       endDate,
       eventType,
-      department,
+      departmentId,
       status,
     } = filter;
 
@@ -126,7 +126,7 @@ export class CalendarService {
       where.endDate = LessThanOrEqual(new Date(endDate));
     }
     if (eventType) where.eventType = eventType;
-    if (department) where.department = department;
+    if (departmentId) where.departmentId = departmentId;
 
     const isEditor = isEditorRole(viewer.role);
     if (!isEditor) {
@@ -140,7 +140,7 @@ export class CalendarService {
       order: { startDate: 'ASC' },
       skip: (page - 1) * limit,
       take: limit,
-      relations: ['attachments', 'organizers', 'organizers.user'],
+      relations: ['attachments', 'organizers', 'organizers.user', 'department'],
     });
 
     return new PaginatedResponseDto(
@@ -197,8 +197,8 @@ export class CalendarService {
       event.endDate = new Date(updateEventDto.endDate);
     if (updateEventDto.eventType) event.eventType = updateEventDto.eventType;
     if (updateEventDto.status) event.status = updateEventDto.status;
-    if (updateEventDto.department !== undefined)
-      event.department = updateEventDto.department ?? null;
+    if (updateEventDto.departmentId !== undefined)
+      event.departmentId = updateEventDto.departmentId ?? null;
     if (updateEventDto.meetingUrl !== undefined) {
       event.meetingUrl = updateEventDto.meetingUrl ?? null;
       event.meetingType =
@@ -341,7 +341,7 @@ export class CalendarService {
   private async loadOne(id: string): Promise<Event> {
     const event = await this.eventRepository.findOne({
       where: { id },
-      relations: ['attachments', 'organizers', 'organizers.user'],
+      relations: ['attachments', 'organizers', 'organizers.user', 'department'],
     });
     if (!event) {
       throw new NotFoundException('Event not found');
@@ -425,7 +425,8 @@ export class CalendarService {
       endDate: event.endDate,
       status: event.status,
       eventType: event.eventType,
-      department: event.department,
+      departmentId: event.departmentId,
+      departmentName: event.department?.name ?? null,
       meetingUrl: event.meetingUrl,
       meetingType: event.meetingType,
       location: event.location,

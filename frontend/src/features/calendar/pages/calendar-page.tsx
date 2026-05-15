@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
-import { useCalendar, type Department, type EventType } from '../hooks/use-calendar'
+import { useCalendar, type EventType } from '../hooks/use-calendar'
 import { useAuthUser } from '../hooks/use-auth-user'
 import { isEditorRole } from '../utils/labels'
 import { CalendarGrid } from '../components/calendar-grid'
@@ -23,7 +23,7 @@ export function CalendarPage() {
 
   const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()))
   const [eventType, setEventType] = useState<EventType | undefined>(undefined)
-  const [department, setDepartment] = useState<Department | undefined>(undefined)
+  const [departmentId, setDepartmentId] = useState<string | undefined>(undefined)
 
   const filters = useMemo(() => {
     const start = startOfMonth(currentMonth)
@@ -34,9 +34,9 @@ export function CalendarPage() {
       startDate: start.toISOString(),
       endDate: end.toISOString(),
       eventType,
-      department,
+      departmentId,
     }
-  }, [currentMonth, eventType, department])
+  }, [currentMonth, eventType, departmentId])
 
   const { data, isLoading, isError } = useCalendar(filters)
   const events = data?.data ?? []
@@ -63,10 +63,10 @@ export function CalendarPage() {
 
       <EventFilters
         eventType={eventType}
-        department={department}
+        departmentId={departmentId}
         currentMonth={currentMonth}
         onEventTypeChange={setEventType}
-        onDepartmentChange={setDepartment}
+        onDepartmentChange={setDepartmentId}
         onPrevMonth={() =>
           setCurrentMonth(
             (m) => new Date(m.getFullYear(), m.getMonth() - 1, 1),

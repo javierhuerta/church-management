@@ -1,5 +1,6 @@
+import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import type { Department, EventType } from '../hooks/use-calendar'
+import type { EventType } from '../hooks/use-calendar'
 import {
   Select,
   SelectContent,
@@ -8,40 +9,28 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import {
-  DEPARTMENT_LABELS,
-  EVENT_TYPE_LABELS,
-} from '../utils/labels'
+import { EVENT_TYPE_LABELS, DEPARTMENT_LABELS } from '../utils/labels'
+import { DepartmentsService } from '@/lib/api'
 
 interface EventFiltersProps {
   eventType?: EventType
-  department?: Department
+  departmentId?: string
   currentMonth: Date
   onEventTypeChange: (value: EventType | undefined) => void
-  onDepartmentChange: (value: Department | undefined) => void
+  onDepartmentChange: (value: string | undefined) => void
   onPrevMonth: () => void
   onNextMonth: () => void
   onToday: () => void
 }
 
 const MONTHS_ES = [
-  'Enero',
-  'Febrero',
-  'Marzo',
-  'Abril',
-  'Mayo',
-  'Junio',
-  'Julio',
-  'Agosto',
-  'Septiembre',
-  'Octubre',
-  'Noviembre',
-  'Diciembre',
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ]
 
 export function EventFilters({
   eventType,
-  department,
+  departmentId,
   currentMonth,
   onEventTypeChange,
   onDepartmentChange,
@@ -49,6 +38,15 @@ export function EventFilters({
   onNextMonth,
   onToday,
 }: EventFiltersProps) {
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => DepartmentsService.departmentsControllerFindAll(),
+  })
+
+  function getDepartmentLabel(name: string): string {
+    return DEPARTMENT_LABELS[name as keyof typeof DEPARTMENT_LABELS] ?? name
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="flex items-center gap-1 rounded-xl border border-neutral-200 bg-white p-1 shadow-sm">
@@ -97,9 +95,9 @@ export function EventFilters({
       </Select>
 
       <Select
-        value={department ?? 'all'}
+        value={departmentId ?? 'all'}
         onValueChange={(v) =>
-          onDepartmentChange(v === 'all' ? undefined : (v as Department))
+          onDepartmentChange(v === 'all' ? undefined : v)
         }
       >
         <SelectTrigger className="w-[200px]">
@@ -107,9 +105,9 @@ export function EventFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todos los departamentos</SelectItem>
-          {(Object.keys(DEPARTMENT_LABELS) as Department[]).map((d) => (
-            <SelectItem key={d} value={d}>
-              {DEPARTMENT_LABELS[d]}
+          {departments.map((d) => (
+            <SelectItem key={d.id} value={d.id}>
+              {getDepartmentLabel(d.name)}
             </SelectItem>
           ))}
         </SelectContent>

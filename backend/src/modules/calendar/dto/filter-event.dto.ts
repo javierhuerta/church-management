@@ -1,8 +1,7 @@
-import { IsOptional, IsDateString, IsEnum } from 'class-validator';
+import { IsOptional, IsDateString, IsEnum, IsUUID } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { EventType } from '../entities/event-type.enum';
 import { EventStatus } from '../entities/event-status.enum';
-import { Department } from '../entities/department.enum';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 export class FilterEventDto extends PaginationDto {
@@ -27,10 +26,10 @@ export class FilterEventDto extends PaginationDto {
   @IsEnum(EventType)
   eventType?: EventType;
 
-  @ApiPropertyOptional({ enum: Department })
+  @ApiPropertyOptional({ type: String, description: 'Department ID (UUID)' })
   @IsOptional()
-  @IsEnum(Department)
-  department?: Department;
+  @IsUUID('4')
+  departmentId?: string;
 
   @ApiPropertyOptional({ enum: EventStatus })
   @IsOptional()

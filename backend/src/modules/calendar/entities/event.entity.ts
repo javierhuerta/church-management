@@ -10,7 +10,7 @@ import { BaseEntity } from '../../common/entities/base.entity';
 import { EventType } from './event-type.enum';
 import { EventStatus } from './event-status.enum';
 import { MeetingType } from './meeting-type.enum';
-import { Department } from './department.enum';
+import { Department } from '../../departments/entities/department.entity';
 import { User } from '../../auth/entities/user.entity';
 import { EventAttachment } from './event-attachment.entity';
 import { EventOrganizer } from './event-organizer.entity';
@@ -44,12 +44,12 @@ export class Event extends BaseEntity {
   })
   eventType: EventType;
 
-  @Column({
-    type: 'enum',
-    enum: Department,
-    nullable: true,
-  })
+  @ManyToOne(() => Department, { nullable: true, eager: false })
+  @JoinColumn({ name: 'department_id' })
   department: Department | null;
+
+  @Column({ name: 'department_id', nullable: true, type: 'uuid' })
+  departmentId: string | null;
 
   @Column({ name: 'meeting_url', type: 'text', nullable: true })
   meetingUrl: string | null;

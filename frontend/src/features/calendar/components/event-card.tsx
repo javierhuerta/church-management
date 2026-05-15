@@ -14,6 +14,7 @@ import {
   EVENT_TYPE_LABELS,
   DEPARTMENT_COLORS,
   DEPARTMENT_LABELS,
+  getDepartmentColors,
 } from '../utils/labels'
 
 interface EventCardProps {
@@ -44,7 +45,10 @@ function formatTime(iso: string): string {
 
 export function EventCard({ event, compact = false }: EventCardProps) {
   const typeColors = EVENT_TYPE_COLORS[event.eventType]
-  const deptColors = event.department ? DEPARTMENT_COLORS[event.department] : null
+  const deptColors = event.departmentName ? getDepartmentColors(event.departmentName) : null
+  const deptLabel = event.departmentName
+    ? (DEPARTMENT_LABELS[event.departmentName as keyof typeof DEPARTMENT_LABELS] ?? event.departmentName)
+    : null
   const [open, setOpen] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -108,11 +112,11 @@ export function EventCard({ event, compact = false }: EventCardProps) {
             >
               {EVENT_TYPE_LABELS[event.eventType]}
             </span>
-            {event.department && deptColors && (
+            {deptLabel && deptColors && (
               <span
                 className={`inline-block text-[10px] px-1.5 py-0.5 rounded ${deptColors.bg} ${deptColors.text}`}
               >
-                {DEPARTMENT_LABELS[event.department]}
+                {deptLabel}
               </span>
             )}
           </div>
@@ -191,10 +195,10 @@ export function EventCard({ event, compact = false }: EventCardProps) {
             <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${typeColors.bg} ${typeColors.text}`}>
               {EVENT_TYPE_LABELS[event.eventType]}
             </span>
-            {event.department && deptColors && (
+            {deptLabel && deptColors && (
               <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${deptColors.bg} ${deptColors.text} flex items-center gap-1`}>
                 <Building2 className="h-2.5 w-2.5" />
-                {DEPARTMENT_LABELS[event.department]}
+                {deptLabel}
               </span>
             )}
           </div>

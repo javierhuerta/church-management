@@ -4,6 +4,7 @@ import { LoginPage } from './features/auth/pages/login-page'
 import { AppLayout } from './layouts/app-layout'
 import { AdaptiveLayout } from './layouts/adaptive-layout'
 import { DashboardPage } from './features/dashboard/pages/dashboard-page'
+import { MantenedoresLayout } from './features/mantenedores/layouts/mantenedores-layout'
 import { TextSizeProvider } from './lib/contexts/text-size-context'
 import { Toaster } from './components/ui/sonner'
 import './index.css'
@@ -46,6 +47,26 @@ const ProgramCreatePage = lazy(() =>
 const ProgramDetailPage = lazy(() =>
   import('./features/worship-services/pages/program-detail-page').then((m) => ({
     default: m.ProgramDetailPage,
+  })),
+)
+const UsersListPage = lazy(() =>
+  import('./features/mantenedores/pages/users-list-page').then((m) => ({
+    default: m.UsersListPage,
+  })),
+)
+const UserFormPage = lazy(() =>
+  import('./features/mantenedores/pages/user-form-page').then((m) => ({
+    default: m.UserFormPage,
+  })),
+)
+const DepartmentsListPage = lazy(() =>
+  import('./features/mantenedores/pages/departments-list-page').then((m) => ({
+    default: m.DepartmentsListPage,
+  })),
+)
+const DepartmentFormPage = lazy(() =>
+  import('./features/mantenedores/pages/department-form-page').then((m) => ({
+    default: m.DepartmentFormPage,
   })),
 )
 
@@ -101,6 +122,19 @@ function App() {
               <Route path="cultos/programas" element={<ProgramsListPage />} />
               <Route path="cultos/programas/nuevo" element={<ProgramCreatePage />} />
               <Route path="cultos/programas/:id" element={<ProgramDetailPage />} />
+
+              <Route path="mantenedores" element={<MantenedoresLayout />}>
+                <Route index element={<Navigate to="usuarios" replace />} />
+                <Route path="usuarios" element={<UsersListPage />} />
+                <Route path="usuarios/nuevo" element={<UserFormPage />} />
+                <Route path="usuarios/:id" element={<UserFormPage />} />
+                <Route path="departamentos" element={<DepartmentsListPage />} />
+                <Route path="departamentos/nuevo" element={<DepartmentFormPage />} />
+                <Route path="departamentos/:id" element={<DepartmentFormPage />} />
+                <Route path="plantillas" element={<TemplatesListPage />} />
+                <Route path="plantillas/nuevo" element={<TemplateFormPage />} />
+                <Route path="plantillas/:id/editar" element={<TemplateFormPage />} />
+              </Route>
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

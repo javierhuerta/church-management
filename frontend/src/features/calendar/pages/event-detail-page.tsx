@@ -190,9 +190,9 @@ export function EventDetailPage() {
           >
             {EVENT_TYPE_LABELS[event.eventType]}
           </span>
-          {event.department && (
+          {event.departmentName && (
             <span className="text-xs font-medium px-2 py-1 rounded-full bg-neutral-100 text-neutral-700">
-              {DEPARTMENT_LABELS[event.department]}
+              {DEPARTMENT_LABELS[event.departmentName as keyof typeof DEPARTMENT_LABELS] ?? event.departmentName}
             </span>
           )}
           {event.status === 'draft' && (

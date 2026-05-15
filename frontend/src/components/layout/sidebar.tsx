@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Calendar, FileText, Heart, LogOut, User, ChevronDown, ChevronLeft } from 'lucide-react'
+import { Calendar, FileText, Heart, LogOut, User, ChevronDown, ChevronLeft, Settings } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import {
@@ -28,6 +28,10 @@ const navItems: NavItem[] = [
   { id: 'calendario', label: 'Calendario', icon: Calendar, path: '/calendario' },
   { id: 'cultos', label: 'Cultos', icon: FileText, path: '/cultos/programas', matchPrefix: '/cultos' },
   { id: 'mision', label: 'Misión', icon: Heart, path: '/mision', disabled: true },
+]
+
+const adminNavItems: NavItem[] = [
+  { id: 'mantenedores', label: 'Mantenedores', icon: Settings, path: '/mantenedores/usuarios', matchPrefix: '/mantenedores' },
 ]
 
 function getUserFromStorage() {
@@ -167,6 +171,28 @@ export function Sidebar() {
                 </button>
               )
             })}
+            {(user?.role === 'Admin' || user?.role === 'Pastor') && adminNavItems.map((item) => {
+              const Icon = item.icon
+              const isActive = item.matchPrefix
+                ? location.pathname.startsWith(item.matchPrefix)
+                : location.pathname === item.path
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavClick(item)}
+                  title={item.label}
+                  className={`
+                    w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200
+                    ${isActive
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                      : 'text-neutral-600 hover:bg-white hover:text-neutral-900 border border-transparent hover:shadow-sm'
+                    }
+                  `}
+                >
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-neutral-400'}`} />
+                </button>
+              )
+            })}
           </div>
         ) : (
           <Accordion type="single" value={openSections[0]} onValueChange={(v) => setOpenSections(v ? [v] : [])}>
@@ -210,6 +236,40 @@ export function Sidebar() {
                 </div>
               </AccordionContent>
             </AccordionItem>
+            {(user?.role === 'Admin' || user?.role === 'Pastor') && (
+              <AccordionItem value="admin">
+                <AccordionTrigger>Administración</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-1">
+                    {adminNavItems.map((item) => {
+                      const Icon = item.icon
+                      const isActive = item.matchPrefix
+                        ? location.pathname.startsWith(item.matchPrefix)
+                        : location.pathname === item.path
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => handleNavClick(item)}
+                          className={`
+                            w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                            ${isActive
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                              : 'text-neutral-600 hover:bg-white hover:text-neutral-900 border border-transparent hover:shadow-sm'
+                            }
+                          `}
+                        >
+                          <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-neutral-400'}`} />
+                          <span>{item.label}</span>
+                          {isActive && (
+                            <div className="ml-auto h-1.5 w-1.5 rounded-full bg-blue-500" />
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
           </Accordion>
         )}
       </nav>

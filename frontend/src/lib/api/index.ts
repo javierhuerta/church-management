@@ -37,9 +37,18 @@ export type { UpdateSectionDto } from './models/UpdateSectionDto';
 export { UpdateTemplateDto } from './models/UpdateTemplateDto';
 export type { UploadAttachmentDto } from './models/UploadAttachmentDto';
 export type { UserResponseDto } from './models/UserResponseDto';
+export type { DepartmentResponseDto } from './models/DepartmentResponseDto';
+export type { CreateDepartmentDto } from './models/CreateDepartmentDto';
+export type { UpdateDepartmentDto } from './models/UpdateDepartmentDto';
+export type { UserMantenedorResponseDto } from './models/UserMantenedorResponseDto';
+export type { CreateUserMantenedorDto } from './models/CreateUserMantenedorDto';
+export type { UpdateUserMantenedorDto } from './models/UpdateUserMantenedorDto';
 
 export { AuthService } from './services/AuthService';
 export { CalendarService } from './services/CalendarService';
 export { HymnsService } from './services/HymnsService';
 export { WorshipServicesProgramsService } from './services/WorshipServicesProgramsService';
 export { WorshipServicesTemplatesService } from './services/WorshipServicesTemplatesService';
+export { UsersMantenedoresService } from './services/UsersMantenedoresService';
+export { DepartmentsService } from './services/DepartmentsService';
+export type { DirectorSummaryDto } from './services/DepartmentsService';

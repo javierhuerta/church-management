@@ -13,7 +13,6 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { EventType } from '../entities/event-type.enum';
 import { EventStatus } from '../entities/event-status.enum';
 import { MeetingType } from '../entities/meeting-type.enum';
-import { Department } from '../entities/department.enum';
 
 export class UpdateEventDto {
   @ApiPropertyOptional({ example: 'Culto del Sabado' })
@@ -47,10 +46,10 @@ export class UpdateEventDto {
   @IsEnum(EventStatus)
   status?: EventStatus;
 
-  @ApiPropertyOptional({ enum: Department, nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true, description: 'Department ID (UUID)' })
   @IsOptional()
-  @IsEnum(Department)
-  department?: Department | null;
+  @IsUUID('4')
+  departmentId?: string | null;
 
   @ApiPropertyOptional({ type: String, example: 'https://zoom.us/j/123456789' })
   @IsOptional()

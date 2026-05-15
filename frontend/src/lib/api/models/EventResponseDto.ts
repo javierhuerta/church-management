@@ -12,7 +12,8 @@ export type EventResponseDto = {
     endDate: string;
     status: EventResponseDto.status;
     eventType: EventResponseDto.eventType;
-    department?: EventResponseDto.department | null;
+    departmentId?: string | null;
+    departmentName?: string | null;
     meetingUrl?: string | null;
     meetingType?: EventResponseDto.meetingType | null;
     location?: string | null;
@@ -34,18 +35,6 @@ export namespace EventResponseDto {
         LOCAL = 'local',
         ASACH = 'asach',
         DISTRITAL = 'distrital',
-    }
-    export enum department {
-        JOVENES = 'jovenes',
-        ADOLESCENTES = 'adolescentes',
-        FAMILIA = 'familia',
-        MISION = 'mision',
-        ESCUELA_SABATICA = 'escuela_sabatica',
-        MUSICA = 'musica',
-        CONDUCTORES_JOVENES = 'conductores_jovenes',
-        MINISTERIOS = 'ministerios',
-        SALUD = 'salud',
-        COMUNICACIONES = 'comunicaciones',
     }
     export enum meetingType {
         ZOOM = 'zoom',

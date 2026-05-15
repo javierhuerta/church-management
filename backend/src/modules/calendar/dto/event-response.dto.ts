@@ -2,7 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EventType } from '../entities/event-type.enum';
 import { EventStatus } from '../entities/event-status.enum';
 import { MeetingType } from '../entities/meeting-type.enum';
-import { Department } from '../entities/department.enum';
 
 export class OrganizerResponseDto {
   @ApiProperty()
@@ -66,8 +65,11 @@ export class EventResponseDto {
   @ApiProperty({ enum: EventType })
   eventType: EventType;
 
-  @ApiPropertyOptional({ enum: Department, nullable: true })
-  department: Department | null;
+  @ApiPropertyOptional({ type: String, nullable: true })
+  departmentId: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  departmentName: string | null;
 
   @ApiPropertyOptional({ type: String, nullable: true })
   meetingUrl: string | null;
