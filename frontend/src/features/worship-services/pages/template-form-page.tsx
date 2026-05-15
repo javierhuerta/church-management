@@ -1,8 +1,10 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Plus, Trash2, GripVertical } from 'lucide-react'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { useAuthUser } from '@/features/calendar/hooks/use-auth-user'
+import { useTemplate } from '../hooks/use-worship-services'
+import type { ServiceTemplateResponseDto } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -48,16 +50,55 @@ interface FormValues {
   sections: SectionInput[]
 }
 
+function templateToFormValues(template: ServiceTemplateResponseDto): FormValues {
+  const sortByOrder = <T extends { order: number }>(items: T[]) =>
+    [...items].sort((a, b) => a.order - b.order)
+
+  return {
+    name: template.name,
+    description: template.description ?? '',
+    type: template.type as ServiceTemplateType,
+    isActive: template.isActive,
+    groups: sortByOrder(template.groups ?? []).map((group) => ({
+      name: group.name,
+      startTime: group.startTime ?? '',
+      endTime: group.endTime ?? '',
+      order: group.order,
+      sections: sortByOrder(group.sections ?? []).map((section) => ({
+        name: section.name,
+        order: section.order,
+        startTime: section.startTime ?? '',
+        duration: section.duration ?? undefined,
+      })),
+    })),
+    sections: sortByOrder(
+      (template.sections ?? []).filter((section) => !section.groupId),
+    ).map((section) => ({
+      name: section.name,
+      order: section.order,
+      startTime: section.startTime ?? '',
+      duration: section.duration ?? undefined,
+    })),
+  }
+}
+
 export function TemplateFormPage() {
   const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>()
+  const isEditMode = !!id
   const user = useAuthUser()
   const [serverError, setServerError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { data: existingTemplate, isLoading: isLoadingTemplate } = useTemplate(
+    id ?? '',
+  )
 
   const {
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
@@ -82,12 +123,22 @@ export function TemplateFormPage() {
     remove: removeSection,
   } = useFieldArray({ control, name: 'sections' })
 
+  useEffect(() => {
+    if (isEditMode && existingTemplate) {
+      reset(templateToFormValues(existingTemplate))
+    }
+  }, [isEditMode, existingTemplate, reset])
+
   async function onSubmit(values: FormValues) {
     setServerError(null)
     setIsSubmitting(true)
 
     try {
-      await WorshipServicesTemplatesService.templateControllerCreate(values as any)
+      if (isEditMode && id) {
+        await WorshipServicesTemplatesService.templateControllerUpdate(id, values as any)
+      } else {
+        await WorshipServicesTemplatesService.templateControllerCreate(values as any)
+      }
       navigate('/cultos/plantillas')
     } catch (err) {
       setServerError((err as Error).message)
@@ -109,6 +160,14 @@ export function TemplateFormPage() {
     )
   }
 
+  if (isEditMode && isLoadingTemplate) {
+    return (
+      <div className="rounded-2xl border border-neutral-200 bg-white p-12 text-center">
+        <p className="text-sm text-neutral-500">Cargando plantilla...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
@@ -117,10 +176,12 @@ export function TemplateFormPage() {
 
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
-          Nueva plantilla
+          {isEditMode ? 'Editar plantilla' : 'Nueva plantilla'}
         </h2>
         <p className="text-neutral-500 mt-1">
-          Crea una nueva plantilla para programas de culto
+          {isEditMode
+            ? 'Modifica los datos de la plantilla de culto'
+            : 'Crea una nueva plantilla para programas de culto'}
         </p>
       </div>
 
@@ -372,7 +433,11 @@ export function TemplateFormPage() {
             Cancelar
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Guardando...' : 'Crear plantilla'}
+            {isSubmitting
+              ? 'Guardando...'
+              : isEditMode
+                ? 'Guardar cambios'
+                : 'Crear plantilla'}
           </Button>
         </div>
       </form>
