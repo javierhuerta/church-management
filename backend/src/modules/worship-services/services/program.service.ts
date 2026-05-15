@@ -514,6 +514,7 @@ export class ProgramService {
       throw new ForbiddenException('Only Admin can delete programs');
     }
 
+    await this.logRepo.delete({ programId });
     await this.programRepo.delete(programId);
   }
 
