@@ -1,19 +1,33 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Clock, User, Music, FileText, Send, CheckCircle, Trash2, Calendar, Plus } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, Clock, User, Music, FileText, Send, CheckCircle, Trash2, Calendar, Plus, Archive } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useAuthUser } from '@/features/calendar/hooks/use-auth-user'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useProgram, useProgramLogs, useHymnSearch, useUserSearch } from '../hooks/use-worship-services'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import {
+  useProgram,
+  useProgramLogs,
+  useHymnSearch,
+  useUserSearch,
+  useDeleteProgram,
+  useArchiveProgram,
+  useDeleteGroup,
+  useDeleteSection,
+} from '../hooks/use-worship-services'
 import { WorshipServicesProgramsService } from '@/lib/api'
+import { toast } from 'sonner'
 
 export function ProgramDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const user = useAuthUser()
+
   const [editingSection, setEditingSection] = useState<string | null>(null)
   const [editingGroup, setEditingGroup] = useState<string | null>(null)
   const [editingDate, setEditingDate] = useState(false)
@@ -21,8 +35,22 @@ export function ProgramDetailPage() {
   const [addingGroup, setAddingGroup] = useState(false)
   const [addingSectionToGroup, setAddingSectionToGroup] = useState<string | null>(null)
 
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false)
+  const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null)
+  const [deleteSectionId, setDeleteSectionId] = useState<string | null>(null)
+
   const { data: program, isLoading } = useProgram(id || '')
   const { data: logs } = useProgramLogs(id || '')
+
+  const deleteProgram = useDeleteProgram()
+  const archiveProgram = useArchiveProgram(id || '')
+  const deleteGroup = useDeleteGroup(id || '')
+  const deleteSection = useDeleteSection(id || '')
+
+  const invalidateProgram = () =>
+    queryClient.invalidateQueries({ queryKey: ['worship-services', 'programs', id] })
 
   if (isLoading) {
     return <div className="text-neutral-500">Cargando programa...</div>
@@ -37,20 +65,22 @@ export function ProgramDetailPage() {
   }
 
   const isPublished = program.status === 'PUBLISHED'
-  const canEdit = !isPublished || user?.role === 'Admin' || (user?.role === 'Pastor' && program.createdById === user?.userId)
-  const canPublish = user?.role === 'Admin' || user?.role === 'Pastor'
+  const isArchived = program.status === 'ARCHIVED'
+  const canEdit = !isArchived && (!isPublished || user?.role === 'Admin' || (user?.role === 'Pastor' && program.createdById === user?.userId))
+  const canPublish = (user?.role === 'Admin' || user?.role === 'Pastor') && !isPublished && !isArchived
+  const isAdmin = user?.role === 'Admin'
 
   async function handlePublish() {
-    if (!confirm('¿Publicar este programa? Una vez publicado solo Admin y el creador original podrán editarlo.')) {
-      return
-    }
-
     setIsPublishing(true)
     try {
       await WorshipServicesProgramsService.programControllerPublish(id || '')
-      window.location.reload()
+      await invalidateProgram()
+      toast.success('Programa publicado')
+    } catch {
+      toast.error('No se pudo publicar el programa')
     } finally {
       setIsPublishing(false)
+      setPublishDialogOpen(false)
     }
   }
 
@@ -58,6 +88,66 @@ export function ProgramDetailPage() {
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog
+        open={publishDialogOpen}
+        onOpenChange={setPublishDialogOpen}
+        title="¿Publicar este programa?"
+        description="Una vez publicado, solo el Admin y el creador original podrán editarlo."
+        confirmLabel="Publicar"
+        onConfirm={handlePublish}
+      />
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="¿Eliminar este programa?"
+        description="Esta acción es permanente y no se puede deshacer."
+        confirmLabel="Eliminar"
+        variant="destructive"
+        onConfirm={async () => {
+          await deleteProgram.mutateAsync(id || '')
+          navigate('/cultos/programas')
+        }}
+      />
+      <ConfirmDialog
+        open={archiveDialogOpen}
+        onOpenChange={setArchiveDialogOpen}
+        title="¿Archivar este programa?"
+        description="El programa quedará como solo lectura y solo el Admin podrá editarlo."
+        confirmLabel="Archivar"
+        onConfirm={async () => {
+          await archiveProgram.mutateAsync()
+          setArchiveDialogOpen(false)
+        }}
+      />
+      <ConfirmDialog
+        open={!!deleteGroupId}
+        onOpenChange={(open) => !open && setDeleteGroupId(null)}
+        title="¿Eliminar este grupo?"
+        description="Se eliminarán el grupo y todas sus secciones. Esta acción no se puede deshacer."
+        confirmLabel="Eliminar grupo"
+        variant="destructive"
+        onConfirm={async () => {
+          if (deleteGroupId) {
+            await deleteGroup.mutateAsync(deleteGroupId)
+            setDeleteGroupId(null)
+          }
+        }}
+      />
+      <ConfirmDialog
+        open={!!deleteSectionId}
+        onOpenChange={(open) => !open && setDeleteSectionId(null)}
+        title="¿Eliminar esta sección?"
+        description="Esta acción no se puede deshacer."
+        confirmLabel="Eliminar sección"
+        variant="destructive"
+        onConfirm={async () => {
+          if (deleteSectionId) {
+            await deleteSection.mutateAsync(deleteSectionId)
+            setDeleteSectionId(null)
+          }
+        }}
+      />
+
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <Button variant="ghost" size="sm" onClick={() => navigate('/cultos/programas')}>
@@ -67,11 +157,12 @@ export function ProgramDetailPage() {
             <div className="flex items-center gap-2 mt-2">
               <Input
                 type="date"
-                value={program.date}
+                defaultValue={program.date}
                 onChange={(e) => {
                   const newDate = e.target.value
                   WorshipServicesProgramsService.programControllerUpdateProgram(id || '', { date: newDate })
-                    .then(() => window.location.reload())
+                    .then(() => { invalidateProgram(); toast.success('Fecha actualizada') })
+                    .catch(() => toast.error('No se pudo actualizar la fecha'))
                 }}
                 className="w-40"
               />
@@ -94,7 +185,11 @@ export function ProgramDetailPage() {
           <p className="text-neutral-500 mt-1">{program.template?.name}</p>
         </div>
         <div className="flex items-center gap-2">
-          {isPublished ? (
+          {isArchived ? (
+            <span className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-sm font-medium text-neutral-600">
+              <Archive className="h-4 w-4 mr-1" /> Archivado
+            </span>
+          ) : isPublished ? (
             <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
               <CheckCircle className="h-4 w-4 mr-1" /> Publicado
             </span>
@@ -103,21 +198,26 @@ export function ProgramDetailPage() {
               Borrador
             </span>
           )}
-          {canPublish && !isPublished && (
-            <Button onClick={handlePublish} disabled={isPublishing}>
+          {canPublish && (
+            <Button onClick={() => setPublishDialogOpen(true)} disabled={isPublishing}>
               <Send className="h-4 w-4 mr-1" /> {isPublishing ? 'Publicando...' : 'Publicar'}
             </Button>
           )}
-          {user?.role === 'Admin' && (
+          {isAdmin && isPublished && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setArchiveDialogOpen(true)}
+            >
+              <Archive className="h-4 w-4 mr-1" /> Archivar
+            </Button>
+          )}
+          {isAdmin && (
             <Button
               variant="ghost"
               size="sm"
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              onClick={async () => {
-                if (!confirm('¿Eliminar este programa? Esta acción no se puede deshacer.')) return
-                await WorshipServicesProgramsService.programControllerDelete(id || '')
-                navigate('/cultos/programas')
-              }}
+              onClick={() => setDeleteDialogOpen(true)}
             >
               <Trash2 className="h-4 w-4 mr-1" /> Eliminar
             </Button>
@@ -135,8 +235,14 @@ export function ProgramDetailPage() {
                     <GroupEditForm
                       group={group}
                       onSave={async (data) => {
-                        await WorshipServicesProgramsService.programControllerUpdateGroup(group.id, data)
-                        window.location.reload()
+                        try {
+                          await WorshipServicesProgramsService.programControllerUpdateGroup(group.id, data)
+                          await invalidateProgram()
+                          setEditingGroup(null)
+                          toast.success('Grupo actualizado')
+                        } catch {
+                          toast.error('No se pudo actualizar el grupo')
+                        }
                       }}
                       onCancel={() => setEditingGroup(null)}
                     />
@@ -164,6 +270,14 @@ export function ProgramDetailPage() {
                             >
                               <Plus className="h-3.5 w-3.5 mr-1" /> Sección
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => setDeleteGroupId(group.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
                           </>
                         )}
                       </div>
@@ -180,14 +294,22 @@ export function ProgramDetailPage() {
                     isEditing={editingSection === section.id}
                     onEdit={() => setEditingSection(section.id)}
                     onCancel={() => setEditingSection(null)}
+                    onDelete={() => setDeleteSectionId(section.id)}
                     sectionName={section.name ?? section.templateSection?.name}
+                    onSaved={invalidateProgram}
                   />
                 ))}
                 {addingSectionToGroup === group.id && (
                   <AddSectionForm
                     onSave={async (name) => {
-                      await WorshipServicesProgramsService.programControllerAddSectionToGroup(group.id, { name })
-                      window.location.reload()
+                      try {
+                        await WorshipServicesProgramsService.programControllerAddSectionToGroup(group.id, { name })
+                        await invalidateProgram()
+                        setAddingSectionToGroup(null)
+                        toast.success('Sección agregada')
+                      } catch {
+                        toast.error('No se pudo agregar la sección')
+                      }
                     }}
                     onCancel={() => setAddingSectionToGroup(null)}
                   />
@@ -200,8 +322,14 @@ export function ProgramDetailPage() {
             addingGroup ? (
               <AddGroupForm
                 onSave={async (data) => {
-                  await WorshipServicesProgramsService.programControllerAddGroup(id || '', data)
-                  window.location.reload()
+                  try {
+                    await WorshipServicesProgramsService.programControllerAddGroup(id || '', data)
+                    await invalidateProgram()
+                    setAddingGroup(false)
+                    toast.success('Grupo agregado')
+                  } catch {
+                    toast.error('No se pudo agregar el grupo')
+                  }
                 }}
                 onCancel={() => setAddingGroup(false)}
               />
@@ -223,7 +351,9 @@ export function ProgramDetailPage() {
                 isEditing={editingSection === section.id}
                 onEdit={() => setEditingSection(section.id)}
                 onCancel={() => setEditingSection(null)}
+                onDelete={() => setDeleteSectionId(section.id)}
                 sectionName={section.templateSection?.name ?? undefined}
+                onSaved={invalidateProgram}
               />
             </div>
           ))}
@@ -322,7 +452,7 @@ function GroupEditForm({ group, onSave, onCancel }: GroupEditFormProps) {
       <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
         Cancelar
       </Button>
-</form>
+    </form>
   )
 }
 
@@ -335,6 +465,7 @@ interface Section {
   hymnText?: string | null
   notes?: string | null
   order: number
+  groupId?: string | null
   templateSection?: { id: string; name: string } | null
 }
 
@@ -344,10 +475,12 @@ interface SectionRowProps {
   isEditing: boolean
   onEdit: () => void
   onCancel: () => void
+  onDelete: () => void
+  onSaved: () => void
   sectionName?: string
 }
 
-function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, sectionName }: SectionRowProps) {
+function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, onDelete, onSaved, sectionName }: SectionRowProps) {
   const displayName = section.name ?? sectionName ?? ''
   const [formData, setFormData] = useState({
     name: displayName,
@@ -373,7 +506,11 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, sectionName
         hymnText: formData.hymnText || undefined,
         notes: formData.notes || undefined,
       })
-      window.location.reload()
+      await onSaved()
+      onCancel()
+      toast.success('Sección guardada')
+    } catch {
+      toast.error('No se pudo guardar la sección')
     } finally {
       setIsSaving(false)
     }
@@ -508,9 +645,19 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, sectionName
         </div>
       </div>
       {canEdit && (
-        <Button variant="ghost" size="sm" onClick={onEdit}>
-          Editar
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={onEdit}>
+            Editar
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={onDelete}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       )}
     </div>
   )

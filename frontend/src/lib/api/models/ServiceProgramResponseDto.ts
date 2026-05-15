@@ -23,6 +23,7 @@ export namespace ServiceProgramResponseDto {
     export enum status {
         DRAFT = 'DRAFT',
         PUBLISHED = 'PUBLISHED',
+        ARCHIVED = 'ARCHIVED',
     }
 }
 

@@ -1,6 +1,34 @@
 import { Type } from 'class-transformer';
-import { IsString, IsOptional, IsNumber, IsUUID } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsUUID, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ProgramStatus } from '../entities/service-template-type.enum';
+
+export class GetProgramsFilterDto {
+  @ApiPropertyOptional({ description: 'Filter by creator user ID' })
+  @IsOptional()
+  @IsUUID()
+  createdById?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by template ID' })
+  @IsOptional()
+  @IsUUID()
+  templateId?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by event date from (YYYY-MM-DD)' })
+  @IsOptional()
+  @IsString()
+  dateFrom?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by event date to (YYYY-MM-DD)' })
+  @IsOptional()
+  @IsString()
+  dateTo?: string;
+
+  @ApiPropertyOptional({ enum: ProgramStatus, description: 'Filter by status' })
+  @IsOptional()
+  @IsEnum(ProgramStatus)
+  status?: ProgramStatus;
+}
 
 export class UpdateSectionDto {
   @ApiPropertyOptional({ example: 'Canto de apertura' })

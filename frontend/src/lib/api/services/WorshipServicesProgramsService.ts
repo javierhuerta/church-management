@@ -15,22 +15,31 @@ import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class WorshipServicesProgramsService {
     /**
-     * List all programs
-     * @param startDate
-     * @param endDate
+     * List programs with optional filters (sorted by date DESC)
+     * @param createdById Filter by creator user ID
+     * @param templateId Filter by template ID
+     * @param dateFrom Filter by event date from (YYYY-MM-DD)
+     * @param dateTo Filter by event date to (YYYY-MM-DD)
+     * @param status Filter by status
      * @returns ServiceProgramResponseDto List of programs
      * @throws ApiError
      */
     public static programControllerFindAll(
-        startDate?: string,
-        endDate?: string,
+        createdById?: string,
+        templateId?: string,
+        dateFrom?: string,
+        dateTo?: string,
+        status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED',
     ): CancelablePromise<Array<ServiceProgramResponseDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/worship-services/programs',
             query: {
-                'startDate': startDate,
-                'endDate': endDate,
+                'createdById': createdById,
+                'templateId': templateId,
+                'dateFrom': dateFrom,
+                'dateTo': dateTo,
+                'status': status,
             },
         });
     }
@@ -74,7 +83,7 @@ export class WorshipServicesProgramsService {
         });
     }
     /**
-     * Delete a program
+     * Delete a program permanently (Admin only)
      * @param id
      * @returns any Program deleted
      * @throws ApiError
@@ -221,6 +230,76 @@ export class WorshipServicesProgramsService {
             errors: {
                 403: `Forbidden`,
                 404: `Program not found`,
+            },
+        });
+    }
+    /**
+     * Archive a program (Admin only)
+     * @param id
+     * @returns ServiceProgramResponseDto Program archived
+     * @throws ApiError
+     */
+    public static programControllerArchive(
+        id: string,
+    ): CancelablePromise<ServiceProgramResponseDto> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/worship-services/programs/{id}/archive',
+            path: {
+                'id': id,
+            },
+            errors: {
+                400: `Already archived`,
+                403: `Forbidden`,
+                404: `Program not found`,
+            },
+        });
+    }
+    /**
+     * Delete a group and its sections from a program
+     * @param programId
+     * @param groupId
+     * @returns any Group deleted
+     * @throws ApiError
+     */
+    public static programControllerDeleteGroup(
+        programId: string,
+        groupId: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/worship-services/programs/{programId}/groups/{groupId}',
+            path: {
+                'programId': programId,
+                'groupId': groupId,
+            },
+            errors: {
+                403: `Forbidden`,
+                404: `Group or program not found`,
+            },
+        });
+    }
+    /**
+     * Delete a section from a program
+     * @param programId
+     * @param sectionId
+     * @returns any Section deleted
+     * @throws ApiError
+     */
+    public static programControllerDeleteSection(
+        programId: string,
+        sectionId: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/worship-services/programs/{programId}/sections/{sectionId}',
+            path: {
+                'programId': programId,
+                'sectionId': sectionId,
+            },
+            errors: {
+                403: `Forbidden`,
+                404: `Section or program not found`,
             },
         });
     }

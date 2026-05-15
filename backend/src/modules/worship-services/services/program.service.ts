@@ -39,11 +39,39 @@ export class ProgramService {
     private readonly templateRepo: Repository<ServiceTemplate>,
   ) {}
 
-  async findAll(): Promise<ServiceProgram[]> {
-    return this.programRepo.find({
-      order: { date: 'DESC', createdAt: 'DESC' },
-      relations: ['groups', 'groups.sections', 'sections', 'template'],
-    });
+  async findAll(filters: {
+    createdById?: string;
+    templateId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    status?: ProgramStatus;
+  } = {}): Promise<ServiceProgram[]> {
+    const qb = this.programRepo
+      .createQueryBuilder('program')
+      .leftJoinAndSelect('program.template', 'template')
+      .leftJoinAndSelect('program.groups', 'groups')
+      .leftJoinAndSelect('groups.sections', 'groupSections')
+      .leftJoinAndSelect('program.sections', 'sections')
+      .orderBy('program.date', 'DESC')
+      .addOrderBy('program.createdAt', 'DESC');
+
+    if (filters.createdById) {
+      qb.andWhere('program.created_by_id = :createdById', { createdById: filters.createdById });
+    }
+    if (filters.templateId) {
+      qb.andWhere('program.template_id = :templateId', { templateId: filters.templateId });
+    }
+    if (filters.dateFrom) {
+      qb.andWhere('program.date >= :dateFrom', { dateFrom: filters.dateFrom });
+    }
+    if (filters.dateTo) {
+      qb.andWhere('program.date <= :dateTo', { dateTo: filters.dateTo });
+    }
+    if (filters.status) {
+      qb.andWhere('program.status = :status', { status: filters.status });
+    }
+
+    return qb.getMany();
   }
 
   async findOne(id: string): Promise<ServiceProgram> {
@@ -459,12 +487,91 @@ export class ProgramService {
     return program;
   }
 
+  async archive(
+    programId: string,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<ServiceProgram> {
+    if (userRole !== UserRole.Admin) {
+      throw new ForbiddenException('Only Admin can archive programs');
+    }
+
+    const program = await this.findOne(programId);
+    if (program.status === ProgramStatus.ARCHIVED) {
+      throw new BadRequestException('Program is already archived');
+    }
+
+    program.status = ProgramStatus.ARCHIVED;
+    await this.programRepo.save(program);
+
+    await this.createLog(programId, userId, null, 'archivó programa', null, null);
+
+    return program;
+  }
+
   async delete(programId: string, userRole: UserRole): Promise<void> {
     if (userRole !== UserRole.Admin) {
       throw new ForbiddenException('Only Admin can delete programs');
     }
 
     await this.programRepo.delete(programId);
+  }
+
+  async deleteGroup(
+    programId: string,
+    groupId: string,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<void> {
+    const program = await this.programRepo.findOne({ where: { id: programId } });
+    if (!program) throw new NotFoundException(`Program ${programId} not found`);
+    if (!this.canEditProgram(program, userId, userRole)) {
+      throw new ForbiddenException('Not authorized to edit this program');
+    }
+
+    const group = await this.programGroupRepo.findOne({ where: { id: groupId, programId } });
+    if (!group) throw new NotFoundException(`Group ${groupId} not found in program ${programId}`);
+
+    // Nullify log references to sections in this group before deleting them
+    const sectionsInGroup = await this.sectionRepo.find({ where: { groupId } });
+    if (sectionsInGroup.length > 0) {
+      const sectionIds = sectionsInGroup.map((s) => s.id);
+      await this.logRepo
+        .createQueryBuilder()
+        .update()
+        .set({ sectionId: null })
+        .where('section_id IN (:...ids)', { ids: sectionIds })
+        .execute();
+    }
+    await this.sectionRepo.delete({ groupId });
+    await this.programGroupRepo.delete(groupId);
+    await this.createLog(programId, userId, null, 'eliminó grupo', group.name, null);
+  }
+
+  async deleteSection(
+    programId: string,
+    sectionId: string,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<void> {
+    const program = await this.programRepo.findOne({ where: { id: programId } });
+    if (!program) throw new NotFoundException(`Program ${programId} not found`);
+    if (!this.canEditProgram(program, userId, userRole)) {
+      throw new ForbiddenException('Not authorized to edit this program');
+    }
+
+    const section = await this.sectionRepo.findOne({ where: { id: sectionId, programId } });
+    if (!section) throw new NotFoundException(`Section ${sectionId} not found in program ${programId}`);
+
+    // Nullify log references to this section before deleting it
+    await this.logRepo
+      .createQueryBuilder()
+      .update()
+      .set({ sectionId: null })
+      .where('section_id = :sectionId', { sectionId })
+      .execute();
+    await this.sectionRepo.delete(sectionId);
+    await this.createLog(programId, userId, null, 'eliminó sección', section.name, null);
   }
 
   async getLogs(programId: string): Promise<ServiceProgramLog[]> {
@@ -508,6 +615,9 @@ export class ProgramService {
     userId: string,
     userRole: UserRole,
   ): boolean {
+    if (program.status === ProgramStatus.ARCHIVED) {
+      return userRole === UserRole.Admin;
+    }
     if (program.status === ProgramStatus.DRAFT) {
       return this.canCreateProgram(userRole);
     }

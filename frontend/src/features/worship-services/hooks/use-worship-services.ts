@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import type {
   ServiceTemplateResponseDto,
   ServiceProgramResponseDto,
@@ -12,6 +13,14 @@ import {
 } from '@/lib/api';
 
 export type ServiceTemplateType = ServiceTemplateResponseDto.type;
+
+export interface ProgramFilters {
+  createdById?: string;
+  templateId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+}
 
 export function useTemplates(type?: ServiceTemplateType) {
   return useQuery({
@@ -30,11 +39,17 @@ export function useTemplate(id: string) {
   });
 }
 
-export function usePrograms(startDate?: string, endDate?: string) {
+export function usePrograms(filters: ProgramFilters = {}) {
   return useQuery({
-    queryKey: ['worship-services', 'programs', startDate, endDate],
+    queryKey: ['worship-services', 'programs', filters],
     queryFn: () =>
-      WorshipServicesProgramsService.programControllerFindAll(startDate, endDate) as Promise<ServiceProgramResponseDto[]>,
+      WorshipServicesProgramsService.programControllerFindAll(
+        filters.createdById,
+        filters.templateId,
+        filters.dateFrom,
+        filters.dateTo,
+        filters.status,
+      ) as Promise<ServiceProgramResponseDto[]>,
   });
 }
 
@@ -53,6 +68,59 @@ export function useProgramLogs(programId: string) {
     queryFn: () =>
       WorshipServicesProgramsService.programControllerGetLogs(programId) as Promise<ProgramLogResponseDto[]>,
     enabled: !!programId,
+  });
+}
+
+export function useDeleteProgram() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (programId: string) =>
+      WorshipServicesProgramsService.programControllerDelete(programId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['worship-services', 'programs'] });
+      toast.success('Programa eliminado');
+    },
+    onError: () => toast.error('No se pudo eliminar el programa'),
+  });
+}
+
+export function useArchiveProgram(programId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      WorshipServicesProgramsService.programControllerArchive(programId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['worship-services', 'programs', programId] });
+      queryClient.invalidateQueries({ queryKey: ['worship-services', 'programs'] });
+      toast.success('Programa archivado');
+    },
+    onError: () => toast.error('No se pudo archivar el programa'),
+  });
+}
+
+export function useDeleteGroup(programId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (groupId: string) =>
+      WorshipServicesProgramsService.programControllerDeleteGroup(programId, groupId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['worship-services', 'programs', programId] });
+      toast.success('Grupo eliminado');
+    },
+    onError: () => toast.error('No se pudo eliminar el grupo'),
+  });
+}
+
+export function useDeleteSection(programId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (sectionId: string) =>
+      WorshipServicesProgramsService.programControllerDeleteSection(programId, sectionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['worship-services', 'programs', programId] });
+      toast.success('Sección eliminada');
+    },
+    onError: () => toast.error('No se pudo eliminar la sección'),
   });
 }
 

@@ -18,7 +18,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { ProgramService } from '../services/program.service';
-import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto, CreateGroupInProgramDto, CreateSectionInGroupDto } from '../dto/program.dto';
+import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto, CreateGroupInProgramDto, CreateSectionInGroupDto, GetProgramsFilterDto } from '../dto/program.dto';
 import { ServiceProgramResponseDto, ProgramLogResponseDto } from '../dto/program-response.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -43,18 +43,10 @@ export class ProgramController {
   constructor(private readonly programService: ProgramService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List all programs' })
-  @ApiQuery({ name: 'startDate', required: false })
-  @ApiQuery({ name: 'endDate', required: false })
+  @ApiOperation({ summary: 'List programs with optional filters (sorted by date DESC)' })
   @ApiResponse({ status: 200, description: 'List of programs', type: [ServiceProgramResponseDto] })
-  async findAll(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    const programs = startDate && endDate
-      ? await this.programService.findByDateRange(startDate, endDate)
-      : await this.programService.findAll();
-    return programs;
+  async findAll(@Query() filters: GetProgramsFilterDto) {
+    return this.programService.findAll(filters);
   }
 
   @Get(':id')
@@ -158,15 +150,56 @@ export class ProgramController {
     return this.programService.publish(id, req.user!.userId, req.user!.role);
   }
 
+  @Patch(':id/archive')
+  @Roles(UserRole.Admin)
+  @ApiOperation({ summary: 'Archive a program (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Program archived', type: ServiceProgramResponseDto })
+  @ApiResponse({ status: 400, description: 'Already archived' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Program not found' })
+  async archive(@Param('id') id: string, @Request() req: RequestWithUser) {
+    return this.programService.archive(id, req.user!.userId, req.user!.role);
+  }
+
   @Delete(':id')
   @Roles(UserRole.Admin)
-  @ApiOperation({ summary: 'Delete a program' })
+  @ApiOperation({ summary: 'Delete a program permanently (Admin only)' })
   @ApiResponse({ status: 200, description: 'Program deleted' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Program not found' })
   async delete(@Param('id') id: string, @Request() req: RequestWithUser) {
     await this.programService.delete(id, req.user!.role);
     return { message: 'Program deleted' };
+  }
+
+  @Delete(':programId/groups/:groupId')
+  @Roles(UserRole.Admin, UserRole.Pastor, UserRole.Anciano, UserRole.DirectorDepartamento)
+  @ApiOperation({ summary: 'Delete a group and its sections from a program' })
+  @ApiResponse({ status: 200, description: 'Group deleted' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Group or program not found' })
+  async deleteGroup(
+    @Param('programId') programId: string,
+    @Param('groupId') groupId: string,
+    @Request() req: RequestWithUser,
+  ) {
+    await this.programService.deleteGroup(programId, groupId, req.user!.userId, req.user!.role);
+    return { message: 'Group deleted' };
+  }
+
+  @Delete(':programId/sections/:sectionId')
+  @Roles(UserRole.Admin, UserRole.Pastor, UserRole.Anciano, UserRole.DirectorDepartamento)
+  @ApiOperation({ summary: 'Delete a section from a program' })
+  @ApiResponse({ status: 200, description: 'Section deleted' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Section or program not found' })
+  async deleteSection(
+    @Param('programId') programId: string,
+    @Param('sectionId') sectionId: string,
+    @Request() req: RequestWithUser,
+  ) {
+    await this.programService.deleteSection(programId, sectionId, req.user!.userId, req.user!.role);
+    return { message: 'Section deleted' };
   }
 
   @Patch('groups/:groupId')

@@ -5,6 +5,7 @@ import { AppLayout } from './layouts/app-layout'
 import { AdaptiveLayout } from './layouts/adaptive-layout'
 import { DashboardPage } from './features/dashboard/pages/dashboard-page'
 import { TextSizeProvider } from './lib/contexts/text-size-context'
+import { Toaster } from './components/ui/sonner'
 import './index.css'
 
 const CalendarPage = lazy(() =>
@@ -106,6 +107,7 @@ function App() {
           </Routes>
         </Suspense>
       </TextSizeProvider>
+      <Toaster />
     </BrowserRouter>
   )
 }
