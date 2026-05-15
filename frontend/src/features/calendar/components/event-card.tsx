@@ -137,7 +137,7 @@ export function EventCard({ event, compact = false }: EventCardProps) {
       <PopoverContent
         side="right"
         align="start"
-        className="w-72 p-0 shadow-lg"
+        className="w-72 p-0 shadow-lg bg-white border border-neutral-200"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
