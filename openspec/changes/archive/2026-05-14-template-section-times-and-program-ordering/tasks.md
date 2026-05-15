@@ -39,7 +39,7 @@
 
 ## 7. Verificación
 
-- [ ] 7.1 Crear una plantilla con secciones que tengan `startTime` y `duration`, luego crear un programa desde ella y verificar que los tiempos se propagaron
-- [ ] 7.2 Verificar que el drag & drop de grupos funciona y persiste el nuevo orden al recargar
-- [ ] 7.3 Verificar que el drag & drop de secciones dentro de un grupo funciona y persiste
-- [ ] 7.4 Verificar que el handle de arrastre no aparece en programas ARCHIVED o cuando el usuario no tiene permiso de edición
+- [x] 7.1 Crear una plantilla con secciones que tengan `startTime` y `duration`, luego crear un programa desde ella y verificar que los tiempos se propagaron
+- [x] 7.2 Verificar que el drag & drop de grupos funciona y persiste el nuevo orden al recargar
+- [x] 7.3 Verificar que el drag & drop de secciones dentro de un grupo funciona y persiste
+- [x] 7.4 Verificar que el handle de arrastre no aparece en programas ARCHIVED o cuando el usuario no tiene permiso de edición

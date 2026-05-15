@@ -75,6 +75,7 @@ function App() {
 
             <Route element={<AdaptiveLayout />}>
               <Route path="/calendario/:slug" element={<EventDetailPage />} />
+              <Route path="/calendario" element={<CalendarPage />} />
             </Route>
 
             <Route
@@ -86,7 +87,6 @@ function App() {
               }
             >
               <Route index element={<DashboardPage />} />
-              <Route path="calendario" element={<CalendarPage />} />
               <Route
                 path="calendario/nuevo"
                 element={<EventFormPage mode="create" />}

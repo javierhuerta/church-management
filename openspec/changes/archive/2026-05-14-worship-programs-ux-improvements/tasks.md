@@ -65,7 +65,7 @@
 
 ## 9. Verificación final
 
-- [ ] 9.1 Probar flujo completo: filtrar → abrir programa → editar sección (sin reload) → publicar (dialog) → archivar → eliminar grupo → eliminar sección
-- [ ] 9.2 Probar como Admin: eliminar programa desde listado
-- [ ] 9.3 Probar como Anciano: confirmar que no aparece botón eliminar en listado y que programas archivados son read-only
+- [x] 9.1 Probar flujo completo: filtrar → abrir programa → editar sección (sin reload) → publicar (dialog) → archivar → eliminar grupo → eliminar sección
+- [x] 9.2 Probar como Admin: eliminar programa desde listado
+- [x] 9.3 Probar como Anciano: confirmar que no aparece botón eliminar en listado y que programas archivados son read-only
 - [x] 9.4 Confirmar que TypeScript compila sin errores (`npx tsc --noEmit` en backend y frontend)
