@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Plus, Download, Loader2 } from 'lucide-react'
 import { useCalendar, type EventType } from '../hooks/use-calendar'
 import { useAuthUser } from '../hooks/use-auth-user'
 import { isEditorRole } from '../utils/labels'
@@ -8,6 +9,8 @@ import { CalendarGrid } from '../components/calendar-grid'
 import { CalendarList } from '../components/calendar-list'
 import { EventFilters } from '../components/event-filters'
 import { Button } from '@/components/ui/button'
+import { DepartmentsService } from '@/lib/api'
+import { downloadCalendarPdf } from '../hooks/use-calendar-pdf'
 
 function startOfMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), 1)
@@ -41,6 +44,26 @@ export function CalendarPage() {
   const { data, isLoading, isError } = useCalendar(filters)
   const events = data?.data ?? []
 
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => DepartmentsService.departmentsControllerFindAll(),
+  })
+
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+
+  async function handleDownloadPdf() {
+    setIsGeneratingPdf(true)
+    try {
+      const dept = departmentId ? departments.find((d) => d.id === departmentId) : undefined
+      await downloadCalendarPdf(currentMonth, events, {
+        departmentName: dept?.name ?? null,
+        eventType,
+      })
+    } finally {
+      setIsGeneratingPdf(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between flex-wrap gap-4">
@@ -52,13 +75,27 @@ export function CalendarPage() {
             Eventos de la iglesia, ASACH y distritales
           </p>
         </div>
-        {canEdit && (
-          <Link to="/calendario/nuevo">
-            <Button>
-              <Plus className="h-4 w-4 mr-1" /> Crear evento
-            </Button>
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleDownloadPdf}
+            disabled={isGeneratingPdf || events.length === 0}
+          >
+            {isGeneratingPdf ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-1" />
+            )}
+            Descargar PDF
+          </Button>
+          {canEdit && (
+            <Link to="/calendario/nuevo">
+              <Button>
+                <Plus className="h-4 w-4 mr-1" /> Crear evento
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       <EventFilters
