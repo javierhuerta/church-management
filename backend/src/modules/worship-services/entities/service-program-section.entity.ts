@@ -60,7 +60,11 @@ export class ServiceProgramSection extends BaseEntity {
   @Column({ name: 'group_id', type: 'uuid', nullable: true })
   groupId: string | null;
 
-  @ManyToOne(() => ServiceTemplateSection, { nullable: true, onDelete: 'SET NULL', eager: false })
+  @ManyToOne(() => ServiceTemplateSection, {
+    nullable: true,
+    onDelete: 'SET NULL',
+    eager: false,
+  })
   @JoinColumn({ name: 'template_section_id' })
   templateSection: ServiceTemplateSection | null;
 

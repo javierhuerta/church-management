@@ -18,7 +18,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { ProgramService } from '../services/program.service';
-import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto, CreateGroupInProgramDto, CreateSectionInGroupDto, GetProgramsFilterDto } from '../dto/program.dto';
+import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto, CreateGroupInProgramDto, CreateSectionInGroupDto, GetProgramsFilterDto, ReorderDto } from '../dto/program.dto';
 import { ServiceProgramResponseDto, ProgramLogResponseDto } from '../dto/program-response.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -224,6 +224,30 @@ export class ProgramController {
       req.user!.userId,
       req.user!.role,
     );
+  }
+
+  @Patch(':programId/groups/reorder')
+  @Roles(UserRole.Admin, UserRole.Pastor, UserRole.Anciano, UserRole.DirectorDepartamento)
+  @ApiOperation({ summary: 'Reorder groups in a program' })
+  @ApiResponse({ status: 200, description: 'Groups reordered' })
+  async reorderGroups(
+    @Param('programId') programId: string,
+    @Body() dto: ReorderDto,
+  ) {
+    await this.programService.reorderGroups(programId, dto);
+    return { message: 'Groups reordered' };
+  }
+
+  @Patch(':programId/sections/reorder')
+  @Roles(UserRole.Admin, UserRole.Pastor, UserRole.Anciano, UserRole.DirectorDepartamento)
+  @ApiOperation({ summary: 'Reorder sections in a program' })
+  @ApiResponse({ status: 200, description: 'Sections reordered' })
+  async reorderSections(
+    @Param('programId') programId: string,
+    @Body() dto: ReorderDto,
+  ) {
+    await this.programService.reorderSections(programId, dto);
+    return { message: 'Sections reordered' };
   }
 
   @Patch(':id')

@@ -16,9 +16,19 @@ type TemplateSeed = {
     startTime: string;
     endTime: string;
     order: number;
-    sections: { name: string; order: number }[];
+    sections: {
+      name: string;
+      order: number;
+      startTime?: string;
+      duration?: number;
+    }[];
   }[];
-  sections: { name: string; order: number }[];
+  sections: {
+    name: string;
+    order: number;
+    startTime?: string;
+    duration?: number;
+  }[];
 };
 
 export class TemplateSeeder implements Seeder {
@@ -30,7 +40,8 @@ export class TemplateSeeder implements Seeder {
     const templates: TemplateSeed[] = [
       {
         name: 'Culto Sabático Regular',
-        description: 'Plantilla estándar para el culto del sábado con Escuela Sabática y Culto Divino',
+        description:
+          'Plantilla estándar para el culto del sábado con Escuela Sabática y Culto Divino',
         type: ServiceTemplateType.CULTO_SABATICO,
         isActive: true,
         groups: [
@@ -40,11 +51,16 @@ export class TemplateSeeder implements Seeder {
             endTime: '10:30',
             order: 1,
             sections: [
-              { name: 'Oración inicial', order: 1 },
-              { name: 'Himnos de adoración', order: 2 },
-              { name: 'Lección bíblica', order: 3 },
-              { name: 'Himno final', order: 4 },
-              { name: 'Oración de cierre', order: 5 },
+              {
+                name: 'Oración inicial',
+                order: 1,
+                startTime: '09:00',
+              },
+              { name: 'Himnos inicial', order: 2 },
+              { name: 'Informe misionero', order: 3 },
+              { name: 'Repaso de la lección', order: 4 },
+              { name: 'Himno final', order: 5 },
+              { name: 'Oración de cierre', order: 6 },
             ],
           },
           {

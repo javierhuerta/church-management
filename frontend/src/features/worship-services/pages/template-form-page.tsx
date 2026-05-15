@@ -27,6 +27,8 @@ const TEMPLATE_TYPES: { value: ServiceTemplateType; label: string }[] = [
 interface SectionInput {
   name: string
   order: number
+  startTime?: string
+  duration?: number
 }
 
 interface GroupInput {
@@ -243,24 +245,41 @@ export function TemplateFormPage() {
                   render={({ field }) => (
                     <div className="space-y-2">
                       {field.value?.map((_: any, sectionIndex: number) => (
-                        <div key={sectionIndex} className="flex items-center gap-2">
-                          <Input
-                            placeholder="Nombre de la sección"
-                            {...register(`groups.${groupIndex}.sections.${sectionIndex}.name` as any)}
-                            className="flex-1"
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              const current = [...(field.value || [])]
-                              current.splice(sectionIndex, 1)
-                              field.onChange(current)
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
+                        <div key={sectionIndex} className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              placeholder="Nombre de la sección"
+                              {...register(`groups.${groupIndex}.sections.${sectionIndex}.name` as any)}
+                              className="flex-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const current = [...(field.value || [])]
+                                current.splice(sectionIndex, 1)
+                                field.onChange(current)
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 pl-0">
+                            <Input
+                              type="time"
+                              placeholder="Hora inicio"
+                              {...register(`groups.${groupIndex}.sections.${sectionIndex}.startTime` as any)}
+                              className="text-sm"
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Duración (min)"
+                              min={1}
+                              {...register(`groups.${groupIndex}.sections.${sectionIndex}.duration` as any, { valueAsNumber: true })}
+                              className="text-sm"
+                            />
+                          </div>
                         </div>
                       ))}
                       <Button
@@ -268,7 +287,7 @@ export function TemplateFormPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          const newSections = [...(field.value || []), { name: '', order: field.value?.length || 0 }]
+                          const newSections = [...(field.value || []), { name: '', order: field.value?.length || 0, startTime: '', duration: undefined }]
                           field.onChange(newSections)
                         }}
                       >
@@ -296,30 +315,47 @@ export function TemplateFormPage() {
               variant="outline"
               size="sm"
               onClick={() =>
-                appendSection({ name: '', order: sectionFields.length })
+                appendSection({ name: '', order: sectionFields.length, startTime: '', duration: undefined })
               }
             >
               <Plus className="h-4 w-4 mr-1" /> Agregar sección
             </Button>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             {sectionFields.map((section, index) => (
-              <div key={section.id} className="flex items-center gap-2">
-                <GripVertical className="h-4 w-4 text-neutral-400 cursor-grab" />
-                <Input
-                  placeholder="Nombre de la sección"
-                  {...register(`sections.${index}.name` as any)}
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeSection(index)}
-                >
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
+              <div key={section.id} className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <GripVertical className="h-4 w-4 text-neutral-400 cursor-grab" />
+                  <Input
+                    placeholder="Nombre de la sección"
+                    {...register(`sections.${index}.name` as any)}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeSection(index)}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 ml-6">
+                  <Input
+                    type="time"
+                    placeholder="Hora inicio"
+                    {...register(`sections.${index}.startTime` as any)}
+                    className="text-sm"
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Duración (min)"
+                    min={1}
+                    {...register(`sections.${index}.duration` as any, { valueAsNumber: true })}
+                    className="text-sm"
+                  />
+                </div>
               </div>
             ))}
 

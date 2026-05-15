@@ -23,6 +23,7 @@ export type { ProgramGroupResponseDto } from './models/ProgramGroupResponseDto';
 export type { ProgramLogResponseDto } from './models/ProgramLogResponseDto';
 export { ProgramSectionResponseDto } from './models/ProgramSectionResponseDto';
 export type { RefreshTokenDto } from './models/RefreshTokenDto';
+export type { ReorderDto } from './models/ReorderDto';
 export type { SectionDto } from './models/SectionDto';
 export { ServiceProgramResponseDto } from './models/ServiceProgramResponseDto';
 export { ServiceTemplateResponseDto } from './models/ServiceTemplateResponseDto';

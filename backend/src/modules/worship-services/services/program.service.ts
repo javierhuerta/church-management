@@ -18,7 +18,7 @@ import {
 } from '../entities';
 import { ProgramStatus } from '../entities/service-template-type.enum';
 import { UserRole } from '../../common/entities/user-role.enum';
-import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto, CreateGroupInProgramDto, CreateSectionInGroupDto } from '../dto/program.dto';
+import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto, CreateGroupInProgramDto, CreateSectionInGroupDto, ReorderDto } from '../dto/program.dto';
 
 @Injectable()
 export class ProgramService {
@@ -156,6 +156,8 @@ export class ProgramService {
       for (const tSection of templateSections) {
         const section = this.sectionRepo.create({
           order: tSection.order,
+          startTime: tSection.startTime ?? null,
+          duration: tSection.duration ?? null,
           targetType: ProgramSectionTargetType.GROUP,
           groupId: savedGroup.id,
           programId: savedProgram.id,
@@ -171,6 +173,8 @@ export class ProgramService {
     for (const tSection of templateSections) {
       const section = this.sectionRepo.create({
         order: tSection.order,
+        startTime: tSection.startTime ?? null,
+        duration: tSection.duration ?? null,
         targetType: ProgramSectionTargetType.PROGRAM,
         programId: savedProgram.id,
         templateSectionId: tSection.id,
@@ -581,6 +585,32 @@ export class ProgramService {
       relations: ['user', 'section'],
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async reorderGroups(programId: string, dto: ReorderDto): Promise<void> {
+    const groups = await this.programGroupRepo.find({ where: { programId } });
+    const groupMap = new Map(groups.map((g) => [g.id, g]));
+    const toSave = dto.orderedIds
+      .filter((id) => groupMap.has(id))
+      .map((id, index) => {
+        const group = groupMap.get(id)!;
+        group.order = index;
+        return group;
+      });
+    await this.programGroupRepo.save(toSave);
+  }
+
+  async reorderSections(programId: string, dto: ReorderDto): Promise<void> {
+    const sections = await this.sectionRepo.find({ where: { programId } });
+    const sectionMap = new Map(sections.map((s) => [s.id, s]));
+    const toSave = dto.orderedIds
+      .filter((id) => sectionMap.has(id))
+      .map((id, index) => {
+        const section = sectionMap.get(id)!;
+        section.order = index;
+        return section;
+      });
+    await this.sectionRepo.save(toSave);
   }
 
   private async createLog(

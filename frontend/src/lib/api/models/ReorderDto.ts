@@ -2,10 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type SectionDto = {
-    name: string;
-    order: number;
-    startTime?: string;
-    duration?: number;
+export type ReorderDto = {
+    orderedIds: Array<string>;
 };
 

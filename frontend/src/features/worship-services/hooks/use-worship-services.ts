@@ -124,6 +124,30 @@ export function useDeleteSection(programId: string) {
   });
 }
 
+export function useReorderGroups(programId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderedIds: string[]) =>
+      WorshipServicesProgramsService.programControllerReorderGroups(programId, { orderedIds }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['worship-services', 'programs', programId] });
+    },
+    onError: () => toast.error('No se pudo reordenar los grupos'),
+  });
+}
+
+export function useReorderSections(programId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderedIds: string[]) =>
+      WorshipServicesProgramsService.programControllerReorderSections(programId, { orderedIds }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['worship-services', 'programs', programId] });
+    },
+    onError: () => toast.error('No se pudo reordenar las secciones'),
+  });
+}
+
 export function useHymnSearch(query: string) {
   return useQuery({
     queryKey: ['hymns', 'search', query],

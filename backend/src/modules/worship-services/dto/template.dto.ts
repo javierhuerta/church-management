@@ -19,6 +19,16 @@ export class SectionDto {
   @ApiProperty({ example: 1 })
   @IsNumber()
   order: number;
+
+  @ApiPropertyOptional({ example: '09:00' })
+  @IsOptional()
+  @IsString()
+  startTime?: string;
+
+  @ApiPropertyOptional({ example: 15 })
+  @IsOptional()
+  @IsNumber()
+  duration?: number;
 }
 
 export class GroupWithSectionsDto {

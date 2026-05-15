@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsString, IsOptional, IsNumber, IsUUID, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsUUID, IsEnum, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProgramStatus } from '../entities/service-template-type.enum';
 
@@ -127,6 +127,13 @@ export class CreateSectionInGroupDto {
   @ApiProperty({ example: 'Canto de apertura' })
   @IsString()
   name: string;
+}
+
+export class ReorderDto {
+  @ApiProperty({ type: [String], example: ['uuid-1', 'uuid-2', 'uuid-3'] })
+  @IsArray()
+  @IsUUID('4', { each: true })
+  orderedIds: string[];
 }
 
 export class CreateProgramDto {

@@ -13,6 +13,12 @@ export class ServiceTemplateSection extends BaseEntity {
   @Column()
   name: string;
 
+  @Column({ name: 'start_time', type: 'varchar', nullable: true })
+  startTime: string | null;
+
+  @Column({ nullable: true, type: 'int' })
+  duration: number | null;
+
   @Column({ default: 0 })
   order: number;
 

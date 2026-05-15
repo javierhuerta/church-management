@@ -87,6 +87,8 @@ export class TemplateCrudService {
             const section = this.sectionRepo.create({
               name: sectionData.name,
               order: sectionData.order,
+              startTime: sectionData.startTime ?? null,
+              duration: sectionData.duration ?? null,
               targetType: TemplateSectionTargetType.GROUP,
               groupId: savedGroup.id,
               templateId: savedTemplate.id,
@@ -102,6 +104,8 @@ export class TemplateCrudService {
         const section = this.sectionRepo.create({
           name: sectionData.name,
           order: sectionData.order,
+          startTime: sectionData.startTime ?? null,
+          duration: sectionData.duration ?? null,
           targetType: TemplateSectionTargetType.TEMPLATE,
           templateId: savedTemplate.id,
         });
@@ -149,6 +153,8 @@ export class TemplateCrudService {
             const section = this.sectionRepo.create({
               name: sectionData.name,
               order: sectionData.order,
+              startTime: sectionData.startTime ?? null,
+              duration: sectionData.duration ?? null,
               targetType: TemplateSectionTargetType.GROUP,
               groupId: savedGroup.id,
               templateId: id,
@@ -165,6 +171,8 @@ export class TemplateCrudService {
         const section = this.sectionRepo.create({
           name: sectionData.name,
           order: sectionData.order,
+          startTime: sectionData.startTime ?? null,
+          duration: sectionData.duration ?? null,
           targetType: TemplateSectionTargetType.TEMPLATE,
           templateId: id,
         });

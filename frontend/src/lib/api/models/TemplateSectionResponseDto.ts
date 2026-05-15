@@ -5,6 +5,8 @@
 export type TemplateSectionResponseDto = {
     id: string;
     name: string;
+    startTime?: string | null;
+    duration?: number | null;
     order: number;
     targetType: TemplateSectionResponseDto.targetType;
     templateId?: string | null;

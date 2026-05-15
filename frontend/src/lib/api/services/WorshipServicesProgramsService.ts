@@ -6,6 +6,7 @@ import type { CreateGroupInProgramDto } from '../models/CreateGroupInProgramDto'
 import type { CreateProgramDto } from '../models/CreateProgramDto';
 import type { CreateSectionInGroupDto } from '../models/CreateSectionInGroupDto';
 import type { ProgramLogResponseDto } from '../models/ProgramLogResponseDto';
+import type { ReorderDto } from '../models/ReorderDto';
 import type { ServiceProgramResponseDto } from '../models/ServiceProgramResponseDto';
 import type { UpdateGroupDto } from '../models/UpdateGroupDto';
 import type { UpdateProgramDateDto } from '../models/UpdateProgramDateDto';
@@ -326,6 +327,48 @@ export class WorshipServicesProgramsService {
                 403: `Forbidden`,
                 404: `Group not found`,
             },
+        });
+    }
+    /**
+     * Reorder groups in a program
+     * @param programId
+     * @param requestBody
+     * @returns any Groups reordered
+     * @throws ApiError
+     */
+    public static programControllerReorderGroups(
+        programId: string,
+        requestBody: ReorderDto,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/worship-services/programs/{programId}/groups/reorder',
+            path: {
+                'programId': programId,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+        });
+    }
+    /**
+     * Reorder sections in a program
+     * @param programId
+     * @param requestBody
+     * @returns any Sections reordered
+     * @throws ApiError
+     */
+    public static programControllerReorderSections(
+        programId: string,
+        requestBody: ReorderDto,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/worship-services/programs/{programId}/sections/reorder',
+            path: {
+                'programId': programId,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
         });
     }
 }

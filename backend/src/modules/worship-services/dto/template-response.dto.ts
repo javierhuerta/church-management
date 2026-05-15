@@ -9,6 +9,12 @@ export class TemplateSectionResponseDto {
   @ApiProperty({ type: String })
   name: string;
 
+  @ApiPropertyOptional({ type: String, nullable: true })
+  startTime: string | null;
+
+  @ApiPropertyOptional({ type: Number, nullable: true })
+  duration: number | null;
+
   @ApiProperty({ type: Number })
   order: number;
 

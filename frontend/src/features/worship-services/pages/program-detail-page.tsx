@@ -1,7 +1,22 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Clock, User, Music, FileText, Send, CheckCircle, Trash2, Calendar, Plus, Archive, Download } from 'lucide-react'
+import { ArrowLeft, Clock, User, Music, FileText, Send, CheckCircle, Trash2, Calendar, Plus, Archive, Download, GripVertical } from 'lucide-react'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useAuthUser } from '@/features/calendar/hooks/use-auth-user'
@@ -18,6 +33,8 @@ import {
   useArchiveProgram,
   useDeleteGroup,
   useDeleteSection,
+  useReorderGroups,
+  useReorderSections,
 } from '../hooks/use-worship-services'
 import { downloadProgramPdf } from '../hooks/use-program-pdf'
 import { WorshipServicesProgramsService } from '@/lib/api'
@@ -50,6 +67,9 @@ export function ProgramDetailPage() {
   const archiveProgram = useArchiveProgram(id || '')
   const deleteGroup = useDeleteGroup(id || '')
   const deleteSection = useDeleteSection(id || '')
+  const reorderGroups = useReorderGroups(id || '')
+  const reorderSections = useReorderSections(id || '')
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   const invalidateProgram = () =>
     queryClient.invalidateQueries({ queryKey: ['worship-services', 'programs', id] })
@@ -247,96 +267,46 @@ export function ProgramDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          {program.groups?.map((group) => (
-            <div key={group.id} className="rounded-2xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
-              <div className="bg-blue-50 px-4 py-3 border-b border-blue-100">
-                <div className="flex items-center justify-between">
-                  {editingGroup === group.id ? (
-                    <GroupEditForm
-                      group={group}
-                      onSave={async (data) => {
-                        try {
-                          await WorshipServicesProgramsService.programControllerUpdateGroup(group.id, data)
-                          await invalidateProgram()
-                          setEditingGroup(null)
-                          toast.success('Grupo actualizado')
-                        } catch {
-                          toast.error('No se pudo actualizar el grupo')
-                        }
-                      }}
-                      onCancel={() => setEditingGroup(null)}
-                    />
-                  ) : (
-                    <>
-                      <h3 className="font-semibold text-blue-900">{group.name}</h3>
-                      <div className="flex items-center gap-2">
-                        {(group.startTime || group.endTime) && (
-                          <span className="text-xs text-blue-600 flex items-center">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {group.startTime && `${group.startTime}`}
-                            {group.startTime && group.endTime && ' - '}
-                            {group.endTime && `${group.endTime}`}
-                          </span>
-                        )}
-                        {canEdit && (
-                          <>
-                            <Button variant="ghost" size="sm" onClick={() => setEditingGroup(group.id)}>
-                              Editar
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setAddingSectionToGroup(addingSectionToGroup === group.id ? null : group.id)}
-                            >
-                              <Plus className="h-3.5 w-3.5 mr-1" /> Sección
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => setDeleteGroupId(group.id)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className="divide-y divide-neutral-100">
-                {group.sections?.map((section) => (
-                  <SectionRow
-                    key={section.id}
-                    section={section}
-                    canEdit={canEdit}
-                    isEditing={editingSection === section.id}
-                    onEdit={() => setEditingSection(section.id)}
-                    onCancel={() => setEditingSection(null)}
-                    onDelete={() => setDeleteSectionId(section.id)}
-                    sectionName={section.name ?? section.templateSection?.name}
-                    onSaved={invalidateProgram}
-                  />
-                ))}
-                {addingSectionToGroup === group.id && (
-                  <AddSectionForm
-                    onSave={async (name) => {
-                      try {
-                        await WorshipServicesProgramsService.programControllerAddSectionToGroup(group.id, { name })
-                        await invalidateProgram()
-                        setAddingSectionToGroup(null)
-                        toast.success('Sección agregada')
-                      } catch {
-                        toast.error('No se pudo agregar la sección')
-                      }
-                    }}
-                    onCancel={() => setAddingSectionToGroup(null)}
-                  />
-                )}
-              </div>
-            </div>
-          ))}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={(event: DragEndEvent) => {
+              const { active, over } = event
+              if (!over || active.id === over.id) return
+              const sorted = [...(program.groups || [])].sort((a, b) => a.order - b.order)
+              const oldIndex = sorted.findIndex(g => g.id === active.id)
+              const newIndex = sorted.findIndex(g => g.id === over.id)
+              reorderGroups.mutate(arrayMove(sorted, oldIndex, newIndex).map(g => g.id))
+            }}
+          >
+            <SortableContext
+              items={[...(program.groups || [])].sort((a, b) => a.order - b.order).map(g => g.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {[...(program.groups || [])].sort((a, b) => a.order - b.order).map((group) => (
+                <SortableGroupCard
+                  key={group.id}
+                  group={group}
+                  canEdit={canEdit}
+                  isEditingGroup={editingGroup === group.id}
+                  onEditGroup={() => setEditingGroup(group.id)}
+                  onCancelEditGroup={() => setEditingGroup(null)}
+                  isAddingSection={addingSectionToGroup === group.id}
+                  onToggleAddSection={() => setAddingSectionToGroup(addingSectionToGroup === group.id ? null : group.id)}
+                  onCancelAddSection={() => setAddingSectionToGroup(null)}
+                  editingSection={editingSection}
+                  onEditSection={setEditingSection}
+                  onCancelEditSection={() => setEditingSection(null)}
+                  onDeleteSection={setDeleteSectionId}
+                  onDeleteGroup={() => setDeleteGroupId(group.id)}
+                  programId={id || ''}
+                  invalidateProgram={invalidateProgram}
+                  reorderSections={reorderSections}
+                  sensors={sensors}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
 
           {canEdit && (
             addingGroup ? (
@@ -780,5 +750,194 @@ function AddSectionForm({
       </Button>
       <Button type="button" variant="ghost" size="sm" onClick={onCancel}>Cancelar</Button>
     </form>
+  )
+}
+
+interface SortableGroupCardProps {
+  group: {
+    id: string
+    name: string
+    startTime?: string | null
+    endTime?: string | null
+    order: number
+    sections?: Section[]
+  }
+  canEdit: boolean
+  isEditingGroup: boolean
+  onEditGroup: () => void
+  onCancelEditGroup: () => void
+  isAddingSection: boolean
+  onToggleAddSection: () => void
+  onCancelAddSection: () => void
+  editingSection: string | null
+  onEditSection: (id: string) => void
+  onCancelEditSection: () => void
+  onDeleteSection: (id: string) => void
+  onDeleteGroup: () => void
+  programId: string
+  invalidateProgram: () => void
+  reorderSections: { mutate: (orderedIds: string[]) => void }
+  sensors: ReturnType<typeof useSensors>
+}
+
+function SortableGroupCard({
+  group, canEdit, isEditingGroup, onEditGroup, onCancelEditGroup,
+  isAddingSection, onToggleAddSection, onCancelAddSection,
+  editingSection, onEditSection, onCancelEditSection, onDeleteSection,
+  onDeleteGroup, invalidateProgram, reorderSections, sensors,
+}: SortableGroupCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: group.id,
+    disabled: !canEdit,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="rounded-2xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
+      <div className="bg-blue-50 px-4 py-3 border-b border-blue-100">
+        <div className="flex items-center justify-between">
+          {isEditingGroup ? (
+            <GroupEditForm
+              group={group}
+              onSave={async (data) => {
+                try {
+                  await WorshipServicesProgramsService.programControllerUpdateGroup(group.id, data)
+                  await invalidateProgram()
+                  onCancelEditGroup()
+                  toast.success('Grupo actualizado')
+                } catch {
+                  toast.error('No se pudo actualizar el grupo')
+                }
+              }}
+              onCancel={onCancelEditGroup}
+            />
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                {canEdit && (
+                  <button
+                    className="cursor-grab touch-none text-blue-300 hover:text-blue-500"
+                    {...attributes}
+                    {...listeners}
+                  >
+                    <GripVertical className="h-4 w-4" />
+                  </button>
+                )}
+                <h3 className="font-semibold text-blue-900">{group.name}</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                {(group.startTime || group.endTime) && (
+                  <span className="text-xs text-blue-600 flex items-center">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {group.startTime}
+                    {group.startTime && group.endTime && ' - '}
+                    {group.endTime}
+                  </span>
+                )}
+                {canEdit && (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={onEditGroup}>Editar</Button>
+                    <Button variant="ghost" size="sm" onClick={onToggleAddSection}>
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Sección
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={onDeleteGroup}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+      <div className="divide-y divide-neutral-100">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={(event: DragEndEvent) => {
+            const { active, over } = event
+            if (!over || active.id === over.id) return
+            const sorted = [...(group.sections || [])].sort((a, b) => a.order - b.order)
+            const oldIndex = sorted.findIndex(s => s.id === active.id)
+            const newIndex = sorted.findIndex(s => s.id === over.id)
+            reorderSections.mutate(arrayMove(sorted, oldIndex, newIndex).map(s => s.id))
+          }}
+        >
+          <SortableContext
+            items={[...(group.sections || [])].sort((a, b) => a.order - b.order).map(s => s.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {[...(group.sections || [])].sort((a, b) => a.order - b.order).map((section) => (
+              <SortableSectionRow
+                key={section.id}
+                section={section}
+                canEdit={canEdit}
+                isEditing={editingSection === section.id}
+                onEdit={() => onEditSection(section.id)}
+                onCancel={onCancelEditSection}
+                onDelete={() => onDeleteSection(section.id)}
+                sectionName={section.name ?? section.templateSection?.name}
+                onSaved={invalidateProgram}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
+        {isAddingSection && (
+          <AddSectionForm
+            onSave={async (name) => {
+              try {
+                await WorshipServicesProgramsService.programControllerAddSectionToGroup(group.id, { name })
+                await invalidateProgram()
+                onCancelAddSection()
+                toast.success('Sección agregada')
+              } catch {
+                toast.error('No se pudo agregar la sección')
+              }
+            }}
+            onCancel={onCancelAddSection}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+function SortableSectionRow(props: Parameters<typeof SectionRow>[0]) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: props.section.id,
+    disabled: !props.canEdit || props.isEditing,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative">
+      {props.canEdit && !props.isEditing && (
+        <button
+          className="absolute left-1 top-1/2 -translate-y-1/2 z-10 cursor-grab touch-none text-neutral-300 hover:text-neutral-500 p-1"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      )}
+      <div className={props.canEdit && !props.isEditing ? 'pl-6' : ''}>
+        <SectionRow {...props} />
+      </div>
+    </div>
   )
 }
