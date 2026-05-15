@@ -22,6 +22,8 @@ import { es } from 'date-fns/locale'
 import { useAuthUser } from '@/features/calendar/hooks/use-auth-user'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
+import { parseDateString } from '@/lib/date'
 import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
@@ -121,7 +123,7 @@ export function ProgramDetailPage() {
     }
   }
 
-  const formattedDate = format(new Date(program.date + 'T12:00:00'), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })
+  const formattedDate = format(parseDateString(program.date) ?? new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })
 
   return (
     <div className="space-y-6">
@@ -196,16 +198,15 @@ export function ProgramDetailPage() {
           </Button>
           {editingDate ? (
             <div className="flex items-center gap-2 mt-2">
-              <Input
-                type="date"
-                defaultValue={program.date}
-                onChange={(e) => {
-                  const newDate = e.target.value
+              <DatePicker
+                value={program.date}
+                onChange={(newDate) => {
+                  if (!newDate) return
                   WorshipServicesProgramsService.programControllerUpdateProgram(id || '', { date: newDate })
                     .then(() => { invalidateProgram(); toast.success('Fecha actualizada') })
                     .catch(() => toast.error('No se pudo actualizar la fecha'))
                 }}
-                className="w-40"
+                className="w-56"
               />
               <Button variant="ghost" size="sm" onClick={() => setEditingDate(false)}>
                 Cancelar

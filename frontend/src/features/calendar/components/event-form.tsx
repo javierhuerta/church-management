@@ -14,6 +14,7 @@ import {
 } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DateTimePicker } from '@/components/ui/date-time-picker'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -188,10 +189,16 @@ export function EventForm({ event, onSaved }: EventFormProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="startDate">Inicio *</Label>
-          <Input
-            id="startDate"
-            type="datetime-local"
-            {...register('startDate')}
+          <Controller
+            control={control}
+            name="startDate"
+            render={({ field }) => (
+              <DateTimePicker
+                id="startDate"
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
           {errors.startDate && (
             <p className="text-xs text-red-500">{errors.startDate.message}</p>
@@ -199,10 +206,16 @@ export function EventForm({ event, onSaved }: EventFormProps) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="endDate">Fin *</Label>
-          <Input
-            id="endDate"
-            type="datetime-local"
-            {...register('endDate')}
+          <Controller
+            control={control}
+            name="endDate"
+            render={({ field }) => (
+              <DateTimePicker
+                id="endDate"
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
           {errors.endDate && (
             <p className="text-xs text-red-500">{errors.endDate.message}</p>

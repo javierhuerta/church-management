@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom'
 import { Plus, Calendar, Clock, Archive, Filter, Trash2, X } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { parseDateString } from '@/lib/date'
 import { usePrograms, useDeleteProgram, type ProgramFilters } from '../hooks/use-worship-services'
 import { useTemplates } from '../hooks/use-worship-services'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { DateRangePicker } from '@/components/ui/date-range-picker'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useAuthUser } from '@/features/calendar/hooks/use-auth-user'
 import type { ServiceProgramResponseDto } from '@/lib/api'
@@ -118,21 +119,17 @@ export function ProgramsListPage() {
               </select>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-neutral-600">Desde</label>
-              <Input
-                type="date"
-                value={filters.dateFrom || ''}
-                onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value || undefined })}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-neutral-600">Hasta</label>
-              <Input
-                type="date"
-                value={filters.dateTo || ''}
-                onChange={(e) => setFilters({ ...filters, dateTo: e.target.value || undefined })}
+            <div className="space-y-1 sm:col-span-2">
+              <label className="text-xs font-medium text-neutral-600">Rango de fechas</label>
+              <DateRangePicker
+                value={{ from: filters.dateFrom, to: filters.dateTo }}
+                onChange={(range) =>
+                  setFilters({
+                    ...filters,
+                    dateFrom: range.from || undefined,
+                    dateTo: range.to || undefined,
+                  })
+                }
               />
             </div>
           </div>
@@ -183,7 +180,7 @@ function ProgramCard({
   isAdmin: boolean
   onDelete: () => void
 }) {
-  const formattedDate = format(new Date(program.date + 'T12:00:00'), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })
+  const formattedDate = format(parseDateString(program.date) ?? new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })
   const status = program.status as string
 
   return (

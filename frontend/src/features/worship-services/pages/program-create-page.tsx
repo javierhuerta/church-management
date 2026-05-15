@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { useAuthUser } from '@/features/calendar/hooks/use-auth-user'
 import { useTemplates, type ServiceTemplateType } from '../hooks/use-worship-services'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -155,7 +155,6 @@ export function ProgramCreatePage() {
   const { data: templates, isLoading } = useTemplates()
 
   const {
-    register,
     handleSubmit,
     control,
     formState: { errors },
@@ -217,7 +216,17 @@ export function ProgramCreatePage() {
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm space-y-6">
           <div className="space-y-2">
             <Label htmlFor="date">Fecha del culto *</Label>
-            <Input id="date" type="date" {...register('date')} />
+            <Controller
+              control={control}
+              name="date"
+              render={({ field }) => (
+                <DatePicker
+                  id="date"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
             {errors.date && (
               <p className="text-xs text-red-500">{errors.date.message}</p>
             )}
