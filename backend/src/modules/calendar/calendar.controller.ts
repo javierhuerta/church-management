@@ -12,7 +12,9 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  ServiceUnavailableException,
   ParseUUIDPipe,
+  Inject,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -34,12 +36,18 @@ import {
 } from './dto/event-response.dto';
 import { PaginatedResponseDto } from '../common/dto/pagination.dto';
 import { UploadAttachmentDto } from './dto/upload-attachment.dto';
+import { UploadCoverDto } from './dto/upload-cover.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../common/entities/user-role.enum';
-import { multerConfig } from './config/upload.config';
+import { coverMulterConfig, multerConfig } from './config/upload.config';
+import {
+  COVER_IMAGE_PROVIDER,
+  CoverImageProvider,
+  CoverSuggestionsResult,
+} from './providers/cover-image-provider.interface';
 
 interface AuthUser {
   userId: string;
@@ -63,7 +71,45 @@ function viewerFromReq(req: RequestWithUser) {
 @ApiTags('calendar')
 @Controller('calendar')
 export class CalendarController {
-  constructor(private readonly calendarService: CalendarService) {}
+  constructor(
+    private readonly calendarService: CalendarService,
+    @Inject(COVER_IMAGE_PROVIDER)
+    private readonly coverImageProvider: CoverImageProvider,
+  ) {}
+
+  @Get('cover-suggestions')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @Roles(...EDITOR_ROLES)
+  @ApiOperation({ summary: 'Search cover image suggestions (editor only)' })
+  @ApiResponse({ status: 200, description: 'Suggestions retrieved' })
+  @ApiResponse({ status: 503, description: 'Cover image provider not configured' })
+  async coverSuggestions(
+    @Query('query') query?: string,
+    @Query('page') page?: string,
+  ): Promise<CoverSuggestionsResult> {
+    if (!this.coverImageProvider.isAvailable()) {
+      throw new ServiceUnavailableException(
+        'Búsqueda de imágenes no disponible (falta UNSPLASH_ACCESS_KEY)',
+      );
+    }
+    const pageNumber = Math.max(1, Number(page ?? '1') || 1);
+    return this.coverImageProvider.search(query ?? '', pageNumber);
+  }
+
+  @Post('cover-suggestions/:photoId/track')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @Roles(...EDITOR_ROLES)
+  @ApiOperation({ summary: 'Notify provider that a suggestion was selected' })
+  async trackCoverSuggestion(
+    @Param('photoId') photoId: string,
+  ): Promise<{ success: true }> {
+    if (this.coverImageProvider.isAvailable()) {
+      await this.coverImageProvider.trackDownload(photoId);
+    }
+    return { success: true };
+  }
 
   @Get()
   @UseGuards(OptionalJwtAuthGuard)
@@ -203,6 +249,34 @@ export class CalendarController {
       file,
       viewerFromReq(req),
       cover,
+    );
+  }
+
+  @Post(':id/cover')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @Roles(...EDITOR_ROLES)
+  @UseInterceptors(FileInterceptor('file', coverMulterConfig))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: UploadCoverDto })
+  @ApiOperation({
+    summary: 'Replace the cover image with an uploaded file (editor only)',
+  })
+  uploadCover(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('sourceAuthor') sourceAuthor: string | undefined,
+    @Body('sourceUrl') sourceUrl: string | undefined,
+    @Request() req: RequestWithUser,
+  ): Promise<AttachmentResponseDto> {
+    if (!file) {
+      throw new BadRequestException('Imagen requerida');
+    }
+    return this.calendarService.replaceCover(
+      id,
+      file,
+      viewerFromReq(req),
+      { sourceAuthor, sourceUrl },
     );
   }
 

@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { diskStorage } from 'multer';
+import { diskStorage, memoryStorage } from 'multer';
 import { extname, join } from 'path';
 import { randomBytes } from 'crypto';
 import { mkdirSync } from 'fs';
@@ -70,3 +70,27 @@ export const MAX_ATTACHMENTS_PER_EVENT = parseInt(
   process.env.MAX_ATTACHMENTS_PER_EVENT || '10',
   10,
 );
+
+export const MAX_COVER_SIZE =
+  parseInt(process.env.COVER_MAX_BYTES || '10485760', 10) || 10 * 1024 * 1024;
+
+function coverFileFilter(
+  _req: unknown,
+  file: { mimetype: string },
+  cb: (err: Error | null, accept: boolean) => void,
+): void {
+  if (!file.mimetype.startsWith('image/')) {
+    cb(
+      new BadRequestException('La portada debe ser una imagen (image/*)'),
+      false,
+    );
+    return;
+  }
+  cb(null, true);
+}
+
+export const coverMulterConfig = {
+  storage: memoryStorage(),
+  limits: { fileSize: MAX_COVER_SIZE },
+  fileFilter: coverFileFilter,
+};

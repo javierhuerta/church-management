@@ -6,10 +6,51 @@ import type { CreateEventDto } from '../models/CreateEventDto';
 import type { EventResponseDto } from '../models/EventResponseDto';
 import type { UpdateEventDto } from '../models/UpdateEventDto';
 import type { UploadAttachmentDto } from '../models/UploadAttachmentDto';
+import type { UploadCoverDto } from '../models/UploadCoverDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class CalendarService {
+    /**
+     * Search cover image suggestions (editor only)
+     * @param query
+     * @param page
+     * @returns any Suggestions retrieved
+     * @throws ApiError
+     */
+    public static calendarControllerCoverSuggestions(
+        query: string,
+        page: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/calendar/cover-suggestions',
+            query: {
+                'query': query,
+                'page': page,
+            },
+            errors: {
+                503: `Cover image provider not configured`,
+            },
+        });
+    }
+    /**
+     * Notify provider that a suggestion was selected
+     * @param photoId
+     * @returns any
+     * @throws ApiError
+     */
+    public static calendarControllerTrackCoverSuggestion(
+        photoId: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/calendar/cover-suggestions/{photoId}/track',
+            path: {
+                'photoId': photoId,
+            },
+        });
+    }
     /**
      * List events with filters (public, role-aware)
      * @param page Page number
@@ -17,7 +58,7 @@ export class CalendarService {
      * @param startDate Start date filter (ISO)
      * @param endDate End date filter (ISO)
      * @param eventType
-     * @param department
+     * @param departmentId Department ID (UUID)
      * @param status
      * @returns any Events retrieved successfully
      * @throws ApiError
@@ -210,6 +251,27 @@ export class CalendarService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/calendar/{id}/attachments',
+            path: {
+                'id': id,
+            },
+            formData: formData,
+            mediaType: 'multipart/form-data',
+        });
+    }
+    /**
+     * Replace the cover image with an uploaded file (editor only)
+     * @param id
+     * @param formData
+     * @returns any
+     * @throws ApiError
+     */
+    public static calendarControllerUploadCover(
+        id: string,
+        formData: UploadCoverDto,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/calendar/{id}/cover',
             path: {
                 'id': id,
             },

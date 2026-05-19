@@ -10,6 +10,8 @@ export type AttachmentResponseDto = {
     size: number;
     isCover: boolean;
     url: string;
+    sourceAuthor?: string | null;
+    sourceUrl?: string | null;
     createdAt: string;
 };
 

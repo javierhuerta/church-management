@@ -8,11 +8,14 @@ import {
   IsUUID,
   ArrayMaxSize,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { EventType } from '../entities/event-type.enum';
 import { EventStatus } from '../entities/event-status.enum';
 import { MeetingType } from '../entities/meeting-type.enum';
+import { OrganizerInputDto } from './organizer-input.dto';
 
 export class UpdateEventDto {
   @ApiPropertyOptional({ example: 'Culto del Sabado' })
@@ -67,10 +70,11 @@ export class UpdateEventDto {
   @MaxLength(300)
   location?: string | null;
 
-  @ApiPropertyOptional({ type: [String] })
+  @ApiPropertyOptional({ type: [OrganizerInputDto] })
   @IsOptional()
   @IsArray()
-  @ArrayMaxSize(20)
-  @IsUUID('4', { each: true })
-  organizerIds?: string[];
+  @ArrayMaxSize(25)
+  @ValidateNested({ each: true })
+  @Type(() => OrganizerInputDto)
+  organizers?: OrganizerInputDto[];
 }

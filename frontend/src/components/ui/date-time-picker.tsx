@@ -26,6 +26,8 @@ export interface DateTimePickerProps {
   disabled?: boolean
   id?: string
   className?: string
+  /** Optional lower bound as a `YYYY-MM-DDTHH:mm` string. Dates strictly before are blocked in the calendar. */
+  minDate?: string
 }
 
 function combine(date: Date, time: string): string {
@@ -42,10 +44,14 @@ export function DateTimePicker({
   disabled,
   id,
   className,
+  minDate,
 }: DateTimePickerProps) {
   const [open, setOpen] = React.useState(false)
   const selected = parseDateTimeString(value)
   const time = timeFromDateTimeString(value)
+  const min = parseDateTimeString(minDate)
+  const minTime = minDate ? timeFromDateTimeString(minDate) : null
+  const onSameDayAsMin = !!(min && selected && isSameDay(selected, min))
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -69,22 +75,51 @@ export function DateTimePicker({
         <Calendar
           mode="single"
           selected={selected}
-          defaultMonth={selected}
+          defaultMonth={selected ?? min ?? undefined}
+          disabled={min ? { before: startOfDay(min) } : undefined}
           onSelect={(date) => {
-            if (date) onChange?.(combine(date, time))
+            if (!date) return
+            let nextTime = time
+            if (min && isSameDay(date, min) && nextTime < (minTime ?? '00:00')) {
+              nextTime = minTime ?? '00:00'
+            }
+            onChange?.(combine(date, nextTime))
           }}
         />
         <div className="border-t border-neutral-200 p-3">
           <Input
             type="time"
             value={time}
+            min={onSameDayAsMin ? minTime ?? undefined : undefined}
             onChange={(e) => {
               const base = selected ?? new Date()
-              onChange?.(combine(base, e.target.value))
+              let nextTime = e.target.value
+              if (
+                min &&
+                isSameDay(base, min) &&
+                nextTime < (minTime ?? '00:00')
+              ) {
+                nextTime = minTime ?? '00:00'
+              }
+              onChange?.(combine(base, nextTime))
             }}
           />
         </div>
       </PopoverContent>
     </Popover>
   )
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  )
+}
+
+function startOfDay(d: Date): Date {
+  const out = new Date(d)
+  out.setHours(0, 0, 0, 0)
+  return out
 }

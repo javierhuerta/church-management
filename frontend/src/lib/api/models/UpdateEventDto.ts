@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { OrganizerInputDto } from './OrganizerInputDto';
 export type UpdateEventDto = {
     title?: string;
     description?: string;
@@ -9,11 +10,14 @@ export type UpdateEventDto = {
     endDate?: string;
     eventType?: UpdateEventDto.eventType;
     status?: UpdateEventDto.status;
+    /**
+     * Department ID (UUID)
+     */
     departmentId?: string | null;
     meetingUrl?: string;
     meetingType?: UpdateEventDto.meetingType | null;
     location?: string;
-    organizerIds?: Array<string>;
+    organizers?: Array<OrganizerInputDto>;
 };
 export namespace UpdateEventDto {
     export enum eventType {
@@ -33,3 +37,4 @@ export namespace UpdateEventDto {
         OTHER = 'other',
     }
 }
+

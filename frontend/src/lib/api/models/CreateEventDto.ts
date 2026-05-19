@@ -2,20 +2,24 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { OrganizerInputDto } from './OrganizerInputDto';
 export type CreateEventDto = {
     title: string;
     description?: string;
     startDate: string;
     endDate: string;
     eventType: CreateEventDto.eventType;
+    /**
+     * Department ID (UUID)
+     */
     departmentId?: string;
     meetingUrl?: string;
     meetingType?: CreateEventDto.meetingType;
     location?: string;
     /**
-     * List of user IDs that organize the event
+     * List of organizers. Each entry must have either `userId` (system user) or `displayName` (free-text).
      */
-    organizerIds?: Array<string>;
+    organizers?: Array<OrganizerInputDto>;
 };
 export namespace CreateEventDto {
     export enum eventType {
@@ -30,3 +34,4 @@ export namespace CreateEventDto {
         OTHER = 'other',
     }
 }
+

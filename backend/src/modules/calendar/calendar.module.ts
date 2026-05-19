@@ -8,6 +8,8 @@ import { EventOrganizer } from './entities/event-organizer.entity';
 import { User } from '../auth/entities/user.entity';
 import { Department } from '../departments/entities/department.entity';
 import { AuthModule } from '../auth/auth.module';
+import { COVER_IMAGE_PROVIDER } from './providers/cover-image-provider.interface';
+import { UnsplashProvider } from './providers/unsplash.provider';
 
 @Module({
   imports: [
@@ -15,7 +17,10 @@ import { AuthModule } from '../auth/auth.module';
     AuthModule,
   ],
   controllers: [CalendarController],
-  providers: [CalendarService],
+  providers: [
+    CalendarService,
+    { provide: COVER_IMAGE_PROVIDER, useClass: UnsplashProvider },
+  ],
   exports: [CalendarService],
 })
 export class CalendarModule {}

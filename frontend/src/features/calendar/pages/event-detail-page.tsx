@@ -8,7 +8,6 @@ import {
   Pencil,
   Trash2,
 } from 'lucide-react'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { CalendarService } from '@/lib/api'
 import { useEventBySlug } from '../hooks/use-calendar'
@@ -22,35 +21,12 @@ import {
 import { AttachmentGallery } from '../components/attachment-gallery'
 import { ShareButtons } from '../components/share-buttons'
 import { MeetingButton } from '../components/meeting-button'
+import { OrganizerChip, type OrganizerEntry } from '../components/organizer-chip'
+import { formatEventDateRange } from '../utils/event-date'
 
 const API_BASE =
   (import.meta as ImportMeta).env.VITE_API_URL || 'http://localhost:3000'
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('es-CL', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-}
-
-function formatRange(startIso: string, endIso: string): string {
-  const start = new Date(startIso)
-  const end = new Date(endIso)
-  const fmt = (d: Date) =>
-    d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
-  return `${fmt(start)} – ${fmt(end)}`
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-}
 
 export function EventDetailPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -106,6 +82,19 @@ export function EventDetailPage() {
         ? event.coverImageUrl
         : `${API_BASE}${event.coverImageUrl}`
       : null
+  const coverAttachment = event.attachments.find((a) => a.isCover) ?? null
+  const dateRange = formatEventDateRange(event.startDate, event.endDate)
+  const organizerEntries: OrganizerEntry[] = event.organizers.map((o) =>
+    o.kind === 'user' && o.userId
+      ? {
+          kind: 'user',
+          id: o.id,
+          userId: o.userId,
+          name: o.name,
+          email: o.email ?? null,
+        }
+      : { kind: 'text', id: o.id, displayName: o.name },
+  )
 
   async function handleDelete() {
     if (!confirm('¿Eliminar este evento permanentemente?')) return
@@ -173,13 +162,33 @@ export function EventDetailPage() {
       </div>
 
       {cover && (
-        <div className="relative w-full overflow-hidden rounded-2xl bg-neutral-100 h-48 md:h-64 lg:h-72">
-          <img
-            src={cover}
-            alt={event.title}
-            className="h-full w-full object-cover"
-            onError={() => setCoverErrored(true)}
-          />
+        <div className="space-y-1">
+          <div className="relative w-full overflow-hidden rounded-2xl bg-neutral-100 h-48 md:h-64 lg:h-72">
+            <img
+              src={cover}
+              alt={event.title}
+              className="h-full w-full object-cover"
+              onError={() => setCoverErrored(true)}
+            />
+          </div>
+          {coverAttachment?.sourceAuthor && (
+            <p className="text-[11px] text-neutral-500 text-right">
+              Foto:{' '}
+              {coverAttachment.sourceUrl ? (
+                <a
+                  href={coverAttachment.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-neutral-700"
+                >
+                  {coverAttachment.sourceAuthor}
+                </a>
+              ) : (
+                coverAttachment.sourceAuthor
+              )}{' '}
+              en Unsplash
+            </p>
+          )}
         </div>
       )}
 
@@ -214,12 +223,14 @@ export function EventDetailPage() {
         <div className="flex items-center gap-4 text-sm text-neutral-600 flex-wrap">
           <div className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4" />
-            <span className="capitalize">{formatDate(event.startDate)}</span>
+            <span className="capitalize">{dateRange.dateLabel}</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Clock className="h-4 w-4" />
-            <span>{formatRange(event.startDate, event.endDate)}</span>
-          </div>
+          {dateRange.timeLabel && (
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-4 w-4" />
+              <span>{dateRange.timeLabel}</span>
+            </div>
+          )}
           {event.location && (
             <div className="flex items-center gap-1.5">
               <MapPin className="h-4 w-4" />
@@ -244,24 +255,14 @@ export function EventDetailPage() {
         </section>
       )}
 
-      {event.organizers.length > 0 && (
+      {organizerEntries.length > 0 && (
         <section className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           <h3 className="text-sm font-semibold text-neutral-700 mb-3">
             Organizadores
           </h3>
           <div className="flex flex-wrap gap-3">
-            {event.organizers.map((o) => (
-              <div
-                key={o.id}
-                className="flex items-center gap-2 rounded-full bg-neutral-50 border border-neutral-200 px-3 py-1.5"
-              >
-                <Avatar className="h-6 w-6">
-                  <AvatarFallback className="bg-neutral-700 text-white text-[10px]">
-                    {getInitials(o.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm text-neutral-700">{o.name}</span>
-              </div>
+            {organizerEntries.map((o) => (
+              <OrganizerChip key={o.id} organizer={o} />
             ))}
           </div>
         </section>

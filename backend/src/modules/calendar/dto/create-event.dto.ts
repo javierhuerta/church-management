@@ -8,10 +8,13 @@ import {
   IsUUID,
   ArrayMaxSize,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EventType } from '../entities/event-type.enum';
 import { MeetingType } from '../entities/meeting-type.enum';
+import { OrganizerInputDto } from './organizer-input.dto';
 
 export class CreateEventDto {
   @ApiProperty({ example: 'Culto del Sabado' })
@@ -58,12 +61,14 @@ export class CreateEventDto {
   location?: string;
 
   @ApiPropertyOptional({
-    description: 'List of user IDs that organize the event',
-    type: [String],
+    description:
+      'List of organizers. Each entry must have either `userId` (system user) or `displayName` (free-text).',
+    type: [OrganizerInputDto],
   })
   @IsOptional()
   @IsArray()
-  @ArrayMaxSize(20)
-  @IsUUID('4', { each: true })
-  organizerIds?: string[];
+  @ArrayMaxSize(25)
+  @ValidateNested({ each: true })
+  @Type(() => OrganizerInputDto)
+  organizers?: OrganizerInputDto[];
 }

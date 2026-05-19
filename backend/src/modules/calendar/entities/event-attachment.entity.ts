@@ -28,4 +28,10 @@ export class EventAttachment extends BaseEntity {
 
   @Column()
   url: string;
+
+  @Column({ name: 'source_author', type: 'text', nullable: true })
+  sourceAuthor: string | null;
+
+  @Column({ name: 'source_url', type: 'text', nullable: true })
+  sourceUrl: string | null;
 }

@@ -12,8 +12,10 @@ import {
   LessThanOrEqual,
   In,
 } from 'typeorm';
-import { unlink } from 'fs/promises';
+import { unlink, writeFile } from 'fs/promises';
 import { join } from 'path';
+import { randomBytes } from 'crypto';
+import sharp = require('sharp');
 import { Event } from './entities/event.entity';
 import { EventAttachment } from './entities/event-attachment.entity';
 import { EventOrganizer } from './entities/event-organizer.entity';
@@ -21,6 +23,7 @@ import { User } from '../auth/entities/user.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { FilterEventDto } from './dto/filter-event.dto';
+import { OrganizerInputDto } from './dto/organizer-input.dto';
 import {
   AttachmentResponseDto,
   EventResponseDto,
@@ -32,6 +35,8 @@ import { EventStatus } from './entities/event-status.enum';
 import { EventType } from './entities/event-type.enum';
 import { MeetingType } from './entities/meeting-type.enum';
 import { MAX_ATTACHMENTS_PER_EVENT, UPLOAD_DIR } from './config/upload.config';
+
+const MAX_ORGANIZERS_PER_EVENT = 25;
 import { generateShareSlug } from './utils/slug';
 import { isEditorRole } from './constants/editor-roles';
 
@@ -96,8 +101,8 @@ export class CalendarService {
 
     const saved = await this.eventRepository.save(event);
 
-    if (createEventDto.organizerIds?.length) {
-      await this.setOrganizers(saved.id, createEventDto.organizerIds);
+    if (createEventDto.organizers?.length) {
+      await this.setOrganizers(saved.id, createEventDto.organizers);
     }
 
     return this.toResponse(await this.loadOne(saved.id));
@@ -211,8 +216,8 @@ export class CalendarService {
 
     await this.eventRepository.save(event);
 
-    if (updateEventDto.organizerIds !== undefined) {
-      await this.setOrganizers(event.id, updateEventDto.organizerIds);
+    if (updateEventDto.organizers !== undefined) {
+      await this.setOrganizers(event.id, updateEventDto.organizers);
     }
 
     return this.toResponse(await this.loadOne(event.id));
@@ -283,6 +288,53 @@ export class CalendarService {
     return this.toAttachmentResponse(saved);
   }
 
+  async replaceCover(
+    eventId: string,
+    file: Express.Multer.File,
+    viewer: ViewerContext,
+    metadata: { sourceAuthor?: string; sourceUrl?: string } = {},
+  ): Promise<AttachmentResponseDto> {
+    this.assertEditor(viewer);
+    const event = await this.loadOne(eventId);
+
+    if (!file?.buffer?.length) {
+      throw new BadRequestException('Imagen requerida');
+    }
+    if (!file.mimetype.startsWith('image/')) {
+      throw new BadRequestException('La portada debe ser una imagen');
+    }
+
+    const processed = await sharp(file.buffer)
+      .rotate()
+      .resize(1600, 900, { fit: 'cover', position: 'center' })
+      .jpeg({ quality: 82, progressive: true, mozjpeg: true })
+      .toBuffer();
+
+    const filename = `cover-${Date.now()}-${randomBytes(6).toString('hex')}.jpg`;
+    await writeFile(join(UPLOAD_DIR, filename), processed);
+
+    // Remove previous cover attachment (file + row).
+    const prior = (event.attachments ?? []).find((a) => a.isCover);
+    if (prior) {
+      await this.safeUnlink(prior.filename);
+      await this.attachmentRepository.remove(prior);
+    }
+
+    const attachment = this.attachmentRepository.create({
+      eventId: event.id,
+      filename,
+      originalName: filename,
+      mimeType: 'image/jpeg',
+      size: processed.length,
+      isCover: true,
+      url: `/uploads/calendar/${filename}`,
+      sourceAuthor: metadata.sourceAuthor ?? null,
+      sourceUrl: metadata.sourceUrl ?? null,
+    });
+    const saved = await this.attachmentRepository.save(attachment);
+    return this.toAttachmentResponse(saved);
+  }
+
   async setCover(
     eventId: string,
     attachmentId: string,
@@ -332,6 +384,8 @@ export class CalendarService {
 
     return users.map((u) => ({
       id: u.id,
+      kind: 'user' as const,
+      userId: u.id,
       name: u.name,
       email: u.email,
       role: u.role,
@@ -351,18 +405,63 @@ export class CalendarService {
 
   private async setOrganizers(
     eventId: string,
-    userIds: string[],
+    organizers: OrganizerInputDto[],
   ): Promise<void> {
-    await this.organizerRepository.delete({ eventId });
-    if (userIds.length === 0) return;
+    if (organizers.length > MAX_ORGANIZERS_PER_EVENT) {
+      throw new BadRequestException(
+        `Máximo ${MAX_ORGANIZERS_PER_EVENT} organizadores por evento`,
+      );
+    }
 
-    const users = await this.userRepository.find({
-      where: { id: In(userIds) },
-    });
-    const valid = users.map((u) => u.id);
-    const rows = valid.map((userId) =>
-      this.organizerRepository.create({ eventId, userId }),
-    );
+    // XOR: exactly one of userId or displayName must be set per entry.
+    const seenUserIds = new Set<string>();
+    for (const o of organizers) {
+      const hasUser = !!o.userId;
+      const hasText = !!o.displayName?.trim();
+      if (hasUser === hasText) {
+        throw new BadRequestException(
+          'Cada organizador debe tener userId o displayName, no ambos',
+        );
+      }
+      if (hasUser) {
+        if (seenUserIds.has(o.userId!)) {
+          throw new BadRequestException(
+            'El mismo usuario no puede aparecer dos veces como organizador',
+          );
+        }
+        seenUserIds.add(o.userId!);
+      }
+    }
+
+    await this.organizerRepository.delete({ eventId });
+    if (organizers.length === 0) return;
+
+    const userIds = organizers
+      .map((o) => o.userId)
+      .filter((id): id is string => !!id);
+    const existingUsers = userIds.length
+      ? await this.userRepository.find({ where: { id: In(userIds) } })
+      : [];
+    const existingUserIds = new Set(existingUsers.map((u) => u.id));
+
+    const rows = organizers
+      .map((o) => {
+        if (o.userId) {
+          if (!existingUserIds.has(o.userId)) return null;
+          return this.organizerRepository.create({
+            eventId,
+            userId: o.userId,
+            displayName: null,
+          });
+        }
+        return this.organizerRepository.create({
+          eventId,
+          userId: null,
+          displayName: o.displayName!.trim(),
+        });
+      })
+      .filter((r): r is EventOrganizer => r !== null);
+
     if (rows.length > 0) {
       await this.organizerRepository.save(rows);
     }
@@ -409,13 +508,26 @@ export class CalendarService {
     );
 
     const organizers: OrganizerResponseDto[] = (event.organizers ?? [])
-      .filter((o) => o.user)
-      .map((o) => ({
-        id: o.user.id,
-        name: o.user.name,
-        email: o.user.email,
-        role: o.user.role,
-      }));
+      .filter((o) => o.user || o.displayName)
+      .map((o) =>
+        o.user
+          ? {
+              id: o.id,
+              kind: 'user' as const,
+              userId: o.user.id,
+              name: o.user.name,
+              email: o.user.email,
+              role: o.user.role,
+            }
+          : {
+              id: o.id,
+              kind: 'text' as const,
+              userId: null,
+              name: o.displayName!,
+              email: null,
+              role: null,
+            },
+      );
 
     return {
       id: event.id,
@@ -449,6 +561,8 @@ export class CalendarService {
       size: a.size,
       isCover: a.isCover,
       url: a.url,
+      sourceAuthor: a.sourceAuthor ?? null,
+      sourceUrl: a.sourceUrl ?? null,
       createdAt: a.createdAt,
     };
   }

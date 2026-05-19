@@ -4,17 +4,23 @@ import { EventStatus } from '../entities/event-status.enum';
 import { MeetingType } from '../entities/meeting-type.enum';
 
 export class OrganizerResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Row id of the event_organizers entry' })
   id: string;
+
+  @ApiProperty({ enum: ['user', 'text'] })
+  kind: 'user' | 'text';
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  userId: string | null;
 
   @ApiProperty()
   name: string;
 
-  @ApiProperty()
-  email: string;
+  @ApiPropertyOptional({ type: String, nullable: true })
+  email: string | null;
 
-  @ApiProperty()
-  role: string;
+  @ApiPropertyOptional({ type: String, nullable: true })
+  role: string | null;
 }
 
 export class AttachmentResponseDto {
@@ -38,6 +44,12 @@ export class AttachmentResponseDto {
 
   @ApiProperty()
   url: string;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  sourceAuthor: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  sourceUrl: string | null;
 
   @ApiProperty()
   createdAt: Date;
