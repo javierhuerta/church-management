@@ -51,14 +51,6 @@ export class Event extends BaseEntity {
   @Column({ name: 'department_id', nullable: true, type: 'uuid' })
   departmentId: string | null;
 
-  get departmentName(): string | null {
-    return this.department?.name ?? null
-  }
-
-  get departmentColor(): string | null {
-    return this.department?.color ?? null
-  }
-
   @Column({ name: 'meeting_url', type: 'text', nullable: true })
   meetingUrl: string | null;
 

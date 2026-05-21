@@ -28,8 +28,6 @@ import { UserRole } from '../common/entities/user-role.enum';
 
 @ApiTags('departments')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.Admin)
 @Controller('departments')
 export class DepartmentsController {
   constructor(private readonly departmentsService: DepartmentsService) {}
@@ -42,6 +40,8 @@ export class DepartmentsController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get department by ID' })
   @ApiResponse({ status: 200, type: DepartmentResponseDto })
   @ApiResponse({ status: 404, description: 'Department not found' })
@@ -50,6 +50,8 @@ export class DepartmentsController {
   }
 
   @Get(':id/directors')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'List directors of a department' })
   @ApiResponse({ status: 200, type: [DirectorSummaryDto] })
   getDirectors(@Param('id') id: string): Promise<DirectorSummaryDto[]> {
@@ -57,6 +59,9 @@ export class DepartmentsController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @Roles(UserRole.Admin)
   @ApiOperation({ summary: 'Create a department' })
   @ApiResponse({ status: 201, type: DepartmentResponseDto })
   @ApiResponse({ status: 409, description: 'Name already exists' })
@@ -65,6 +70,9 @@ export class DepartmentsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @Roles(UserRole.Admin)
   @ApiOperation({ summary: 'Update a department' })
   @ApiResponse({ status: 200, type: DepartmentResponseDto })
   @ApiResponse({ status: 404, description: 'Department not found' })
@@ -76,6 +84,9 @@ export class DepartmentsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @Roles(UserRole.Admin)
   @ApiOperation({ summary: 'Delete a department' })
   @ApiResponse({ status: 200, description: 'Department deleted' })
   @ApiResponse({ status: 404, description: 'Department not found' })

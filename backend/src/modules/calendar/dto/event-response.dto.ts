@@ -74,10 +74,32 @@ export class EventResponseDto {
 
   @ApiPropertyOptional({ type: String, nullable: true })
   @Expose()
+  @Transform(
+    ({ obj }) => {
+      const event = obj as Event
+      return event.department?.name ?? null
+    },
+    { toClassOnly: true },
+  )
+  @Transform(
+    ({ value }) => value as string | null,
+    { toPlainOnly: true },
+  )
   departmentName: string | null;
 
   @ApiPropertyOptional({ type: String, nullable: true })
   @Expose()
+  @Transform(
+    ({ obj }) => {
+      const event = obj as Event
+      return event.department?.color ?? null
+    },
+    { toClassOnly: true },
+  )
+  @Transform(
+    ({ value }) => value as string | null,
+    { toPlainOnly: true },
+  )
   departmentColor: string | null;
 
   @ApiPropertyOptional({ type: String, nullable: true })
