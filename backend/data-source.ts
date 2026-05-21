@@ -7,6 +7,8 @@ import { EventAttachment } from './src/modules/calendar/entities/event-attachmen
 import { EventOrganizer } from './src/modules/calendar/entities/event-organizer.entity';
 import { ServiceTemplate, ServiceTemplateGroup, ServiceTemplateSection, ServiceProgram, ServiceProgramGroup, ServiceProgramSection, ServiceProgramLog, Hymn } from './src/modules/worship-services/entities';
 
+const isProd = process.env.NODE_ENV === 'production';
+
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
@@ -15,6 +17,6 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_DATABASE || 'church_management',
   entities: [User, Department, Event, EventAttachment, EventOrganizer, ServiceTemplate, ServiceTemplateGroup, ServiceTemplateSection, ServiceProgram, ServiceProgramGroup, ServiceProgramSection, ServiceProgramLog, Hymn],
-  migrations: ['src/migrations/*.ts'],
+  migrations: [isProd ? 'dist/src/migrations/*.js' : 'src/migrations/*.ts'],
   synchronize: false,
 });

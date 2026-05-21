@@ -30,6 +30,8 @@ RUN apk add --no-cache python3 make g++ \
     && apk del python3 make g++
 
 COPY --from=builder /app/dist ./dist
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x entrypoint.sh
 
 # Directorio de uploads con permisos correctos
 RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app
@@ -40,4 +42,4 @@ ENV NODE_ENV=production
 
 EXPOSE 3000
 
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]
