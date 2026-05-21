@@ -6,15 +6,8 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  Repository,
-  Between,
-  MoreThanOrEqual,
-  LessThanOrEqual,
-  In,
-  DataSource,
-  EntityManager,
-} from 'typeorm';
+import { Repository, In, DataSource, EntityManager } from 'typeorm';
+import { EventRepository } from './repositories/event.repository';
 import { toDto } from '../common';
 import { unlink, writeFile } from 'fs/promises';
 import { join } from 'path';
@@ -40,7 +33,6 @@ import { MeetingType } from './entities/meeting-type.enum';
 import { MAX_ATTACHMENTS_PER_EVENT, UPLOAD_DIR } from './config/upload.config';
 
 const MAX_ORGANIZERS_PER_EVENT = 25;
-import { generateShareSlug } from './utils/slug';
 import { isEditorRole } from './constants/editor-roles';
 
 interface ViewerContext {
@@ -71,6 +63,7 @@ export class CalendarService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly dataSource: DataSource,
+    private readonly eventRepo: EventRepository,
   ) {}
 
   async create(
@@ -83,7 +76,7 @@ export class CalendarService {
 
     const startDate = new Date(createEventDto.startDate);
     const endDate = new Date(createEventDto.endDate);
-    const shareSlug = await this.uniqueShareSlug(
+    const shareSlug = await this.eventRepo.generateUniqueShareSlug(
       createEventDto.title,
       startDate,
     );
@@ -126,47 +119,12 @@ export class CalendarService {
     filter: FilterEventDto,
     viewer: ViewerContext,
   ): Promise<PaginatedResponseDto<EventResponseDto>> {
-    const {
-      page = 1,
-      limit = 20,
-      startDate,
-      endDate,
-      eventType,
-      departmentId,
-      status,
-    } = filter;
-
-    const where: Record<string, unknown> = {};
-    if (startDate && endDate) {
-      where.startDate = Between(new Date(startDate), new Date(endDate));
-    } else if (startDate) {
-      where.startDate = MoreThanOrEqual(new Date(startDate));
-    } else if (endDate) {
-      where.endDate = LessThanOrEqual(new Date(endDate));
-    }
-    if (eventType) where.eventType = eventType;
-    if (departmentId) where.departmentId = departmentId;
-
-    const isEditor = isEditorRole(viewer.role);
-    if (!isEditor) {
-      where.status = EventStatus.Published;
-    } else if (status) {
-      where.status = status;
-    }
-
-    const [events, total] = await this.eventRepository.findAndCount({
-      where,
-      order: { startDate: 'ASC' },
-      skip: (page - 1) * limit,
-      take: limit,
-      relations: ['attachments', 'organizers', 'organizers.user', 'department'],
-    });
-
+    const paginated = await this.eventRepo.findWithFilters(filter, viewer);
     return new PaginatedResponseDto(
-      toDto(EventResponseDto, events),
-      total,
-      page,
-      limit,
+      toDto(EventResponseDto, paginated.data),
+      paginated.total,
+      paginated.page,
+      paginated.limit,
     );
   }
 
@@ -180,10 +138,7 @@ export class CalendarService {
     slug: string,
     viewer: ViewerContext,
   ): Promise<EventResponseDto> {
-    const event = await this.eventRepository.findOne({
-      where: { shareSlug: slug },
-      relations: ['attachments', 'organizers', 'organizers.user'],
-    });
+    const event = await this.eventRepo.findBySlugWithRelations(slug);
     if (!event) {
       throw new NotFoundException('Event not found');
     }
@@ -410,10 +365,7 @@ export class CalendarService {
   }
 
   private async loadOne(id: string): Promise<Event> {
-    const event = await this.eventRepository.findOne({
-      where: { id },
-      relations: ['attachments', 'organizers', 'organizers.user', 'department'],
-    });
+    const event = await this.eventRepo.findOneWithRelations(id);
     if (!event) {
       throw new NotFoundException('Event not found');
     }
@@ -490,18 +442,6 @@ export class CalendarService {
     if (rows.length > 0) {
       await organizerRepo.save(rows);
     }
-  }
-
-  private async uniqueShareSlug(title: string, date: Date): Promise<string> {
-    for (let attempt = 0; attempt < 5; attempt++) {
-      const candidate = generateShareSlug(title, date);
-      const existing = await this.eventRepository.findOne({
-        where: { shareSlug: candidate },
-        select: { id: true },
-      });
-      if (!existing) return candidate;
-    }
-    throw new BadRequestException('Could not generate unique share slug');
   }
 
   private ensureVisibility(event: Event, viewer: ViewerContext): void {

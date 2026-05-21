@@ -7,6 +7,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { CalendarService } from './calendar.service';
+import { EventRepository } from './repositories/event.repository';
 import { Event } from './entities/event.entity';
 import { EventAttachment } from './entities/event-attachment.entity';
 import { EventOrganizer } from './entities/event-organizer.entity';
@@ -79,12 +80,25 @@ describe('CalendarService', () => {
   let attachmentRepo: MockRepo<EventAttachment>;
   let organizerRepo: MockRepo<EventOrganizer>;
   let userRepo: MockRepo<User>;
+  let mockEventRepository: {
+    findOneWithRelations: jest.Mock;
+    findBySlugWithRelations: jest.Mock;
+    findWithFilters: jest.Mock;
+    generateUniqueShareSlug: jest.Mock;
+  };
 
   beforeEach(async () => {
     eventRepo = createMockRepo<Event>();
     attachmentRepo = createMockRepo<EventAttachment>();
     organizerRepo = createMockRepo<EventOrganizer>();
     userRepo = createMockRepo<User>();
+
+    mockEventRepository = {
+      findOneWithRelations: jest.fn(),
+      findBySlugWithRelations: jest.fn(),
+      findWithFilters: jest.fn(),
+      generateUniqueShareSlug: jest.fn().mockResolvedValue('mock-slug-abc123'),
+    };
 
     // Manager mock: Event create/save delegate to eventRepo (so existing
     // assertions hold); getRepository routes related entities to their mocks.
@@ -119,6 +133,7 @@ describe('CalendarService', () => {
         },
         { provide: getRepositoryToken(User), useValue: userRepo },
         { provide: DataSource, useValue: dataSource },
+        { provide: EventRepository, useValue: mockEventRepository },
       ],
     }).compile();
 
@@ -128,7 +143,7 @@ describe('CalendarService', () => {
   describe('visibility (ensureVisibility)', () => {
     it('returns the event when status is Published, even for anonymous viewers', async () => {
       const published = makeEvent({ status: EventStatus.Published });
-      eventRepo.findOne.mockResolvedValue(published);
+      mockEventRepository.findBySlugWithRelations.mockResolvedValue(published);
 
       const result = await service.findBySlug(published.shareSlug, {});
 
@@ -137,7 +152,7 @@ describe('CalendarService', () => {
 
     it('throws NotFoundException for draft events when viewer is not an editor', async () => {
       const draft = makeEvent({ status: EventStatus.Draft });
-      eventRepo.findOne.mockResolvedValue(draft);
+      mockEventRepository.findBySlugWithRelations.mockResolvedValue(draft);
 
       await expect(
         service.findBySlug(draft.shareSlug, { role: UserRole.Anciano }),
@@ -146,18 +161,20 @@ describe('CalendarService', () => {
 
     it('returns the draft event when viewer has an editor role', async () => {
       const draft = makeEvent({ status: EventStatus.Draft });
-      eventRepo.findOne.mockResolvedValue(draft);
+      mockEventRepository.findBySlugWithRelations.mockResolvedValue(draft);
 
       const adminView = await service.findBySlug(draft.shareSlug, {
         role: UserRole.Admin,
       });
       expect(adminView.id).toBe(draft.id);
 
+      mockEventRepository.findBySlugWithRelations.mockResolvedValue(draft);
       const pastorView = await service.findBySlug(draft.shareSlug, {
         role: UserRole.Pastor,
       });
       expect(pastorView.id).toBe(draft.id);
 
+      mockEventRepository.findBySlugWithRelations.mockResolvedValue(draft);
       const secretariaView = await service.findBySlug(draft.shareSlug, {
         role: UserRole.Secretaria,
       });
@@ -193,7 +210,7 @@ describe('CalendarService', () => {
         url: `/uploads/calendar/f${i}.jpg`,
       })) as EventAttachment[];
       const event = makeEvent({ attachments });
-      eventRepo.findOne.mockResolvedValue(event);
+      mockEventRepository.findOneWithRelations.mockResolvedValue(event);
 
       await expect(
         service.addAttachment('event-1', fakeFile(), { role: UserRole.Admin }),
@@ -202,7 +219,7 @@ describe('CalendarService', () => {
 
     it('saves a new attachment when below the limit', async () => {
       const event = makeEvent({ attachments: [] });
-      eventRepo.findOne.mockResolvedValue(event);
+      mockEventRepository.findOneWithRelations.mockResolvedValue(event);
       attachmentRepo.save.mockImplementation(async (entity) => ({
         ...entity,
         id: 'new-att',
@@ -223,7 +240,7 @@ describe('CalendarService', () => {
 
     it('rejects attachment upload for non-editor roles', async () => {
       const event = makeEvent({ attachments: [] });
-      eventRepo.findOne.mockResolvedValue(event);
+      mockEventRepository.findOneWithRelations.mockResolvedValue(event);
 
       await expect(
         service.addAttachment('event-1', fakeFile(), {
@@ -237,7 +254,7 @@ describe('CalendarService', () => {
     it('does not change shareSlug when title or dates change', async () => {
       const originalSlug = 'culto-original-2026-05-16-aaaaaa';
       const event = makeEvent({ shareSlug: originalSlug });
-      eventRepo.findOne.mockResolvedValue(event);
+      mockEventRepository.findOneWithRelations.mockResolvedValue(event);
 
       const updated = await service.update(
         event.id,
@@ -257,7 +274,7 @@ describe('CalendarService', () => {
 
     it('rejects update for non-editor roles', async () => {
       const event = makeEvent();
-      eventRepo.findOne.mockResolvedValue(event);
+      mockEventRepository.findOneWithRelations.mockResolvedValue(event);
 
       await expect(
         service.update(

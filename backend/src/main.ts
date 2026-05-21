@@ -10,7 +10,11 @@ const logger = new Logger('Bootstrap');
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: false });
   const config = app.get(ConfigService);
-  const appCfg = config.get<{ port: number; corsOrigin: string; logLevel: string }>('app')!;
+  const appCfg = config.get<{
+    port: number;
+    corsOrigin: string;
+    logLevel: string;
+  }>('app')!;
 
   const levels: ('log' | 'error' | 'warn' | 'debug' | 'verbose')[] = [
     'error',
@@ -21,7 +25,9 @@ async function bootstrap() {
   ];
   const enabledLevels = levels.slice(
     0,
-    levels.indexOf(appCfg.logLevel as 'log' | 'error' | 'warn' | 'debug' | 'verbose') + 1,
+    levels.indexOf(
+      appCfg.logLevel as 'log' | 'error' | 'warn' | 'debug' | 'verbose',
+    ) + 1,
   );
   app.useLogger(enabledLevels);
 

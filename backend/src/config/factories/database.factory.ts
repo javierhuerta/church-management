@@ -1,9 +1,13 @@
 import { ConfigService } from '@nestjs/config';
-import { TypeOrmModuleAsyncOptions, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import {
+  TypeOrmModuleAsyncOptions,
+  TypeOrmModuleOptions,
+} from '@nestjs/typeorm';
 import type { DatabaseConfig } from '../database.config';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const databaseFactory = (entities: any[]): TypeOrmModuleAsyncOptions => ({
+export const databaseFactory = (
+  entities: any[],
+): TypeOrmModuleAsyncOptions => ({
   inject: [ConfigService],
   useFactory: (config: ConfigService): TypeOrmModuleOptions => {
     const db = config.get<DatabaseConfig>('database')!;

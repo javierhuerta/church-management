@@ -67,7 +67,14 @@ const ENTITIES = [
     // --- Configuration (global, validated at startup) ---
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, authConfig, cacheConfig, databaseConfig, throttleConfig, uploadConfig],
+      load: [
+        appConfig,
+        authConfig,
+        cacheConfig,
+        databaseConfig,
+        throttleConfig,
+        uploadConfig,
+      ],
       validationSchema,
     }),
 

@@ -20,7 +20,9 @@ import type { AuthConfig } from '../../config';
         const auth = config.get<AuthConfig>('auth')!;
         return {
           secret: auth.jwtSecret,
-          signOptions: { expiresIn: auth.jwtExpiresIn as `${number}${'s' | 'm' | 'h' | 'd'}` },
+          signOptions: {
+            expiresIn: auth.jwtExpiresIn as `${number}${'s' | 'm' | 'h' | 'd'}`,
+          },
         };
       },
     }),

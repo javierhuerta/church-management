@@ -13,6 +13,7 @@ import {
 import { TemplateCrudService } from './services/template-crud.service';
 import { ProgramService } from './services/program.service';
 import { HymnService } from './services/hymn.service';
+import { ProgramRepository } from './repositories/program.repository';
 import { TemplateController } from './controllers/template.controller';
 import { ProgramController } from './controllers/program.controller';
 import { HymnController } from './controllers/hymn.controller';
@@ -31,7 +32,12 @@ import { HymnController } from './controllers/hymn.controller';
     ]),
   ],
   controllers: [TemplateController, ProgramController, HymnController],
-  providers: [TemplateCrudService, ProgramService, HymnService],
+  providers: [
+    TemplateCrudService,
+    ProgramService,
+    HymnService,
+    ProgramRepository,
+  ],
   exports: [TypeOrmModule, ProgramService],
 })
 export class WorshipServicesModule {}

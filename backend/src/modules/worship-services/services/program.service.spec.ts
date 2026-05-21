@@ -7,6 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ProgramService } from './program.service';
+import { ProgramRepository } from '../repositories/program.repository';
 import {
   ServiceProgram,
   ServiceProgramGroup,
@@ -164,6 +165,11 @@ describe('ProgramService — unit tests', () => {
   let sectionRepo: MockRepo<ServiceProgramSection>;
   let logRepo: MockRepo<ServiceProgramLog>;
   let templateRepo: MockRepo<ServiceTemplate>;
+  let mockProgramRepository: {
+    findWithFilters: jest.Mock;
+    findOneWithRelations: jest.Mock;
+    findByDateRange: jest.Mock;
+  };
 
   beforeEach(async () => {
     programRepo = createMockRepo<ServiceProgram>();
@@ -173,6 +179,12 @@ describe('ProgramService — unit tests', () => {
     sectionRepo = createMockRepo<ServiceProgramSection>();
     logRepo = createMockRepo<ServiceProgramLog>();
     templateRepo = createMockRepo<ServiceTemplate>();
+
+    mockProgramRepository = {
+      findWithFilters: jest.fn(),
+      findOneWithRelations: jest.fn(),
+      findByDateRange: jest.fn(),
+    };
 
     const { dataSource } = createTxMocks({
       programRepo,
@@ -210,6 +222,7 @@ describe('ProgramService — unit tests', () => {
           useValue: templateRepo,
         },
         { provide: DataSource, useValue: dataSource },
+        { provide: ProgramRepository, useValue: mockProgramRepository },
       ],
     }).compile();
 
@@ -218,7 +231,9 @@ describe('ProgramService — unit tests', () => {
 
   describe('findOne', () => {
     it('throws NotFoundException when program does not exist', async () => {
-      programRepo.findOne.mockResolvedValue(null);
+      mockProgramRepository.findOneWithRelations.mockRejectedValue(
+        new NotFoundException('Program nonexistent not found'),
+      );
 
       await expect(service.findOne('nonexistent')).rejects.toBeInstanceOf(
         NotFoundException,
@@ -227,7 +242,7 @@ describe('ProgramService — unit tests', () => {
 
     it('returns the program when found', async () => {
       const program = makeProgram();
-      programRepo.findOne.mockResolvedValue(program);
+      mockProgramRepository.findOneWithRelations.mockResolvedValue(program);
 
       const result = await service.findOne(program.id);
 
@@ -249,7 +264,9 @@ describe('ProgramService — unit tests', () => {
       templateRepo.findOne.mockResolvedValue(template);
       templateGroupRepo.find.mockResolvedValue([]);
       templateSectionRepo.find.mockResolvedValue([]);
-      programRepo.findOne.mockResolvedValue(savedProgram);
+      mockProgramRepository.findOneWithRelations.mockResolvedValue(
+        savedProgram,
+      );
 
       const result = await service.createFromTemplate(dto, 'user-1', role);
 
@@ -402,7 +419,7 @@ describe('ProgramService — unit tests', () => {
   describe('publish', () => {
     it('changes status to PUBLISHED and sets publishedAt', async () => {
       const program = makeProgram({ status: ProgramStatus.DRAFT });
-      programRepo.findOne.mockResolvedValue(program);
+      mockProgramRepository.findOneWithRelations.mockResolvedValue(program);
 
       await service.publish(program.id, 'user-1', UserRole.Admin);
 
@@ -415,7 +432,7 @@ describe('ProgramService — unit tests', () => {
 
     it('throws BadRequestException when program is already published', async () => {
       const program = makeProgram({ status: ProgramStatus.PUBLISHED });
-      programRepo.findOne.mockResolvedValue(program);
+      mockProgramRepository.findOneWithRelations.mockResolvedValue(program);
 
       await expect(
         service.publish(program.id, 'user-1', UserRole.Admin),
@@ -484,6 +501,11 @@ describe('ProgramService — createFromTemplate workflow', () => {
   let logRepo: MockRepo<ServiceProgramLog>;
   let templateRepo: MockRepo<ServiceTemplate>;
   let dataSource: { transaction: jest.Mock };
+  let mockProgramRepository: {
+    findOneWithRelations: jest.Mock;
+    findWithFilters: jest.Mock;
+    findByDateRange: jest.Mock;
+  };
 
   beforeEach(async () => {
     programRepo = createMockRepo<ServiceProgram>();
@@ -493,6 +515,12 @@ describe('ProgramService — createFromTemplate workflow', () => {
     sectionRepo = createMockRepo<ServiceProgramSection>();
     logRepo = createMockRepo<ServiceProgramLog>();
     templateRepo = createMockRepo<ServiceTemplate>();
+
+    mockProgramRepository = {
+      findOneWithRelations: jest.fn(),
+      findWithFilters: jest.fn(),
+      findByDateRange: jest.fn(),
+    };
 
     const tx = createTxMocks({
       programRepo,
@@ -531,6 +559,7 @@ describe('ProgramService — createFromTemplate workflow', () => {
           useValue: templateRepo,
         },
         { provide: DataSource, useValue: dataSource },
+        { provide: ProgramRepository, useValue: mockProgramRepository },
       ],
     }).compile();
 
@@ -539,7 +568,7 @@ describe('ProgramService — createFromTemplate workflow', () => {
 
   it('copies groups and their sections from the template', async () => {
     templateRepo.findOne.mockResolvedValue(makeTemplate({ isActive: true }));
-    programRepo.findOne.mockResolvedValue(
+    mockProgramRepository.findOneWithRelations.mockResolvedValue(
       makeProgram({ id: 'prog-new', groups: [], sections: [] }),
     );
 
@@ -587,7 +616,7 @@ describe('ProgramService — createFromTemplate workflow', () => {
 
   it('copies top-level sections (without group) from the template', async () => {
     templateRepo.findOne.mockResolvedValue(makeTemplate({ isActive: true }));
-    programRepo.findOne.mockResolvedValue(
+    mockProgramRepository.findOneWithRelations.mockResolvedValue(
       makeProgram({ id: 'prog-new', groups: [], sections: [] }),
     );
 
@@ -627,7 +656,7 @@ describe('ProgramService — createFromTemplate workflow', () => {
 
   it('creates an audit log entry for program creation', async () => {
     templateRepo.findOne.mockResolvedValue(makeTemplate({ isActive: true }));
-    programRepo.findOne.mockResolvedValue(
+    mockProgramRepository.findOneWithRelations.mockResolvedValue(
       makeProgram({ id: 'prog-new', groups: [], sections: [] }),
     );
     templateGroupRepo.find.mockResolvedValue([]);
@@ -666,8 +695,8 @@ describe('ProgramService — createFromTemplate workflow', () => {
     ).rejects.toThrow('db failure');
 
     expect(dataSource.transaction).toHaveBeenCalledTimes(1);
-    // findOne (which reloads the program after commit) must not run on rollback.
-    expect(programRepo.findOne).not.toHaveBeenCalled();
+    // findOneWithRelations (which reloads the program after commit) must not run on rollback.
+    expect(mockProgramRepository.findOneWithRelations).not.toHaveBeenCalled();
   });
 });
 
@@ -693,6 +722,12 @@ describe('ProgramService — audit logging on updateSection', () => {
       logRepo: repos.logRepo,
       templateRepo: createMockRepo<ServiceTemplate>(),
     });
+
+    const mockProgramRepo = {
+      findOneWithRelations: jest.fn(),
+      findWithFilters: jest.fn(),
+      findByDateRange: jest.fn(),
+    };
 
     return Test.createTestingModule({
       providers: [
@@ -726,6 +761,7 @@ describe('ProgramService — audit logging on updateSection', () => {
           useValue: createMockRepo<ServiceTemplate>(),
         },
         { provide: DataSource, useValue: dataSource },
+        { provide: ProgramRepository, useValue: mockProgramRepo },
       ],
     })
       .compile()
