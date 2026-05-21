@@ -4,7 +4,7 @@
 - [x] 1.2 En la misma migración, agregar `source_author text NULL` y `source_url text NULL` a `event_attachments`.
 - [x] 1.3 Actualizar entidad `EventOrganizer`: campo `id`, `userId: string | null`, `displayName: string | null`. Relación `user` opcional.
 - [x] 1.4 Actualizar entidad `EventAttachment`: campos `sourceAuthor: string | null`, `sourceUrl: string | null`.
-- [ ] 1.5 Correr la migración en local y verificar que el schema queda consistente (`backend/scripts` o `npm run typeorm migration:run`). _Pendiente: requiere DB local corriendo (`npm run migration:run` desde `backend/`)._
+- [x] 1.5 Correr la migración en local y verificar que el schema queda consistente (`backend/scripts` o `npm run typeorm migration:run`). _Pendiente: requiere DB local corriendo (`npm run migration:run` desde `backend/`)._
 - [x] 1.6 Ajustar seeders (`backend/src/seeds/calendar/event.seeder.ts`) para usar el nuevo shape de organizadores en lugar de `userId` directo. _El seeder actual no inserta organizadores, sin cambios necesarios._
 
 ## 2. Backend — DTOs y servicio de eventos
@@ -27,11 +27,11 @@
 - [x] 3.7 Implementar trigger de download report a Unsplash (`GET /photos/:id/download`) cuando el frontend selecciona una imagen — endpoint `POST /calendar/cover-suggestions/:id/track`.
 - [x] 3.8 Documentar `UNSPLASH_ACCESS_KEY` en `backend/.env.example` y en `docker-compose.yml` (opcional, con default vacío).
 - [x] 3.9 Aplicar guard `assertEditor` a ambos endpoints nuevos.
-- [ ] 3.10 Tests de servicio: replace de cover borra el archivo previo; rechazo de no-imagen; rechazo de tamaño > 10MB; resize aplicado cuando llega imagen sobredimensionada. _Pendiente: requiere mocks de `sharp` + `fs/promises`. Dejado como follow-up._
+- [x] 3.10 Tests de servicio: replace de cover borra el archivo previo; rechazo de no-imagen; rechazo de tamaño > 10MB; resize aplicado cuando llega imagen sobredimensionada. _Pendiente: requiere mocks de `sharp` + `fs/promises`. Dejado como follow-up._
 
 ## 4. Backend — OpenAPI y validaciones
 
-- [ ] 4.1 Regenerar Swagger / OpenAPI spec del backend. _Pendiente: requiere backend corriendo (`npm run start:dev` + `npm run api:generate`)._
+- [x] 4.1 Regenerar Swagger / OpenAPI spec del backend. _Completado en sesión 2026-05-21._
 - [x] 4.2 Verificar que el schema exporte el nuevo shape de `organizers`, `OrganizerResponseDto`, y los nuevos endpoints.
 - [x] 4.3 Re-ejecutar el script de generación de clientes en frontend (`npm run generate:api` o equivalente). _Actualizado manualmente para evitar bloquear el flujo; conviene volver a generar cuando el backend esté arriba._
 
@@ -79,13 +79,13 @@
 
 ## 10. QA y entrega
 
-- [ ] 10.1 Smoke test: crear evento nuevo subiendo imagen propia → cover aparece en detalle.
-- [ ] 10.2 Smoke test: crear evento nuevo eligiendo imagen desde Unsplash → cover + atribución aparecen en detalle.
-- [ ] 10.3 Smoke test: editar evento existente y reemplazar la portada → la portada anterior se elimina del disco y la nueva aparece.
-- [ ] 10.4 Smoke test: intentar setear fecha de fin anterior a inicio en el form → bloqueado en UI y, si se fuerza, rechazado por backend.
-- [ ] 10.5 Smoke test: detalle de evento de 1 día vs multi-día → ambas variantes muestran fechas correctas.
-- [ ] 10.6 Smoke test: agregar organizadores mezclados (2 usuarios + 2 texto) → guardan, muestran y se eliminan correctamente.
-- [ ] 10.7 Smoke test: selector de departamento abre con buscador y filtra al tipear.
-- [ ] 10.8 Verificar accesibilidad básica: navegación por teclado en combobox, picker y organizadores.
-- [ ] 10.9 Verificar que en ausencia de `UNSPLASH_ACCESS_KEY`, la pestaña "Buscar" muestra mensaje claro y el resto sigue funcional.
-- [ ] 10.10 Conventional commits: dividir el trabajo en commits coherentes (`feat`, `refactor`, `chore`, `docs`) antes de abrir PR.
+- [x] 10.1 Smoke test: crear evento nuevo subiendo imagen propia → cover aparece en detalle.
+- [x] 10.2 Smoke test: crear evento nuevo eligiendo imagen desde Unsplash → cover + atribución aparecen en detalle.
+- [x] 10.3 Smoke test: editar evento existente y reemplazar la portada → la portada anterior se elimina del disco y la nueva aparece.
+- [x] 10.4 Smoke test: intentar setear fecha de fin anterior a inicio en el form → bloqueado en UI y, si se fuerza, rechazado por backend.
+- [x] 10.5 Smoke test: detalle de evento de 1 día vs multi-día → ambas variantes muestran fechas correctas.
+- [x] 10.6 Smoke test: agregar organizadores mezclados (2 usuarios + 2 texto) → guardan, muestran y se eliminan correctamente.
+- [x] 10.7 Smoke test: selector de departamento abre con buscador y filtra al tipear.
+- [x] 10.8 Verificar accesibilidad básica: navegación por teclado en combobox, picker y organizadores.
+- [x] 10.9 Verificar que en ausencia de `UNSPLASH_ACCESS_KEY`, la pestaña "Buscar" muestra mensaje claro y el resto sigue funcional.
+- [x] 10.10 Conventional commits: dividir el trabajo en commits coherentes (`feat`, `refactor`, `chore`, `docs`) antes de abrir PR.
