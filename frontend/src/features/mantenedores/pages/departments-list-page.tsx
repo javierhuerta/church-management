@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2, Building2, Search } from 'lucide-react'
 import { DepartmentsService } from '@/lib/api'
@@ -21,6 +21,7 @@ function EmptyState() {
 }
 
 export function DepartmentsListPage() {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [search, setSearch] = useState('')

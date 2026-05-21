@@ -83,7 +83,7 @@ export function EventCard({ event, compact = false }: EventCardProps) {
       `}
     >
       {/* Cover area */}
-      <div className="relative" style={hasCover ? undefined : { backgroundImage: TYPE_BG[event.eventType] ?? TYPE_BG.local }}>
+      <div className="relative overflow-hidden" style={hasCover ? undefined : { backgroundImage: TYPE_BG[event.eventType] ?? TYPE_BG.local }}>
         {/* Image at reduced opacity so card bg shows through and text stays readable */}
         {hasCover && (
           <img
@@ -95,14 +95,14 @@ export function EventCard({ event, compact = false }: EventCardProps) {
           />
         )}
 
-        <div className="relative p-3 space-y-1.5">
+        <div className="relative p-3 space-y-1.5 min-w-0">
           {/* Title row */}
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-2 min-w-0">
             <span
               className="mt-1 h-2 w-2 rounded-full flex-shrink-0"
               style={{ backgroundColor: deptStyle ? deptStyle.dotColor : typeStyle.dotColor }}
             />
-            <p className="text-sm font-semibold leading-snug line-clamp-2 flex-1 text-foreground">
+            <p className="text-sm font-semibold leading-snug line-clamp-2 flex-1 text-foreground min-w-0">
               {event.title}
             </p>
             {event.meetingUrl && (

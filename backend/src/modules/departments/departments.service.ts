@@ -49,7 +49,7 @@ export class DepartmentsService {
       `SELECT u.id, u.name, u.email
        FROM users u
        JOIN user_departments ud ON ud.user_id = u.id
-       WHERE ud.department_id = $1 AND ud.is_director = true`,
+       WHERE ud.department_id = $1`,
       [id],
     );
 

@@ -41,14 +41,11 @@ function SectionPreviewRow({
   section: TemplateSectionResponseDto
   variant?: 'group' | 'standalone'
 }) {
-  const isStandalone = variant === 'standalone'
   return (
     <div className="flex items-center justify-between gap-2 text-xs">
       <div className="flex items-center gap-1.5 min-w-0">
-        <ChevronRight
-          className={`h-3 w-3 shrink-0 ${isStandalone ? 'text-blue-400' : 'text-muted-foreground'}`}
-        />
-        <span className={`truncate ${isStandalone ? 'text-blue-800' : 'text-muted-foreground'}`}>
+        <ChevronRight className="h-3 w-3 shrink-0 text-accent" />
+        <span className="truncate text-foreground/80">
           {section.name}
         </span>
       </div>
@@ -85,27 +82,27 @@ function TemplatePreview({ template }: { template: ServiceTemplateResponseDto })
     <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-semibold text-blue-900">{template.name}</p>
+          <p className="text-sm font-semibold text-primary">{template.name}</p>
           {template.description && (
-            <p className="text-xs text-blue-700 mt-0.5">{template.description}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{template.description}</p>
           )}
         </div>
-        <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+        <span className="shrink-0 rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-accent-foreground">
           {templateTypeLabels[template.type]}
         </span>
       </div>
 
       {!hasContent && (
-        <p className="text-xs text-blue-600 italic">Esta plantilla no tiene secciones definidas.</p>
+        <p className="text-xs text-muted-foreground italic">Esta plantilla no tiene secciones definidas.</p>
       )}
 
       {sortedGroups.map((group) => (
         <div
           key={group.id}
-          className="rounded-lg border border-primary/15 bg-card/70 p-3 space-y-2"
+          className="rounded-lg border border-border bg-card/70 p-3 space-y-2"
         >
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+            <p className="text-xs font-bold text-primary uppercase tracking-wide">
               {group.name}
             </p>
             {(group.startTime || group.endTime) && (
@@ -133,7 +130,7 @@ function TemplatePreview({ template }: { template: ServiceTemplateResponseDto })
       {standaloneSections.length > 0 && (
         <div className="space-y-1">
           {sortedGroups.length > 0 && (
-            <p className="text-xs font-semibold text-blue-700 mb-1.5">Secciones adicionales</p>
+            <p className="text-xs font-semibold text-primary mb-1.5">Secciones adicionales</p>
           )}
           {standaloneSections.map((s) => (
             <SectionPreviewRow key={s.id} section={s} variant="standalone" />

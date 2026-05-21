@@ -84,7 +84,7 @@ export class ProgramGroupResponseDto {
   sections: ProgramSectionResponseDto[];
 }
 
-export class UserResponseDto {
+export class UserBriefResponseDto {
   @ApiProperty({ type: String }) @Expose() id: string;
   @ApiProperty({ type: String }) @Expose() name: string;
   @ApiProperty({ type: String }) @Expose() email: string;
@@ -111,10 +111,10 @@ export class ProgramLogResponseDto {
 
   @ApiProperty({ type: Date }) @Expose() createdAt: Date;
 
-  @ApiProperty({ type: () => UserResponseDto })
+  @ApiProperty({ type: () => UserBriefResponseDto })
   @Expose()
-  @Type(() => UserResponseDto)
-  user: UserResponseDto;
+  @Type(() => UserBriefResponseDto)
+  user: UserBriefResponseDto;
 
   @ApiPropertyOptional({
     type: () => ProgramSectionResponseDto,

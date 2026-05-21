@@ -1,105 +1,131 @@
-import { Document, Page, View, Text, StyleSheet, Svg, Path, Circle } from '@react-pdf/renderer'
+import { Document, Page, View, Text, Image, StyleSheet } from '@react-pdf/renderer'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import type { ServiceProgramResponseDto } from '@/lib/api'
+import logoMark from '@/assets/images/logo.png'
 
-const PURPLE = '#8B6CC8'
-const PURPLE_BG = '#F3EEFF'
-const WHITE = '#FFFFFF'
-const GRAY_ROW = '#F7F7F7'
-const GRAY_NOTE = '#9CA3AF'
-const TEXT_DARK = '#1A1A2E'
-const BORDER = '#E8E0F5'
+// ── Paleta de marca: Adventistas Central Osorno ──────────────
+const NAVY        = '#1B3A6B'
+const NAVY_LIGHT  = '#EEF2F9'   // navy al 8% sobre blanco
+const GOLD        = '#C9A84C'
+const GOLD_LIGHT  = '#FBF6EA'   // dorado al 8% sobre blanco
+const CREAM       = '#FAF6F0'
+const WHITE       = '#FFFFFF'
+const TEXT_DARK   = '#1A2A3A'
+const TEXT_MID    = '#4B5A72'
+const TEXT_MUTED  = '#8A96A8'
+const BORDER      = '#DDE3EE'
+const ROW_ALT     = '#F5F7FB'
 
 const styles = StyleSheet.create({
   page: {
     fontFamily: 'Helvetica',
     fontSize: 10,
     color: TEXT_DARK,
-    paddingVertical: 40,
+    paddingTop: 36,
+    paddingBottom: 40,
     paddingHorizontal: 48,
     backgroundColor: WHITE,
   },
+
+  // ── Header ────────────────────────────────────────────────
   header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 2,
+    borderBottomColor: GOLD,
   },
-  logoCircle: {
-    width: 56,
-    height: 56,
-    marginBottom: 10,
+  logoWrap: {
+    width: 52,
+    height: 41,   // mantiene proporción 773×605
+    marginRight: 14,
+  },
+  logoImg: {
+    width: 52,
+    height: 41,
+  },
+  headerText: {
+    flex: 1,
   },
   churchName: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Helvetica-Bold',
-    color: TEXT_DARK,
+    color: NAVY,
     marginBottom: 2,
   },
   templateName: {
-    fontSize: 10,
-    color: '#6B7280',
-    marginBottom: 2,
+    fontSize: 9,
+    color: TEXT_MID,
+    marginBottom: 4,
   },
-  programDate: {
-    fontSize: 10,
-    color: PURPLE,
+  dateBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: GOLD_LIGHT,
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  dateText: {
+    fontSize: 9,
     fontFamily: 'Helvetica-Bold',
+    color: GOLD,
   },
-  divider: {
-    borderBottomWidth: 1.5,
-    borderBottomColor: PURPLE,
-    marginBottom: 12,
-    marginTop: 12,
-    width: 48,
-    alignSelf: 'center',
-  },
+
+  // ── Tabla ─────────────────────────────────────────────────
   tableHeaderRow: {
     flexDirection: 'row',
-    backgroundColor: PURPLE,
-    borderRadius: 3,
-    marginBottom: 2,
+    backgroundColor: NAVY,
+    borderRadius: 4,
+    marginBottom: 1,
   },
   tableHeaderCell: {
     paddingVertical: 7,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     color: WHITE,
     fontFamily: 'Helvetica-Bold',
-    fontSize: 8,
-    letterSpacing: 1,
+    fontSize: 7.5,
+    letterSpacing: 0.8,
   },
+
+  // ── Grupo ─────────────────────────────────────────────────
   groupRow: {
     flexDirection: 'row',
-    backgroundColor: PURPLE_BG,
-    borderLeftWidth: 3,
-    borderLeftColor: PURPLE,
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-    marginTop: 8,
-    marginBottom: 2,
     alignItems: 'center',
+    backgroundColor: NAVY_LIGHT,
+    borderLeftWidth: 3,
+    borderLeftColor: NAVY,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    marginTop: 10,
+    marginBottom: 1,
   },
   groupName: {
     fontFamily: 'Helvetica-Bold',
-    fontSize: 9,
-    color: PURPLE,
+    fontSize: 8.5,
+    color: NAVY,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   groupTime: {
     fontSize: 8,
-    color: PURPLE,
+    color: TEXT_MID,
     marginLeft: 8,
   },
+
+  // ── Filas de sección ──────────────────────────────────────
   sectionRow: {
     flexDirection: 'row',
     borderBottomWidth: 0.5,
     borderBottomColor: BORDER,
   },
   sectionRowAlt: {
-    backgroundColor: GRAY_ROW,
+    backgroundColor: ROW_ALT,
   },
   cellPad: {
     paddingVertical: 6,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
   },
   cellText: {
     fontSize: 9,
@@ -112,13 +138,40 @@ const styles = StyleSheet.create({
   },
   noteText: {
     fontSize: 7.5,
-    color: GRAY_NOTE,
+    color: TEXT_MUTED,
     marginTop: 2,
   },
+
+  // ── Columnas ──────────────────────────────────────────────
   colResponsable: { width: '20%' },
-  colParte: { width: '30%' },
-  colDetalle: { width: '50%' },
+  colParte:       { width: '30%' },
+  colDetalle:     { width: '50%' },
+
+  // ── Footer ────────────────────────────────────────────────
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 48,
+    right: 48,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 0.5,
+    borderTopColor: BORDER,
+    paddingTop: 6,
+  },
+  footerText: {
+    fontSize: 7,
+    color: TEXT_MUTED,
+  },
+  footerGold: {
+    fontSize: 7,
+    color: GOLD,
+    fontFamily: 'Helvetica-Bold',
+  },
 })
+
+// ── Componentes internos ──────────────────────────────────────
 
 interface SectionRowProps {
   responsible?: string | null
@@ -146,30 +199,7 @@ function SectionRow({ responsible, sectionName, hymnText, notes, isAlt }: Sectio
   )
 }
 
-function ChurchLogoPlaceholder() {
-  return (
-    <Svg viewBox="0 0 56 56" style={styles.logoCircle}>
-      <Circle cx="28" cy="28" r="28" fill={PURPLE} />
-      {/* Llama adventista simplificada */}
-      <Path
-        d="M28 8 C28 8 20 18 20 26 C20 30.4 23.6 34 28 34 C32.4 34 36 30.4 36 26 C36 18 28 8 28 8Z"
-        fill="none"
-        stroke={WHITE}
-        strokeWidth="2"
-      />
-      <Path
-        d="M28 14 C28 14 23 21 23 26 C23 28.8 25.2 31 28 31 C30.8 31 33 28.8 33 26 C33 21 28 14 28 14Z"
-        fill={WHITE}
-      />
-      {/* Base de la llama */}
-      <Path
-        d="M22 34 L34 34 L34 36 C34 36 32 38 28 38 C24 38 22 36 22 36 Z"
-        fill={WHITE}
-        fillOpacity="0.7"
-      />
-    </Svg>
-  )
-}
+// ── Documento ─────────────────────────────────────────────────
 
 interface Props {
   program: ServiceProgramResponseDto
@@ -192,18 +222,23 @@ export function ProgramPdfDocument({ program }: Props) {
   return (
     <Document>
       <Page size="LETTER" style={styles.page}>
-        {/* Encabezado */}
+
+        {/* ── Encabezado ── */}
         <View style={styles.header}>
-          <ChurchLogoPlaceholder />
-          <Text style={styles.churchName}>Iglesia Adventista del Séptimo Día</Text>
-          <Text style={styles.templateName}>{program.template?.name}</Text>
-          <View style={styles.divider} />
-          <Text style={styles.programDate}>{formattedDate}</Text>
+          <View style={styles.logoWrap}>
+            <Image src={logoMark} style={styles.logoImg} />
+          </View>
+          <View style={styles.headerText}>
+            <Text style={styles.churchName}>Iglesia Adventista del Séptimo Día</Text>
+            <Text style={styles.templateName}>{program.template?.name ?? 'Programa de Culto'}</Text>
+            <View style={styles.dateBadge}>
+              <Text style={styles.dateText}>{formattedDate}</Text>
+            </View>
+          </View>
         </View>
 
-        {/* Tabla */}
+        {/* ── Tabla ── */}
         <View>
-          {/* Encabezado de columnas */}
           <View style={styles.tableHeaderRow}>
             <View style={styles.colResponsable}>
               <Text style={styles.tableHeaderCell}>RESPONSABLE</Text>
@@ -216,31 +251,25 @@ export function ProgramPdfDocument({ program }: Props) {
             </View>
           </View>
 
-          {/* Grupos y sus secciones */}
           {sortedGroups.map((group) => {
-            const groupSections = [...(group.sections ?? [])].sort(
-              (a, b) => a.order - b.order,
-            )
+            const groupSections = [...(group.sections ?? [])].sort((a, b) => a.order - b.order)
             return (
               <View key={group.id}>
                 <View style={styles.groupRow}>
                   <Text style={styles.groupName}>{group.name}</Text>
                   {group.startTime && (
                     <Text style={styles.groupTime}>
-                      {group.startTime}
-                      {group.endTime ? ` - ${group.endTime}` : ''}
+                      {group.startTime}{group.endTime ? ` – ${group.endTime}` : ''}
                     </Text>
                   )}
                 </View>
                 {groupSections.map((section) => {
                   const isAlt = sectionIndex++ % 2 !== 0
-                  const sectionName =
-                    section.name ?? section.templateSection?.name ?? ''
                   return (
                     <SectionRow
                       key={section.id}
                       responsible={section.responsible}
-                      sectionName={sectionName}
+                      sectionName={section.name ?? section.templateSection?.name ?? ''}
                       hymnText={section.hymnText}
                       notes={section.notes}
                       isAlt={isAlt}
@@ -251,15 +280,13 @@ export function ProgramPdfDocument({ program }: Props) {
             )
           })}
 
-          {/* Secciones sin grupo */}
           {ungroupedSections.map((section) => {
             const isAlt = sectionIndex++ % 2 !== 0
-            const sectionName = section.name ?? section.templateSection?.name ?? ''
             return (
               <SectionRow
                 key={section.id}
                 responsible={section.responsible}
-                sectionName={sectionName}
+                sectionName={section.name ?? section.templateSection?.name ?? ''}
                 hymnText={section.hymnText}
                 notes={section.notes}
                 isAlt={isAlt}
@@ -267,6 +294,13 @@ export function ProgramPdfDocument({ program }: Props) {
             )
           })}
         </View>
+
+        {/* ── Footer ── */}
+        <View style={styles.footer} fixed>
+          <Text style={styles.footerText}>Iglesia Adventista del Séptimo Día — Central Osorno</Text>
+          <Text style={styles.footerGold}>{program.template?.name ?? ''}</Text>
+        </View>
+
       </Page>
     </Document>
   )

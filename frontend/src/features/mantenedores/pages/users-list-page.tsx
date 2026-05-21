@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2, UserX, Search } from 'lucide-react'
 import { UsersService } from '@/lib/api'
@@ -41,6 +41,7 @@ function EmptyState() {
 }
 
 export function UsersListPage() {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
@@ -122,7 +123,11 @@ export function UsersListPage() {
               {filteredUsers.map((user) => {
                 const roleCfg = ROLE_BADGE_COLORS[user.role] ?? { bg: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }
                 return (
-                  <tr key={user.id} className="hover:bg-accent/40 transition-colors">
+                  <tr
+                    key={user.id}
+                    className="hover:bg-accent/40 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/mantenedores/usuarios/${user.id}`)}
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <div className="h-7 w-7 rounded-full bg-primary/10 border border-border flex items-center justify-center text-xs font-semibold text-primary">
@@ -147,7 +152,7 @@ export function UsersListPage() {
                       }
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 justify-end">
+                      <div className="flex items-center gap-1 justify-end" onClick={(e) => e.stopPropagation()}>
                         <Link to={`/mantenedores/usuarios/${user.id}`}>
                           <Button variant="ghost" size="icon" className="h-8 w-8">
                             <Pencil className="h-3.5 w-3.5 text-muted-foreground" />

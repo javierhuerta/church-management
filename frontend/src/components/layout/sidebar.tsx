@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Calendar, FileText, Church, LogOut, User, ChevronDown, ChevronLeft, Settings, Sun, Moon, Monitor } from 'lucide-react'
 import logoFull from '@/assets/images/logo.png'
@@ -16,6 +16,7 @@ import {
 import { useTextSize } from '@/lib/contexts/text-size-context'
 import type { TextSize } from '@/lib/contexts/text-size-context'
 import { useTheme } from '@/components/theme-provider'
+import { useSidebar } from '@/lib/contexts/sidebar-context'
 import { AuthService } from '@/lib/api'
 
 interface NavItem {
@@ -79,22 +80,10 @@ export function Sidebar() {
   const logoFilter = isDark ? 'brightness(0) invert(1)' : undefined
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isCollapsedDropdownOpen, setIsCollapsedDropdownOpen] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isSmallScreen, setIsSmallScreen] = useState(false)
   const [openSections, setOpenSections] = useState<string[]>(['modules'])
+  const { isOpen, isSmallScreen, close, toggle } = useSidebar()
+  const isCollapsed = !isOpen
   const user = getUserFromStorage()
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 1023px)')
-    const handleChange = (e: MediaQueryListEvent) => {
-      setIsSmallScreen(e.matches)
-      setIsCollapsed(e.matches)
-    }
-    setIsSmallScreen(mediaQuery.matches)
-    setIsCollapsed(mediaQuery.matches)
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
-  }, [])
 
   const handleLogout = async () => {
     try {
@@ -122,7 +111,7 @@ export function Sidebar() {
       <div className={`border-b border-border bg-card ${isCollapsed ? 'p-3 flex justify-center' : 'px-4 py-5'}`}>
         {isCollapsed ? (
           <button
-            onClick={() => isSmallScreen ? setIsCollapsed(false) : navigate('/')}
+            onClick={() => isSmallScreen ? toggle() : navigate('/')}
             className="h-10 w-10 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
             aria-label={isSmallScreen ? 'Expandir menú' : 'Ir al inicio'}
           >
@@ -142,7 +131,7 @@ export function Sidebar() {
             </button>
             {isSmallScreen && (
               <button
-                onClick={() => setIsCollapsed(true)}
+                onClick={() => close()}
                 className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                 aria-label="Colapsar sidebar"
               >

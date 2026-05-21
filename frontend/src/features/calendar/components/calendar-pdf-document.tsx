@@ -39,10 +39,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 0,
     backgroundColor: WHITE,
-    borderBottomWidth: 3,
-    borderBottomColor: NAVY,
+    borderBottomWidth: 2,
+    borderBottomColor: GOLD,
+    marginBottom: 8,
   },
-  logo: { width: 70, height: 34, objectFit: 'contain' as const },
+  logo: { width: 52, height: 52, objectFit: 'contain' as const, marginRight: 14 },
   headerLeft: { flex: 1 },
   headerTopRow: {
     flexDirection: 'row',
@@ -66,8 +67,7 @@ const styles = StyleSheet.create({
   },
   filtersLine: { fontSize: 7, color: TEXT_MUTED, marginTop: 4 },
   goldBar: {
-    height: 4,
-    backgroundColor: GOLD,
+    height: 0,
   },
   weekdayRow: {
     flexDirection: 'row',
@@ -204,13 +204,16 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 8,
-    paddingHorizontal: 28,
-    borderTopWidth: 1,
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 0,
+    borderTopWidth: 0.5,
     borderTopColor: BORDER,
     backgroundColor: WHITE,
+    marginTop: 4,
   },
   footerText: { fontSize: 7, color: TEXT_MUTED },
+  footerGold: { fontSize: 7, color: GOLD, fontFamily: 'Helvetica-Bold' },
 })
 
 function startOfDay(d: Date): Date {
@@ -455,9 +458,9 @@ export function CalendarPdfDocument({ currentMonth, events, filters }: Props) {
           )
         })}
 
-        <View style={styles.footer}>
+        <View style={styles.footer} fixed>
           <Text style={styles.footerText}>Iglesia Adventista del Séptimo Día — Osorno Central</Text>
-          <Text style={styles.footerText}>Generado: {format(new Date(), "d 'de' MMM yyyy, HH:mm", { locale: es })}</Text>
+          <Text style={styles.footerGold}>Generado: {format(new Date(), "d 'de' MMM yyyy, HH:mm", { locale: es })}</Text>
         </View>
       </Page>
 
@@ -523,9 +526,9 @@ export function CalendarPdfDocument({ currentMonth, events, filters }: Props) {
             )
           })}
 
-          <View style={styles.footer}>
+          <View style={styles.footer} fixed>
             <Text style={styles.footerText}>Iglesia Adventista del Séptimo Día — Osorno Central</Text>
-            <Text style={styles.footerText}>Generado: {format(new Date(), "d 'de' MMM yyyy, HH:mm", { locale: es })}</Text>
+            <Text style={styles.footerGold}>Generado: {format(new Date(), "d 'de' MMM yyyy, HH:mm", { locale: es })}</Text>
           </View>
         </Page>
       )}
