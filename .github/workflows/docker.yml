@@ -89,3 +89,14 @@ jobs:
           labels: ${{ steps.meta-frontend.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy-portainer:
+    runs-on: ubuntu-latest
+    needs: [build-backend, build-frontend]
+    if: github.ref == 'refs/heads/development' || github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Trigger Portainer deploy
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "https://portainer.unach.app/api/stacks/webhooks/6d64895d-dc93-4414-95eb-b3bf21ffc066"
