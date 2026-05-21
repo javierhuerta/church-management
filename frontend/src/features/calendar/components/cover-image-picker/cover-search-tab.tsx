@@ -64,7 +64,7 @@ export function CoverSearchTab({ defaultQuery, onPicked }: CoverSearchTabProps) 
   return (
     <div className="space-y-3">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -85,13 +85,13 @@ export function CoverSearchTab({ defaultQuery, onPicked }: CoverSearchTabProps) 
       )}
 
       {isLoading && (
-        <div className="flex items-center justify-center py-8 text-sm text-neutral-500">
+        <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Buscando…
         </div>
       )}
 
       {!isLoading && results.length === 0 && query.trim().length > 0 && (
-        <p className="text-sm text-neutral-500 text-center py-6">
+        <p className="text-sm text-muted-foreground text-center py-6">
           Sin resultados para "{query}". Probá con otras palabras.
         </p>
       )}
@@ -104,7 +104,7 @@ export function CoverSearchTab({ defaultQuery, onPicked }: CoverSearchTabProps) 
               type="button"
               onClick={() => handlePick(s)}
               disabled={pickingId !== null}
-              className="group relative rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100 hover:ring-2 hover:ring-neutral-900 transition focus:outline-none focus:ring-2 focus:ring-neutral-900 disabled:opacity-50"
+              className="group relative rounded-lg overflow-hidden border border-border bg-muted hover:ring-2 hover:ring-neutral-900 transition focus:outline-none focus:ring-2 focus:ring-neutral-900 disabled:opacity-50"
               style={s.color ? { backgroundColor: s.color } : undefined}
               aria-label={`Elegir foto de ${s.author}`}
             >

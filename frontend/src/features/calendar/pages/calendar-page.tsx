@@ -68,10 +68,10 @@ export function CalendarPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+          <h2 className="text-3xl font-bold tracking-tight text-muted-foreground">
             Calendario
           </h2>
-          <p className="text-neutral-500 mt-1">
+          <p className="text-muted-foreground mt-1">
             Eventos de la iglesia, ASACH y distritales
           </p>
         </div>
@@ -144,12 +144,12 @@ export function CalendarPage() {
 
 function CalendarSkeleton() {
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
       <div className="grid grid-cols-7 gap-2">
         {Array.from({ length: 42 }).map((_, i) => (
           <div
             key={i}
-            className="h-20 bg-neutral-100 rounded animate-pulse"
+            className="h-20 bg-muted rounded animate-pulse"
           />
         ))}
       </div>
@@ -159,14 +159,14 @@ function CalendarSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-12 text-center shadow-sm">
-      <div className="mx-auto h-12 w-12 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
+    <div className="rounded-2xl border border-border bg-card p-12 text-center shadow-sm">
+      <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
         <span className="text-2xl">📅</span>
       </div>
-      <h3 className="text-base font-semibold text-neutral-900">
+      <h3 className="text-base font-semibold text-muted-foreground">
         Sin eventos
       </h3>
-      <p className="text-sm text-neutral-500 mt-1">
+      <p className="text-sm text-muted-foreground mt-1">
         No hay eventos para los filtros seleccionados.
       </p>
     </div>

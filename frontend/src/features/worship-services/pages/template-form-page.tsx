@@ -151,9 +151,9 @@ export function TemplateFormPage() {
 
   if (!canManage) {
     return (
-      <div className="rounded-2xl border border-neutral-200 bg-white p-12 text-center">
-        <h2 className="text-xl font-semibold text-neutral-900">Acceso restringido</h2>
-        <p className="text-sm text-neutral-500 mt-1">
+      <div className="rounded-2xl border border-border bg-card p-12 text-center">
+        <h2 className="text-xl font-semibold text-muted-foreground">Acceso restringido</h2>
+        <p className="text-sm text-muted-foreground mt-1">
           Solo Admin y Pastor pueden gestionar plantillas.
         </p>
       </div>
@@ -162,8 +162,8 @@ export function TemplateFormPage() {
 
   if (isEditMode && isLoadingTemplate) {
     return (
-      <div className="rounded-2xl border border-neutral-200 bg-white p-12 text-center">
-        <p className="text-sm text-neutral-500">Cargando plantilla...</p>
+      <div className="rounded-2xl border border-border bg-card p-12 text-center">
+        <p className="text-sm text-muted-foreground">Cargando plantilla...</p>
       </div>
     )
   }
@@ -175,10 +175,10 @@ export function TemplateFormPage() {
       </Button>
 
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+        <h2 className="text-3xl font-bold tracking-tight text-muted-foreground">
           {isEditMode ? 'Editar plantilla' : 'Nueva plantilla'}
         </h2>
-        <p className="text-neutral-500 mt-1">
+        <p className="text-muted-foreground mt-1">
           {isEditMode
             ? 'Modifica los datos de la plantilla de culto'
             : 'Crea una nueva plantilla para programas de culto'}
@@ -192,7 +192,7 @@ export function TemplateFormPage() {
           </div>
         )}
 
-        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm space-y-6">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-6">
           <div className="space-y-2">
             <Label htmlFor="name">Nombre de la plantilla *</Label>
             <Input id="name" {...register('name')} />
@@ -253,9 +253,9 @@ export function TemplateFormPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm space-y-6">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-neutral-900">Grupos</h3>
+            <h3 className="font-semibold text-muted-foreground">Grupos</h3>
             <Button
               type="button"
               variant="outline"
@@ -269,9 +269,9 @@ export function TemplateFormPage() {
           </div>
 
           {groupFields.map((group, groupIndex) => (
-            <div key={group.id} className="border border-neutral-200 rounded-lg p-4 space-y-4">
+            <div key={group.id} className="border border-border rounded-lg p-4 space-y-4">
               <div className="flex items-center gap-2">
-                <GripVertical className="h-4 w-4 text-neutral-400 cursor-grab" />
+                <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
                 <Input
                   placeholder="Nombre del grupo (ej: Escuela Sabática)"
                   {...register(`groups.${groupIndex}.name` as any)}
@@ -299,7 +299,7 @@ export function TemplateFormPage() {
               </div>
 
               <div className="ml-6 space-y-2">
-                <Label className="text-sm text-neutral-500">Secciones del grupo</Label>
+                <Label className="text-sm text-muted-foreground">Secciones del grupo</Label>
                 <Controller
                   control={control}
                   name={`groups.${groupIndex}.sections`}
@@ -362,15 +362,15 @@ export function TemplateFormPage() {
           ))}
 
           {groupFields.length === 0 && (
-            <p className="text-sm text-neutral-500 text-center py-4">
+            <p className="text-sm text-muted-foreground text-center py-4">
               Sin grupos. Agrega grupos para organizar secciones.
             </p>
           )}
         </div>
 
-        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm space-y-6">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-neutral-900">Secciones sin grupo</h3>
+            <h3 className="font-semibold text-muted-foreground">Secciones sin grupo</h3>
             <Button
               type="button"
               variant="outline"
@@ -387,7 +387,7 @@ export function TemplateFormPage() {
             {sectionFields.map((section, index) => (
               <div key={section.id} className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <GripVertical className="h-4 w-4 text-neutral-400 cursor-grab" />
+                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
                   <Input
                     placeholder="Nombre de la sección"
                     {...register(`sections.${index}.name` as any)}
@@ -421,14 +421,14 @@ export function TemplateFormPage() {
             ))}
 
             {sectionFields.length === 0 && (
-              <p className="text-sm text-neutral-500 text-center py-4">
+              <p className="text-sm text-muted-foreground text-center py-4">
                 Sin secciones adicionales.
               </p>
             )}
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-4 border-t border-neutral-200">
+        <div className="flex items-center justify-end gap-2 pt-4 border-t border-border">
           <Button type="button" variant="ghost" onClick={() => navigate(-1)}>
             Cancelar
           </Button>

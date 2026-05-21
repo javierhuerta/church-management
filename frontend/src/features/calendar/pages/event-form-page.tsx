@@ -22,11 +22,11 @@ export function EventFormPage({ mode }: EventFormPageProps) {
 
   if (!canEdit) {
     return (
-      <div className="rounded-2xl border border-neutral-200 bg-white p-12 text-center">
-        <h2 className="text-xl font-semibold text-neutral-900">
+      <div className="rounded-2xl border border-border bg-card p-12 text-center">
+        <h2 className="text-xl font-semibold text-muted-foreground">
           Acceso restringido
         </h2>
-        <p className="text-sm text-neutral-500 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Solo los editores pueden crear o modificar eventos.
         </p>
       </div>
@@ -34,13 +34,13 @@ export function EventFormPage({ mode }: EventFormPageProps) {
   }
 
   if (mode === 'edit' && isLoading) {
-    return <div className="text-neutral-500">Cargando evento...</div>
+    return <div className="text-muted-foreground">Cargando evento...</div>
   }
 
   if (mode === 'edit' && !event) {
     return (
-      <div className="rounded-2xl border border-neutral-200 bg-white p-12 text-center">
-        <h2 className="text-xl font-semibold text-neutral-900">
+      <div className="rounded-2xl border border-border bg-card p-12 text-center">
+        <h2 className="text-xl font-semibold text-muted-foreground">
           Evento no encontrado
         </h2>
       </div>
@@ -57,17 +57,17 @@ export function EventFormPage({ mode }: EventFormPageProps) {
         <ArrowLeft className="h-4 w-4 mr-1" /> Volver
       </Button>
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+        <h2 className="text-3xl font-bold tracking-tight text-muted-foreground">
           {mode === 'edit' ? 'Editar evento' : 'Nuevo evento'}
         </h2>
-        <p className="text-neutral-500 mt-1">
+        <p className="text-muted-foreground mt-1">
           {mode === 'edit'
             ? 'Modifica los detalles del evento'
             : 'Crea un nuevo evento (se guardará como borrador)'}
         </p>
       </div>
 
-      <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <EventForm
           event={event}
           onSaved={(saved) => navigate(`/calendario/${saved.shareSlug}`)}

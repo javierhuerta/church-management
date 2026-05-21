@@ -22,7 +22,7 @@ export function LightboxModal({ url, alt, onClose }: LightboxModalProps) {
       onClick={onClose}
     >
       <button
-        className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
+        className="absolute top-4 right-4 h-10 w-10 rounded-full bg-card/20 hover:bg-card/30 flex items-center justify-center text-white"
         onClick={onClose}
         aria-label="Cerrar"
       >

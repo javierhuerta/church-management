@@ -11,8 +11,8 @@ const PAGE_SIZE = 8
 function actionBadgeClass(action: string) {
   if (action.startsWith('eliminó')) return 'bg-red-50 text-red-700 border-red-100'
   if (action.startsWith('creó') || action.startsWith('agregó')) return 'bg-green-50 text-green-700 border-green-100'
-  if (action.startsWith('publicó') || action.startsWith('archivó')) return 'bg-blue-50 text-blue-700 border-blue-100'
-  return 'bg-neutral-100 text-neutral-600 border-neutral-200'
+  if (action.startsWith('publicó') || action.startsWith('archivó')) return 'bg-primary/10 text-primary border-primary/20'
+  return 'bg-muted text-muted-foreground border-border'
 }
 
 function LogDetail({ log }: { log: ProgramLogResponseDto }) {
@@ -22,21 +22,21 @@ function LogDetail({ log }: { log: ProgramLogResponseDto }) {
   let valueDetail: ReactNode = null
   if (previousValue && newValue) {
     valueDetail = (
-      <p className="flex items-center gap-1 text-xs text-neutral-500 min-w-0">
-        <span className="truncate text-neutral-400 max-w-[80px]" title={previousValue}>{previousValue}</span>
-        <ArrowRight className="h-3 w-3 shrink-0 text-neutral-300" />
-        <span className="truncate font-medium text-neutral-600 max-w-[80px]" title={newValue}>{newValue}</span>
+      <p className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
+        <span className="truncate text-muted-foreground max-w-[80px]" title={previousValue}>{previousValue}</span>
+        <ArrowRight className="h-3 w-3 shrink-0 text-muted-foreground" />
+        <span className="truncate font-medium text-muted-foreground max-w-[80px]" title={newValue}>{newValue}</span>
       </p>
     )
   } else if (previousValue) {
     valueDetail = (
-      <p className="text-xs text-neutral-400 truncate" title={previousValue}>
+      <p className="text-xs text-muted-foreground truncate" title={previousValue}>
         <span className="line-through">{previousValue}</span>
       </p>
     )
   } else if (newValue) {
     valueDetail = (
-      <p className="text-xs text-neutral-500 truncate" title={newValue}>
+      <p className="text-xs text-muted-foreground truncate" title={newValue}>
         {newValue}
       </p>
     )
@@ -47,8 +47,8 @@ function LogDetail({ log }: { log: ProgramLogResponseDto }) {
   return (
     <div className="space-y-0.5">
       {sectionName && (
-        <p className="text-xs text-neutral-400">
-          Sección: <span className="font-medium text-neutral-500">{sectionName}</span>
+        <p className="text-xs text-muted-foreground">
+          Sección: <span className="font-medium text-muted-foreground">{sectionName}</span>
         </p>
       )}
       {valueDetail}
@@ -86,16 +86,16 @@ export function ProgramChangeHistory({ logs }: ProgramChangeHistoryProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm sticky top-6 flex flex-col">
-      <div className="px-4 pt-3 pb-2 border-b border-neutral-100 space-y-2">
+    <div className="rounded-2xl border border-border bg-card shadow-sm sticky top-6 flex flex-col">
+      <div className="px-4 pt-3 pb-2 border-b border-border space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-neutral-900">Historial de cambios</h3>
+          <h3 className="font-semibold text-muted-foreground">Historial de cambios</h3>
           {logs && logs.length > 0 && (
-            <span className="text-xs text-neutral-400">{logs.length} registros</span>
+            <span className="text-xs text-muted-foreground">{logs.length} registros</span>
           )}
         </div>
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400 pointer-events-none" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
           <Input
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
@@ -107,17 +107,17 @@ export function ProgramChangeHistory({ logs }: ProgramChangeHistoryProps) {
 
       <div className="divide-y divide-neutral-100">
         {pageItems.length === 0 && (
-          <div className="px-4 py-8 text-center text-sm text-neutral-400">
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
             {search ? 'Sin resultados para esa búsqueda' : 'Sin cambios registrados'}
           </div>
         )}
         {pageItems.map((log) => (
           <div key={log.id} className="px-4 py-3 space-y-1.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-semibold text-neutral-800 truncate">
+              <span className="text-xs font-semibold text-muted-foreground truncate">
                 {log.user?.name ?? 'Usuario'}
               </span>
-              <span className="text-xs text-neutral-400 shrink-0">
+              <span className="text-xs text-muted-foreground shrink-0">
                 {format(new Date(log.createdAt), "d MMM, HH:mm", { locale: es })}
               </span>
             </div>
@@ -132,8 +132,8 @@ export function ProgramChangeHistory({ logs }: ProgramChangeHistoryProps) {
       </div>
 
       {totalPages > 1 && (
-        <div className="px-4 py-2 border-t border-neutral-100 flex items-center justify-between">
-          <span className="text-xs text-neutral-400">
+        <div className="px-4 py-2 border-t border-border flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">
             Página {page + 1} de {totalPages}
           </span>
           <div className="flex gap-1">

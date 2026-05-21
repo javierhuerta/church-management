@@ -63,7 +63,7 @@ export function DateTimePicker({
           disabled={disabled}
           className={cn(
             'w-full justify-start text-left font-normal',
-            !selected && 'text-neutral-500',
+            !selected && 'text-muted-foreground',
             className
           )}
         >
@@ -71,7 +71,7 @@ export function DateTimePicker({
           {selected ? displayDateTime(selected) : placeholder}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 bg-white" align="start">
+      <PopoverContent className="w-auto p-0 bg-popover" align="start">
         <Calendar
           mode="single"
           selected={selected}
@@ -86,7 +86,7 @@ export function DateTimePicker({
             onChange?.(combine(date, nextTime))
           }}
         />
-        <div className="border-t border-neutral-200 p-3">
+        <div className="border-t border-border p-3">
           <Input
             type="time"
             value={time}

@@ -57,11 +57,11 @@ export function EventDetailPage() {
 
   if (isError || !event) {
     return (
-      <div className="rounded-2xl border border-neutral-200 bg-white p-12 text-center">
-        <h2 className="text-xl font-semibold text-neutral-900">
+      <div className="rounded-2xl border border-border bg-card p-12 text-center">
+        <h2 className="text-xl font-semibold text-muted-foreground">
           Evento no encontrado
         </h2>
-        <p className="text-sm text-neutral-500 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           El evento que buscas no existe o no está disponible.
         </p>
         <Link to="/calendario" className="inline-block mt-4">
@@ -159,7 +159,7 @@ export function EventDetailPage() {
 
       {cover && (
         <div className="space-y-1">
-          <div className="relative w-full overflow-hidden rounded-2xl bg-neutral-100 h-48 md:h-64 lg:h-72">
+          <div className="relative w-full overflow-hidden rounded-2xl bg-muted h-48 md:h-64 lg:h-72">
             <img
               src={cover}
               alt={event.title}
@@ -168,14 +168,14 @@ export function EventDetailPage() {
             />
           </div>
           {coverAttachment?.sourceAuthor && (
-            <p className="text-[11px] text-neutral-500 text-right">
+            <p className="text-[11px] text-muted-foreground text-right">
               Foto:{' '}
               {coverAttachment.sourceUrl ? (
                 <a
                   href={coverAttachment.sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-neutral-700"
+                  className="underline hover:text-muted-foreground"
                 >
                   {coverAttachment.sourceAuthor}
                 </a>
@@ -196,7 +196,7 @@ export function EventDetailPage() {
             {EVENT_TYPE_LABELS[event.eventType]}
           </span>
           {event.departmentName && (
-            <span className="text-xs font-medium px-2 py-1 rounded-full bg-neutral-100 text-neutral-700">
+            <span className="text-xs font-medium px-2 py-1 rounded-full bg-muted text-muted-foreground">
               {DEPARTMENT_LABELS[event.departmentName as keyof typeof DEPARTMENT_LABELS] ?? event.departmentName}
             </span>
           )}
@@ -206,17 +206,17 @@ export function EventDetailPage() {
             </span>
           )}
           {event.status === 'archived' && (
-            <span className="text-xs font-medium px-2 py-1 rounded-full bg-neutral-200 text-neutral-700">
+            <span className="text-xs font-medium px-2 py-1 rounded-full bg-muted text-muted-foreground">
               Archivado
             </span>
           )}
         </div>
 
-        <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
+        <h1 className="text-3xl font-bold tracking-tight text-muted-foreground">
           {event.title}
         </h1>
 
-        <div className="flex items-center gap-4 text-sm text-neutral-600 flex-wrap">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
           <div className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4" />
             <span className="capitalize">{dateRange.dateLabel}</span>
@@ -243,7 +243,7 @@ export function EventDetailPage() {
       </div>
 
       {event.description && (
-        <section className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div
             className="prose prose-sm prose-neutral max-w-none"
             dangerouslySetInnerHTML={{ __html: event.description }}
@@ -252,8 +252,8 @@ export function EventDetailPage() {
       )}
 
       {organizerEntries.length > 0 && (
-        <section className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-neutral-700 mb-3">
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3">
             Organizadores
           </h3>
           <div className="flex flex-wrap gap-3">
@@ -265,15 +265,15 @@ export function EventDetailPage() {
       )}
 
       {event.attachments.length > 0 && (
-        <section className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <AttachmentGallery
             attachments={event.attachments}
           />
         </section>
       )}
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-neutral-700 mb-3">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3">
           Compartir este evento
         </h3>
         <ShareButtons url={window.location.href} title={event.title} />
@@ -285,10 +285,10 @@ export function EventDetailPage() {
 function DetailSkeleton() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="aspect-[16/9] w-full rounded-2xl bg-neutral-100 animate-pulse" />
-      <div className="h-8 w-2/3 bg-neutral-100 rounded animate-pulse" />
-      <div className="h-4 w-1/2 bg-neutral-100 rounded animate-pulse" />
-      <div className="h-32 bg-neutral-100 rounded animate-pulse" />
+      <div className="aspect-[16/9] w-full rounded-2xl bg-muted animate-pulse" />
+      <div className="h-8 w-2/3 bg-muted rounded animate-pulse" />
+      <div className="h-4 w-1/2 bg-muted rounded animate-pulse" />
+      <div className="h-32 bg-muted rounded animate-pulse" />
     </div>
   )
 }

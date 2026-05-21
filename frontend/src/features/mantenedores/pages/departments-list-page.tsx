@@ -37,7 +37,7 @@ export function DepartmentsListPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-neutral-900">Departamentos</h2>
+        <h2 className="text-lg font-semibold text-muted-foreground">Departamentos</h2>
         <Link to="/mantenedores/departamentos/nuevo">
           <Button size="sm">
             <Plus className="h-4 w-4 mr-1" /> Nuevo departamento
@@ -46,11 +46,11 @@ export function DepartmentsListPage() {
       </div>
 
       {isLoading && (
-        <div className="text-sm text-neutral-500">Cargando departamentos...</div>
+        <div className="text-sm text-muted-foreground">Cargando departamentos...</div>
       )}
 
       {!isLoading && departments.length === 0 && (
-        <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center text-sm text-neutral-500">
+        <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
           No hay departamentos registrados.
         </div>
       )}
@@ -60,12 +60,12 @@ export function DepartmentsListPage() {
           {departments.map((dept) => (
             <div
               key={dept.id}
-              className="bg-white rounded-xl border border-neutral-200 p-4 flex items-center justify-between"
+              className="bg-card rounded-xl border border-border p-4 flex items-center justify-between"
             >
               <div>
-                <p className="font-medium text-neutral-900">{getDeptDisplayName(dept.name)}</p>
+                <p className="font-medium text-muted-foreground">{getDeptDisplayName(dept.name)}</p>
                 {getDeptDisplayName(dept.name) !== dept.name && (
-                  <p className="text-xs text-neutral-400 mt-0.5">{dept.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{dept.name}</p>
                 )}
               </div>
               <div className="flex items-center gap-1">

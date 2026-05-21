@@ -38,11 +38,11 @@ export function MantenedoresLayout() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Mantenedores</h1>
-        <p className="text-sm text-neutral-500 mt-1">Gestión de usuarios, departamentos y plantillas</p>
+        <h1 className="text-2xl font-semibold text-muted-foreground">Mantenedores</h1>
+        <p className="text-sm text-muted-foreground mt-1">Gestión de usuarios, departamentos y plantillas</p>
       </div>
 
-      <nav className="flex gap-1 border-b border-neutral-200 pb-0">
+      <nav className="flex gap-1 border-b border-border pb-0">
         {subNav.map(({ path, label, icon: Icon }) => (
           <NavLink
             key={path}
@@ -50,8 +50,8 @@ export function MantenedoresLayout() {
             className={({ isActive }) =>
               `flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
                 isActive
-                  ? 'border-blue-600 text-blue-700'
-                  : 'border-transparent text-neutral-500 hover:text-neutral-800 hover:border-neutral-300'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-muted-foreground hover:border-border'
               }`
             }
           >

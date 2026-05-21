@@ -13,10 +13,10 @@ const TEMPLATE_TYPE_LABELS: Record<string, string> = {
 }
 
 const TEMPLATE_TYPE_STYLES: Record<string, string> = {
-  CULTO_SABATICO: 'bg-blue-100 text-blue-800',
+  CULTO_SABATICO: 'bg-primary/15 text-primary',
   CULTO_JA: 'bg-purple-100 text-purple-800',
   CULTO_ORACION: 'bg-green-100 text-green-800',
-  OTRO: 'bg-gray-100 text-gray-800',
+  OTRO: 'bg-muted text-muted-foreground',
 }
 
 export function TemplatesListPage() {
@@ -28,10 +28,10 @@ export function TemplatesListPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+          <h2 className="text-3xl font-bold tracking-tight text-muted-foreground">
             Plantillas de Cultos
           </h2>
-          <p className="text-neutral-500 mt-1">
+          <p className="text-muted-foreground mt-1">
             Gestiona las plantillas para los programas de culto
           </p>
         </div>
@@ -70,10 +70,10 @@ function TemplateCard({ template, canEdit }: { template: ServiceTemplateResponse
   const sectionCount = template.groups.reduce((acc: number, g) => acc + g.sections.length, 0) + template.sections.length
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+    <div className="rounded-xl border border-border bg-card p-5 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-neutral-900 truncate">{template.name}</h3>
+          <h3 className="font-semibold text-muted-foreground truncate">{template.name}</h3>
           <span className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${TEMPLATE_TYPE_STYLES[template.type]}`}>
             {TEMPLATE_TYPE_LABELS[template.type]}
           </span>
@@ -83,17 +83,17 @@ function TemplateCard({ template, canEdit }: { template: ServiceTemplateResponse
             Activa
           </span>
         ) : (
-          <span className="shrink-0 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+          <span className="shrink-0 inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
             Inactiva
           </span>
         )}
       </div>
 
       {template.description && (
-        <p className="mt-2 text-sm text-neutral-500 line-clamp-2">{template.description}</p>
+        <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{template.description}</p>
       )}
 
-      <div className="mt-3 flex items-center justify-between text-sm text-neutral-500">
+      <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
         <span>{sectionCount} secciones</span>
         {canEdit && (
           <div className="flex gap-1">
@@ -113,11 +113,11 @@ function TemplatesSkeleton() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <div className="h-5 w-32 bg-neutral-200 rounded animate-pulse" />
-          <div className="mt-2 h-4 w-20 bg-neutral-100 rounded animate-pulse" />
-          <div className="mt-4 h-4 w-full bg-neutral-100 rounded animate-pulse" />
-          <div className="mt-2 h-4 w-3/4 bg-neutral-100 rounded animate-pulse" />
+        <div key={i} className="rounded-xl border border-border bg-card p-5 shadow-sm">
+          <div className="h-5 w-32 bg-muted rounded animate-pulse" />
+          <div className="mt-2 h-4 w-20 bg-muted rounded animate-pulse" />
+          <div className="mt-4 h-4 w-full bg-muted rounded animate-pulse" />
+          <div className="mt-2 h-4 w-3/4 bg-muted rounded animate-pulse" />
         </div>
       ))}
     </div>
@@ -126,12 +126,12 @@ function TemplatesSkeleton() {
 
 function EmptyState({ canCreate }: { canCreate: boolean }) {
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-12 text-center shadow-sm">
-      <div className="mx-auto h-12 w-12 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
+    <div className="rounded-2xl border border-border bg-card p-12 text-center shadow-sm">
+      <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
         <span className="text-2xl">📋</span>
       </div>
-      <h3 className="text-base font-semibold text-neutral-900">Sin plantillas</h3>
-      <p className="text-sm text-neutral-500 mt-1">
+      <h3 className="text-base font-semibold text-muted-foreground">Sin plantillas</h3>
+      <p className="text-sm text-muted-foreground mt-1">
         {canCreate
           ? 'Crea tu primera plantilla para comenzar a organizar cultos.'
           : 'No hay plantillas disponibles.'}

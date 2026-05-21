@@ -57,8 +57,8 @@ export function CoverImagePicker({
 
   if (stage.kind === 'crop') {
     return (
-      <div className="space-y-3 rounded-2xl border border-neutral-200 bg-white p-4">
-        <header className="flex items-center gap-2 text-sm text-neutral-700">
+      <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+        <header className="flex items-center gap-2 text-sm text-muted-foreground">
           <ImagePlus className="h-4 w-4" />
           <span className="font-medium">Recortar imagen (16:9)</span>
         </header>
@@ -72,8 +72,8 @@ export function CoverImagePicker({
   }
 
   return (
-    <div className="space-y-3 rounded-2xl border border-neutral-200 bg-white p-4">
-      <header className="flex items-center gap-2 text-sm text-neutral-700">
+    <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <header className="flex items-center gap-2 text-sm text-muted-foreground">
         <ImagePlus className="h-4 w-4" />
         <span className="font-medium">Imagen de portada</span>
       </header>
@@ -88,19 +88,19 @@ export function CoverImagePicker({
         <TabsContent value="current">
           {currentCoverUrl ? (
             <>
-              <div className="relative w-full overflow-hidden rounded-xl bg-neutral-100 aspect-[16/9]">
+              <div className="relative w-full overflow-hidden rounded-xl bg-muted aspect-[16/9]">
                 <img
                   src={currentCoverUrl}
                   alt="Portada actual"
                   className="h-full w-full object-cover"
                 />
               </div>
-              <p className="text-xs text-neutral-500 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 Esta es la portada que verán los visitantes. Cambiala desde "Subir" o "Buscar".
               </p>
             </>
           ) : (
-            <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-8 text-center text-sm text-neutral-500">
+            <div className="rounded-xl border border-dashed border-border bg-muted/40 p-8 text-center text-sm text-muted-foreground">
               Aún no hay portada elegida. Subí una imagen o buscala en Unsplash.
             </div>
           )}
@@ -113,7 +113,7 @@ export function CoverImagePicker({
         </TabsContent>
 
         <TabsContent value="search">
-          <Suspense fallback={<div className="py-8 text-center text-sm text-neutral-500">Cargando…</div>}>
+          <Suspense fallback={<div className="py-8 text-center text-sm text-muted-foreground">Cargando…</div>}>
             <CoverSearchTab
               defaultQuery={defaultQuery}
               onPicked={(dataUrl, suggestion) =>

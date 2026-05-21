@@ -49,7 +49,7 @@ export function EventFilters({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <div className="flex items-center gap-1 rounded-xl border border-neutral-200 bg-white p-1 shadow-sm">
+      <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1 shadow-sm">
         <Button
           variant="ghost"
           size="icon"
@@ -58,7 +58,7 @@ export function EventFilters({
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <div className="px-3 text-sm font-medium text-neutral-700 min-w-[160px] text-center">
+        <div className="px-3 text-sm font-medium text-muted-foreground min-w-[160px] text-center">
           {MONTHS_ES[currentMonth.getMonth()]} {currentMonth.getFullYear()}
         </div>
         <Button

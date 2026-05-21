@@ -46,7 +46,7 @@ export function AttachmentGallery({
     <div className="space-y-6">
       {images.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-neutral-700 mb-3">
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3">
             Imágenes
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -54,7 +54,7 @@ export function AttachmentGallery({
               <button
                 key={a.id}
                 onClick={() => setLightbox(a)}
-                className="group relative aspect-square overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100"
+                className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-muted"
               >
                 <img
                   src={resolveUrl(a.url)}
@@ -70,7 +70,7 @@ export function AttachmentGallery({
 
       {videos.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-neutral-700 mb-3">
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3">
             Videos
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -78,16 +78,16 @@ export function AttachmentGallery({
               <button
                 key={a.id}
                 onClick={() => setVideoOpen(a)}
-                className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3 hover:bg-neutral-50 text-left"
+                className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 hover:bg-muted/40 text-left"
               >
                 <div className="h-10 w-10 rounded-lg bg-rose-50 flex items-center justify-center">
                   <Video className="h-5 w-5 text-rose-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-neutral-900 truncate">
+                  <p className="text-sm font-medium text-muted-foreground truncate">
                     {a.originalName}
                   </p>
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-muted-foreground">
                     {formatSize(a.size)}
                   </p>
                 </div>
@@ -99,7 +99,7 @@ export function AttachmentGallery({
 
       {documents.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-neutral-700 mb-3">
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3">
             Documentos
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -109,20 +109,20 @@ export function AttachmentGallery({
                 href={resolveUrl(a.url)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3 hover:bg-neutral-50"
+                className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 hover:bg-muted/40"
               >
-                <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <FileText className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-neutral-900 truncate">
+                  <p className="text-sm font-medium text-muted-foreground truncate">
                     {a.originalName}
                   </p>
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-muted-foreground">
                     {formatSize(a.size)}
                   </p>
                 </div>
-                <Download className="h-4 w-4 text-neutral-400" />
+                <Download className="h-4 w-4 text-muted-foreground" />
               </a>
             ))}
           </div>

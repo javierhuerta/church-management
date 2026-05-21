@@ -330,7 +330,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
             <p className="text-xs text-red-500">{errors.endDate.message}</p>
           )}
           {endAutoAdjusted && (
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-muted-foreground">
               Ajustamos la fecha de fin para que no sea anterior al inicio.
             </p>
           )}
@@ -435,7 +435,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-200">
+      <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
         <Button type="submit" disabled={isSubmitting || cover.uploading}>
           {isSubmitting || cover.uploading
             ? 'Guardando...'

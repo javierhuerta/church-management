@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Calendar, Clock, Archive, Filter, Trash2, X } from 'lucide-react'
+import { Plus, Calendar, Clock, Archive, Filter, Trash2, X, Layers, LayoutList } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { parseDateString } from '@/lib/date'
@@ -215,12 +216,18 @@ function ProgramCard({
       </div>
 
       <Link to={`/cultos/programas/${program.id}`}>
-        <div className="px-5 pb-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+        <div className="px-5 pb-4 flex flex-wrap items-center gap-3">
           {program.groups && program.groups.length > 0 && (
-            <span>{program.groups.length} grupos</span>
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-primary/80">
+              <Layers className="h-3.5 w-3.5" />
+              {program.groups.length} {program.groups.length === 1 ? 'grupo' : 'grupos'}
+            </span>
           )}
           {program.sections && program.sections.length > 0 && (
-            <span>{program.sections.length} secciones</span>
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+              <LayoutList className="h-3.5 w-3.5" />
+              {program.sections.length} {program.sections.length === 1 ? 'sección' : 'secciones'}
+            </span>
           )}
         </div>
       </Link>
@@ -228,23 +235,20 @@ function ProgramCard({
   )
 }
 
+const STATUS_STYLES: Record<string, { bg: string; color: string; icon?: ReactNode }> = {
+  PUBLISHED: { bg: '#0F766E', color: '#fff', icon: <Clock className="h-3 w-3 mr-1" /> },
+  DRAFT:     { bg: '#C9A84C', color: '#102240' },
+  ARCHIVED:  { bg: '#475569', color: '#fff', icon: <Archive className="h-3 w-3 mr-1" /> },
+}
+
 function StatusBadge({ status }: { status: string }) {
-  if (status === 'PUBLISHED') {
-    return (
-      <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-900/20 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
-        <Clock className="h-3 w-3 mr-1" /> Publicado
-      </span>
-    )
-  }
-  if (status === 'ARCHIVED') {
-    return (
-      <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-        <Archive className="h-3 w-3 mr-1" /> Archivado
-      </span>
-    )
-  }
+  const style = STATUS_STYLES[status] ?? { bg: '#475569', color: '#fff' }
   return (
-    <span className="inline-flex items-center rounded-full bg-yellow-50 dark:bg-yellow-900/20 px-2.5 py-0.5 text-xs font-medium text-yellow-700 dark:text-yellow-400">
+    <span
+      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+      style={{ backgroundColor: style.bg, color: style.color }}
+    >
+      {style.icon}
       {STATUS_LABELS[status] ?? status}
     </span>
   )

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Calendar, FileText, Heart, LogOut, User, ChevronDown, ChevronLeft, Settings, Sun, Moon, Monitor } from 'lucide-react'
+import logoFull from '@/assets/images/logo.png'
+import logoMark from '@/assets/images/logo-mark.png'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import {
@@ -73,6 +75,8 @@ export function Sidebar() {
   const location = useLocation()
   const { textSize, setTextSize } = useTextSize()
   const { theme, setTheme } = useTheme()
+  const isDark = theme === 'dark'
+  const logoFilter = isDark ? 'brightness(0) invert(1)' : undefined
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isCollapsedDropdownOpen, setIsCollapsedDropdownOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -115,25 +119,26 @@ export function Sidebar() {
       }`}
     >
       {/* Header */}
-      <div className={`border-b border-border bg-card ${isCollapsed ? 'p-3 flex justify-center' : 'p-6'}`}>
+      <div className={`border-b border-border bg-card ${isCollapsed ? 'p-3 flex justify-center' : 'px-4 py-5'}`}>
         {isCollapsed ? (
           <button
-            onClick={() => setIsCollapsed(false)}
-            className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm hover:opacity-90 transition-opacity cursor-pointer"
+            onClick={() => navigate('/')}
+            className="h-10 w-10 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
           >
-            <span className="text-primary-foreground font-bold text-sm">IA</span>
+            <img src={logoMark} alt="Logo" className="h-9 w-auto" style={{ filter: logoFilter }} />
           </button>
         ) : (
           <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm">
-                <span className="text-primary-foreground font-bold text-sm">IA</span>
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer text-left w-full"
+            >
+              <img src={logoFull} alt="Adventistas Central Osorno" className="h-14 w-auto shrink-0" style={{ filter: logoFilter }} />
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-foreground leading-tight">Adventistas</p>
+                <p className="text-sm text-muted-foreground leading-snug">Central Osorno</p>
               </div>
-              <div>
-                <h2 className="text-base font-semibold text-foreground">Iglesia Adventista</h2>
-                <p className="text-xs text-muted-foreground">Osorno Central</p>
-              </div>
-            </div>
+            </button>
             {isSmallScreen && (
               <button
                 onClick={() => setIsCollapsed(true)}
@@ -289,7 +294,7 @@ export function Sidebar() {
                 className="rounded-full hover:opacity-90 transition-opacity"
               >
                 <Avatar className="h-10 w-10 shadow-sm">
-                  <AvatarFallback className="bg-gradient-to-br from-muted-foreground to-foreground text-background text-sm font-medium">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
                     {user ? getInitials(user.name) : 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -381,7 +386,7 @@ export function Sidebar() {
               className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted hover:bg-accent transition-colors border border-border"
             >
               <Avatar className="h-10 w-10 shadow-sm">
-                <AvatarFallback className="bg-gradient-to-br from-muted-foreground to-foreground text-background text-sm font-medium">
+                <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
                   {user ? getInitials(user.name) : 'U'}
                 </AvatarFallback>
               </Avatar>

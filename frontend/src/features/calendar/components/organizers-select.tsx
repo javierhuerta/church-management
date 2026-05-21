@@ -86,7 +86,7 @@ export function OrganizersSelect({ value, onChange }: OrganizersSelectProps) {
   return (
     <div className="space-y-2">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Buscar usuario o escribir nombre…"
           value={query}
@@ -102,17 +102,17 @@ export function OrganizersSelect({ value, onChange }: OrganizersSelectProps) {
           className="pl-10"
         />
         {open && (userMatches.length > 0 || showTextOption) && (
-          <div className="absolute z-10 mt-1 w-full rounded-xl border border-neutral-200 bg-white shadow-lg max-h-60 overflow-y-auto">
+          <div className="absolute z-10 mt-1 w-full rounded-xl border border-border bg-card shadow-lg max-h-60 overflow-y-auto">
             {userMatches.map((u) => (
               <button
                 key={u.id}
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => addUser(u)}
-                className="w-full text-left px-3 py-2 hover:bg-neutral-50 border-b border-neutral-100 last:border-0"
+                className="w-full text-left px-3 py-2 hover:bg-muted/40 border-b border-border last:border-0"
               >
-                <p className="text-sm font-medium text-neutral-900">{u.name}</p>
-                <p className="text-xs text-neutral-500">
+                <p className="text-sm font-medium text-muted-foreground">{u.name}</p>
+                <p className="text-xs text-muted-foreground">
                   {u.email ?? '—'}
                   {u.role ? ` · ${u.role}` : ''}
                 </p>
@@ -123,13 +123,13 @@ export function OrganizersSelect({ value, onChange }: OrganizersSelectProps) {
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={addText}
-                className="w-full text-left px-3 py-2 hover:bg-neutral-50 border-t border-neutral-100 bg-neutral-50/50"
+                className="w-full text-left px-3 py-2 hover:bg-muted/40 border-t border-border bg-muted/40/50"
               >
-                <p className="text-sm font-medium text-neutral-900 flex items-center gap-1.5">
+                <p className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
                   <Plus className="h-3.5 w-3.5" />
                   Agregar como texto: "{trimmed}"
                 </p>
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-muted-foreground">
                   Usalo si el organizador no es un usuario del sistema.
                 </p>
               </button>

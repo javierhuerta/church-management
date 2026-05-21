@@ -39,7 +39,7 @@ export function CoverCropper({ source, onCancel, onApply }: CoverCropperProps) {
 
   return (
     <div className="space-y-3">
-      <div className="relative h-72 w-full overflow-hidden rounded-xl bg-neutral-900">
+      <div className="relative h-72 w-full overflow-hidden rounded-xl bg-foreground">
         <Cropper
           image={source}
           crop={crop}
@@ -51,7 +51,7 @@ export function CoverCropper({ source, onCancel, onApply }: CoverCropperProps) {
           objectFit="contain"
         />
       </div>
-      <div className="flex items-center gap-3 text-sm text-neutral-600">
+      <div className="flex items-center gap-3 text-sm text-muted-foreground">
         <label className="flex items-center gap-2 flex-1">
           <span>Zoom</span>
           <input

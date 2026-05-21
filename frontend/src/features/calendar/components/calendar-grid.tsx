@@ -18,7 +18,7 @@ import {
 } from '../utils/labels'
 
 const BAND_BG_COLORS: Record<string, string> = {
-  local: 'bg-blue-200 text-blue-900 hover:bg-blue-300',
+  local: 'bg-primary/20 text-primary hover:bg-primary/30',
   asach: 'bg-purple-200 text-purple-900 hover:bg-purple-300',
   distrital: 'bg-emerald-200 text-emerald-900 hover:bg-emerald-300',
 }
@@ -173,7 +173,7 @@ function MultiDayBand({ band }: { band: MultiDayBand }) {
         <PopoverContent
           side="bottom"
           align="start"
-          className="w-72 p-0 shadow-lg bg-white border border-neutral-200"
+          className="w-72 p-0 shadow-lg bg-card border border-border"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
@@ -181,7 +181,7 @@ function MultiDayBand({ band }: { band: MultiDayBand }) {
             <div className="flex items-start gap-2">
               <span className={`mt-1 h-2.5 w-2.5 rounded-full flex-shrink-0 ${typeColors.dot}`} />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-neutral-900 leading-tight">
+                <p className="text-sm font-semibold text-muted-foreground leading-tight">
                   {event.title}
                 </p>
                 {event.status === 'draft' && (
@@ -192,20 +192,20 @@ function MultiDayBand({ band }: { band: MultiDayBand }) {
               </div>
             </div>
 
-            <div className="space-y-1.5 text-xs text-neutral-600">
+            <div className="space-y-1.5 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                <Calendar className="h-3.5 w-3.5 text-neutral-400 flex-shrink-0" />
+                <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                 <span>{formatBandDateRange(event.startDate, event.endDate)}</span>
               </div>
               {event.location && (
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-3.5 w-3.5 text-neutral-400 flex-shrink-0" />
+                  <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   <span className="truncate">{event.location}</span>
                 </div>
               )}
               {event.meetingUrl && (
                 <div className="flex items-center gap-2">
-                  <Video className="h-3.5 w-3.5 text-neutral-400 flex-shrink-0" />
+                  <Video className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   <a
                     href={event.meetingUrl}
                     target="_blank"
@@ -219,7 +219,7 @@ function MultiDayBand({ band }: { band: MultiDayBand }) {
               )}
               {event.organizers && event.organizers.length > 0 && (
                 <div className="flex items-start gap-2">
-                  <Users className="h-3.5 w-3.5 text-neutral-400 flex-shrink-0 mt-0.5" />
+                  <Users className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
                   <span className="truncate">
                     {event.organizers.map((o) => o.name).join(', ')}
                   </span>
@@ -227,7 +227,7 @@ function MultiDayBand({ band }: { band: MultiDayBand }) {
               )}
             </div>
 
-            <div className="flex flex-wrap gap-1.5 pt-1 border-t border-neutral-100">
+            <div className="flex flex-wrap gap-1.5 pt-1 border-t border-border">
               <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${typeColors.bg} ${typeColors.text}`}>
                 {EVENT_TYPE_LABELS[event.eventType]}
               </span>
@@ -272,11 +272,11 @@ export function CalendarGrid({ currentMonth, events }: CalendarGridProps) {
   // Multi-day events on their start day are handled by the bands — no need to duplicate
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 border-b border-neutral-200 bg-neutral-50">
+      <div className="grid grid-cols-7 border-b border-border bg-muted/40">
         {WEEKDAYS.map((d) => (
-          <div key={d} className="px-3 py-2 text-xs font-semibold text-neutral-500 text-center">
+          <div key={d} className="px-3 py-2 text-xs font-semibold text-muted-foreground text-center">
             {d}
           </div>
         ))}
@@ -292,7 +292,7 @@ export function CalendarGrid({ currentMonth, events }: CalendarGridProps) {
             {/* Multi-day event bands */}
             {bands.length > 0 && (
               <div
-                className="grid grid-cols-7 gap-y-0.5 py-0.5 border-b border-neutral-50"
+                className="grid grid-cols-7 gap-y-0.5 py-0.5 border-b border-border"
                 style={{ gridAutoFlow: 'dense' }}
               >
                 {bands.map((band, i) => (
@@ -315,9 +315,9 @@ export function CalendarGrid({ currentMonth, events }: CalendarGridProps) {
                     key={dayIdx}
                     className={`
                       min-h-[96px] p-2
-                      ${!isLastCol ? 'border-r border-neutral-100' : ''}
-                      ${!isLastWeek ? 'border-b border-neutral-100' : ''}
-                      ${inMonth ? 'bg-white' : 'bg-neutral-50/60'}
+                      ${!isLastCol ? 'border-r border-border' : ''}
+                      ${!isLastWeek ? 'border-b border-border' : ''}
+                      ${inMonth ? 'bg-card' : 'bg-muted/40'}
                     `}
                   >
                     <div
@@ -325,10 +325,10 @@ export function CalendarGrid({ currentMonth, events }: CalendarGridProps) {
                         inline-flex h-6 w-6 items-center justify-center rounded-full
                         text-xs font-medium mb-1
                         ${isToday
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-primary text-primary-foreground'
                           : inMonth
-                            ? 'text-neutral-700'
-                            : 'text-neutral-400'
+                            ? 'text-muted-foreground'
+                            : 'text-muted-foreground'
                         }
                       `}
                     >
@@ -339,7 +339,7 @@ export function CalendarGrid({ currentMonth, events }: CalendarGridProps) {
                         <EventCard key={e.id} event={e} compact />
                       ))}
                       {dayEvents.length > 3 && (
-                        <span className="text-[10px] text-neutral-400 px-1">
+                        <span className="text-[10px] text-muted-foreground px-1">
                           +{dayEvents.length - 3} más
                         </span>
                       )}

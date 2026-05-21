@@ -82,7 +82,7 @@ export function DepartmentFormPage() {
   }
 
   if (isEdit && isLoadingDept) {
-    return <div className="text-sm text-neutral-500">Cargando departamento...</div>
+    return <div className="text-sm text-muted-foreground">Cargando departamento...</div>
   }
 
   return (
@@ -95,12 +95,12 @@ export function DepartmentFormPage() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-lg font-semibold text-neutral-900">
+        <h2 className="text-lg font-semibold text-muted-foreground">
           {isEdit ? 'Editar departamento' : 'Nuevo departamento'}
         </h2>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 bg-white rounded-xl border border-neutral-200 p-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 bg-card rounded-xl border border-border p-6">
         {serverError && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {serverError}
@@ -113,7 +113,7 @@ export function DepartmentFormPage() {
           {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
         </div>
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-neutral-100">
+        <div className="flex justify-end gap-2 pt-2 border-t border-border">
           <Button
             type="button"
             variant="outline"
@@ -128,31 +128,31 @@ export function DepartmentFormPage() {
       </form>
 
       {isEdit && (
-        <div className="bg-white rounded-xl border border-neutral-200 p-6 space-y-4">
+        <div className="bg-card rounded-xl border border-border p-6 space-y-4">
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-neutral-400" />
-            <h3 className="text-sm font-semibold text-neutral-700">Directores</h3>
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-muted-foreground">Directores</h3>
           </div>
           {isLoadingDirectors ? (
-            <p className="text-sm text-neutral-400">Cargando directores...</p>
+            <p className="text-sm text-muted-foreground">Cargando directores...</p>
           ) : directors.length === 0 ? (
-            <p className="text-sm text-neutral-400">Este departamento no tiene directores asignados.</p>
+            <p className="text-sm text-muted-foreground">Este departamento no tiene directores asignados.</p>
           ) : (
             <ul className="space-y-2">
               {directors.map((d) => (
                 <li key={d.id} className="flex items-center gap-2 text-sm">
-                  <div className="h-7 w-7 rounded-full bg-neutral-200 flex items-center justify-center text-xs font-medium text-neutral-600">
+                  <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
                     {d.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-medium text-neutral-900">{d.name}</p>
-                    <p className="text-xs text-neutral-500">{d.email}</p>
+                    <p className="font-medium text-muted-foreground">{d.name}</p>
+                    <p className="text-xs text-muted-foreground">{d.email}</p>
                   </div>
                 </li>
               ))}
             </ul>
           )}
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs text-muted-foreground">
             Los directores se asignan desde la gestión de usuarios.
           </p>
         </div>

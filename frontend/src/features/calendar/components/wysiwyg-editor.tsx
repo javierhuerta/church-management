@@ -43,8 +43,8 @@ export function WysiwygEditor({ value, onChange, placeholder }: WysiwygEditorPro
   }
 
   return (
-    <div className="rounded-xl border border-neutral-300 bg-white overflow-hidden">
-      <div className="flex items-center gap-1 border-b border-neutral-200 bg-neutral-50 p-1">
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="flex items-center gap-1 border-b border-border bg-muted/40 p-1">
         <ToolbarButton
           active={editor.isActive('bold')}
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -100,7 +100,7 @@ function ToolbarButton({ active, onClick, children }: ToolbarButtonProps) {
       variant="ghost"
       size="icon"
       onClick={onClick}
-      className={active ? 'bg-blue-50 text-blue-700' : ''}
+      className={active ? 'bg-primary/10 text-primary' : ''}
     >
       {children}
     </Button>

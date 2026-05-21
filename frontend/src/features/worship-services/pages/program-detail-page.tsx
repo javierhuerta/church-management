@@ -228,15 +228,15 @@ export function ProgramDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           {isArchived ? (
-            <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+            <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium" style={{ backgroundColor: '#475569', color: '#fff' }}>
               <Archive className="h-4 w-4 mr-1" /> Archivado
             </span>
           ) : isPublished ? (
-            <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-900/20 px-3 py-1 text-sm font-medium text-green-700 dark:text-green-400">
+            <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium" style={{ backgroundColor: '#0F766E', color: '#fff' }}>
               <CheckCircle className="h-4 w-4 mr-1" /> Publicado
             </span>
           ) : (
-            <span className="inline-flex items-center rounded-full bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1 text-sm font-medium text-yellow-700 dark:text-yellow-400">
+            <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium" style={{ backgroundColor: '#C9A84C', color: '#102240' }}>
               Borrador
             </span>
           )}
@@ -354,7 +354,7 @@ export function ProgramDetailPage() {
           )}
 
           {program.sections?.filter(s => !s.groupId).map((section) => (
-            <div key={section.id} className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
+            <div key={section.id} className="rounded-2xl border border-border bg-card shadow-sm">
               <SectionRow
                 section={section}
                 canEdit={canEdit}

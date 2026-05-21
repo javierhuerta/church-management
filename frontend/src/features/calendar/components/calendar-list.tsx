@@ -38,7 +38,7 @@ export function CalendarList({ events }: CalendarListProps) {
     <div className="space-y-4">
       {[...groups.values()].map((group) => (
         <div key={group.label} className="space-y-2">
-          <h3 className="text-sm font-semibold text-neutral-700 capitalize sticky top-0 bg-neutral-50 py-1">
+          <h3 className="text-sm font-semibold text-muted-foreground capitalize sticky top-0 bg-muted/40 py-1">
             {group.label}
           </h3>
           <div className="space-y-2">

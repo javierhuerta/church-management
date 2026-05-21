@@ -33,8 +33,8 @@ export function OrganizerChip({ organizer, onRemove, size = 'md' }: OrganizerChi
         'inline-flex items-center gap-1.5 rounded-full border',
         size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm',
         isUser
-          ? 'bg-blue-50 text-blue-700 border-blue-200'
-          : 'bg-neutral-100 text-neutral-700 border-neutral-200',
+          ? 'bg-primary/10 text-primary border-primary/20'
+          : 'bg-muted text-muted-foreground border-border',
       )}
       title={isUser ? `${name}${organizer.email ? ` · ${organizer.email}` : ''}` : name}
     >
@@ -42,7 +42,7 @@ export function OrganizerChip({ organizer, onRemove, size = 'md' }: OrganizerChi
         <AvatarFallback
           className={cn(
             'text-[10px] text-white',
-            isUser ? 'bg-blue-700' : 'bg-neutral-500',
+            isUser ? 'bg-primary' : 'bg-muted-foreground',
           )}
         >
           {initials(name)}

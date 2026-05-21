@@ -46,14 +46,14 @@ function SectionPreviewRow({
     <div className="flex items-center justify-between gap-2 text-xs">
       <div className="flex items-center gap-1.5 min-w-0">
         <ChevronRight
-          className={`h-3 w-3 shrink-0 ${isStandalone ? 'text-blue-400' : 'text-neutral-300'}`}
+          className={`h-3 w-3 shrink-0 ${isStandalone ? 'text-blue-400' : 'text-muted-foreground'}`}
         />
-        <span className={`truncate ${isStandalone ? 'text-blue-800' : 'text-neutral-700'}`}>
+        <span className={`truncate ${isStandalone ? 'text-blue-800' : 'text-muted-foreground'}`}>
           {section.name}
         </span>
       </div>
       {(section.startTime || section.duration) && (
-        <div className="flex items-center gap-2 text-neutral-400 shrink-0">
+        <div className="flex items-center gap-2 text-muted-foreground shrink-0">
           {section.startTime && (
             <span className="flex items-center gap-0.5">
               <Clock className="h-2.5 w-2.5" />
@@ -82,7 +82,7 @@ function TemplatePreview({ template }: { template: ServiceTemplateResponseDto })
   const hasContent = sortedGroups.length > 0 || standaloneSections.length > 0
 
   return (
-    <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 space-y-3">
+    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-sm font-semibold text-blue-900">{template.name}</p>
@@ -90,7 +90,7 @@ function TemplatePreview({ template }: { template: ServiceTemplateResponseDto })
             <p className="text-xs text-blue-700 mt-0.5">{template.description}</p>
           )}
         </div>
-        <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+        <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
           {templateTypeLabels[template.type]}
         </span>
       </div>
@@ -102,14 +102,14 @@ function TemplatePreview({ template }: { template: ServiceTemplateResponseDto })
       {sortedGroups.map((group) => (
         <div
           key={group.id}
-          className="rounded-lg border border-blue-100 bg-white/70 p-3 space-y-2"
+          className="rounded-lg border border-primary/15 bg-card/70 p-3 space-y-2"
         >
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-bold text-neutral-700 uppercase tracking-wide">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
               {group.name}
             </p>
             {(group.startTime || group.endTime) && (
-              <span className="flex items-center gap-1 text-xs text-neutral-500">
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Clock className="h-3 w-3" />
                 {group.startTime}
                 {group.endTime ? ` – ${group.endTime}` : ''}
@@ -117,7 +117,7 @@ function TemplatePreview({ template }: { template: ServiceTemplateResponseDto })
             )}
           </div>
           {group.sections.length === 0 ? (
-            <p className="text-xs text-neutral-400 italic">Sin secciones</p>
+            <p className="text-xs text-muted-foreground italic">Sin secciones</p>
           ) : (
             <div className="space-y-1">
               {[...group.sections]
@@ -182,9 +182,9 @@ export function ProgramCreatePage() {
 
   if (!canCreate) {
     return (
-      <div className="rounded-2xl border border-neutral-200 bg-white p-12 text-center">
-        <h2 className="text-xl font-semibold text-neutral-900">Acceso restringido</h2>
-        <p className="text-sm text-neutral-500 mt-1">
+      <div className="rounded-2xl border border-border bg-card p-12 text-center">
+        <h2 className="text-xl font-semibold text-muted-foreground">Acceso restringido</h2>
+        <p className="text-sm text-muted-foreground mt-1">
           No tienes permisos para crear programas.
         </p>
       </div>
@@ -198,10 +198,10 @@ export function ProgramCreatePage() {
       </Button>
 
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+        <h2 className="text-3xl font-bold tracking-tight text-muted-foreground">
           Nuevo programa de culto
         </h2>
-        <p className="text-neutral-500 mt-1">
+        <p className="text-muted-foreground mt-1">
           Selecciona una plantilla y la fecha para crear el programa
         </p>
       </div>
@@ -213,7 +213,7 @@ export function ProgramCreatePage() {
           </div>
         )}
 
-        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm space-y-6">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-6">
           <div className="space-y-2">
             <Label htmlFor="date">Fecha del culto *</Label>
             <Controller

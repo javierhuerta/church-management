@@ -75,7 +75,7 @@ export function AttachmentUploader({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-neutral-700">
+        <span className="text-sm font-medium text-muted-foreground">
           Adjuntos ({attachments.length}/{maxAttachments})
         </span>
         <Button
@@ -116,7 +116,7 @@ export function AttachmentUploader({
             return (
               <div
                 key={a.id}
-                className="relative rounded-xl border border-neutral-200 bg-white p-2"
+                className="relative rounded-xl border border-border bg-card p-2"
               >
                 {isImage ? (
                   <img
@@ -125,7 +125,7 @@ export function AttachmentUploader({
                     className="h-24 w-full rounded object-cover"
                   />
                 ) : (
-                  <div className="h-24 w-full rounded bg-neutral-100 flex items-center justify-center text-xs text-neutral-500 p-2 text-center">
+                  <div className="h-24 w-full rounded bg-muted flex items-center justify-center text-xs text-muted-foreground p-2 text-center">
                     {a.originalName}
                   </div>
                 )}
@@ -137,7 +137,7 @@ export function AttachmentUploader({
                       size="icon"
                       onClick={() => handleSetCover(a.id)}
                       className={
-                        a.isCover ? 'text-amber-500' : 'text-neutral-400'
+                        a.isCover ? 'text-amber-500' : 'text-muted-foreground'
                       }
                       title={a.isCover ? 'Portada' : 'Marcar como portada'}
                     >

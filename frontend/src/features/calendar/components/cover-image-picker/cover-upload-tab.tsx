@@ -40,12 +40,12 @@ export function CoverUploadTab({ onFileSelected }: CoverUploadTabProps) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50 p-8 text-center">
-        <Upload className="mx-auto h-8 w-8 text-neutral-400" />
-        <p className="mt-2 text-sm text-neutral-600">
+      <div className="rounded-xl border-2 border-dashed border-border bg-muted/40 p-8 text-center">
+        <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+        <p className="mt-2 text-sm text-muted-foreground">
           Selecciona una imagen desde tu equipo
         </p>
-        <p className="text-xs text-neutral-500 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Formatos: JPG, PNG, WebP. Máximo 10 MB.
         </p>
         <Button
