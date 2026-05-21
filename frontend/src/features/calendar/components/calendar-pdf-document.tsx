@@ -1,36 +1,26 @@
-import { Document, Page, View, Text, StyleSheet, Svg, Path, Circle } from '@react-pdf/renderer'
+import { Document, Page, View, Text, StyleSheet, Image } from '@react-pdf/renderer'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import type { EventResponseDto } from '@/lib/api'
-import { EVENT_TYPE_LABELS } from '../utils/labels'
+import { EVENT_TYPE_STYLE, EVENT_TYPE_LABELS } from '../utils/labels'
+import logoFull from '@/assets/images/logo.png'
 
-const PURPLE = '#8B6CC8'
+const NAVY = '#1B3A6B'
+const GOLD = '#C9A84C'
+const CREAM = '#FAF6F0'
 const WHITE = '#FFFFFF'
-const TEXT_DARK = '#1A1A2E'
+const TEXT_DARK = '#1B3A6B'
 const TEXT_MUTED = '#6B7280'
 const BORDER = '#E5E7EB'
 const BORDER_LIGHT = '#F3F4F6'
-const OUT_OF_MONTH_BG = '#FAFAFA'
+const OUT_OF_MONTH_BG = '#FAF6F0'
 
-const TYPE_COLORS: Record<string, { bg: string; text: string; dot: string; bandBg: string; bandText: string }> = {
-  local: { bg: '#EFF6FF', text: '#1D4ED8', dot: '#3B82F6', bandBg: '#BFDBFE', bandText: '#1E3A8A' },
-  asach: { bg: '#FAF5FF', text: '#7E22CE', dot: '#A855F7', bandBg: '#E9D5FF', bandText: '#581C87' },
-  distrital: { bg: '#ECFDF5', text: '#047857', dot: '#10B981', bandBg: '#A7F3D0', bandText: '#064E3B' },
+// Status colors for PDF
+const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  draft:     { bg: '#FEF3C7', text: '#92600A' },
+  archived:  { bg: '#F1F5F9', text: '#475569' },
+  published: { bg: '#D1FAE5', text: '#065F46' },
 }
-
-const DEPT_COLORS: Record<string, { bg: string; text: string }> = {
-  jovenes: { bg: '#FFF7ED', text: '#C2410C' },
-  adolescentes: { bg: '#FEFCE8', text: '#A16207' },
-  familia: { bg: '#F0FDF4', text: '#15803D' },
-  mision: { bg: '#FEF2F2', text: '#B91C1C' },
-  escuela_sabatica: { bg: '#F0F9FF', text: '#0369A1' },
-  musica: { bg: '#FAF5FF', text: '#7E22CE' },
-  conductores_jovenes: { bg: '#F0FDFA', text: '#0F766E' },
-  ministerios: { bg: '#EEF2FF', text: '#4338CA' },
-  salud: { bg: '#F7FEE7', text: '#4D7C0F' },
-  comunicaciones: { bg: '#ECFEFF', text: '#0E7490' },
-}
-const DEPT_COLORS_DEFAULT = { bg: '#F5F5F5', text: '#525252' }
 
 const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
@@ -39,38 +29,52 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica',
     fontSize: 9,
     color: TEXT_DARK,
-    paddingVertical: 24,
-    paddingHorizontal: 28,
-    backgroundColor: WHITE,
+    backgroundColor: CREAM,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 0,
+    backgroundColor: WHITE,
+    borderBottomWidth: 3,
+    borderBottomColor: NAVY,
   },
-  logo: { width: 40, height: 40, marginRight: 12 },
-  headerText: { flex: 1 },
+  logo: { width: 70, height: 34, objectFit: 'contain' as const },
+  headerLeft: { flex: 1 },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+  },
   churchName: {
-    fontSize: 13,
+    fontSize: 11,
     fontFamily: 'Helvetica-Bold',
-    color: TEXT_DARK,
+    color: NAVY,
+    letterSpacing: 0.3,
   },
-  churchSubtitle: { fontSize: 9, color: TEXT_MUTED, marginTop: 1 },
+  churchSubtitle: { fontSize: 8, color: TEXT_MUTED, marginTop: 2 },
   monthTitle: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: 'Helvetica-Bold',
-    color: PURPLE,
-    marginTop: 4,
+    color: NAVY,
+    letterSpacing: 0.5,
     textTransform: 'capitalize',
+    marginLeft: 20,
   },
-  filtersLine: { fontSize: 8, color: TEXT_MUTED, marginTop: 4 },
+  filtersLine: { fontSize: 7, color: TEXT_MUTED, marginTop: 4 },
+  goldBar: {
+    height: 4,
+    backgroundColor: GOLD,
+  },
   weekdayRow: {
     flexDirection: 'row',
-    backgroundColor: '#F9FAFB',
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-    borderWidth: 1,
-    borderColor: BORDER,
+    backgroundColor: NAVY,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: NAVY,
   },
   weekdayCell: {
     flex: 1,
@@ -78,9 +82,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 8,
     fontFamily: 'Helvetica-Bold',
-    color: TEXT_MUTED,
+    color: WHITE,
     borderRightWidth: 1,
-    borderRightColor: BORDER,
+    borderRightColor: 'rgba(255,255,255,0.2)',
   },
   weekdayCellLast: { borderRightWidth: 0 },
   week: {
@@ -88,6 +92,7 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderBottomWidth: 1,
     borderColor: BORDER,
+    backgroundColor: WHITE,
   },
   bandsRow: {
     flexDirection: 'row',
@@ -106,41 +111,49 @@ const styles = StyleSheet.create({
   },
   daysRow: {
     flexDirection: 'row',
-    minHeight: 78,
+    minHeight: 76,
   },
   dayCell: {
     flex: 1,
     padding: 3,
     borderRightWidth: 1,
     borderRightColor: BORDER_LIGHT,
+    backgroundColor: WHITE,
   },
   dayCellLast: { borderRightWidth: 0 },
   outOfMonth: { backgroundColor: OUT_OF_MONTH_BG },
   dayNumber: {
     fontSize: 8,
     fontFamily: 'Helvetica-Bold',
-    color: TEXT_DARK,
+    color: NAVY,
     marginBottom: 2,
   },
   dayNumberMuted: { color: '#A3A3A3' },
+  todayCell: {
+    backgroundColor: '#FEF9EF',
+    borderTopWidth: 2,
+    borderTopColor: GOLD,
+  },
   eventBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingVertical: 1,
     paddingHorizontal: 3,
-    borderRadius: 2,
+    borderRadius: 3,
     marginBottom: 1,
+    borderLeftWidth: 2,
   },
   eventDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
     marginRight: 3,
-    marginTop: 3,
+    marginTop: 2,
   },
   eventTitle: {
-    fontSize: 7,
+    fontSize: 6.5,
     flex: 1,
+    fontFamily: 'Helvetica',
   },
   eventDraft: {
     borderWidth: 0.5,
@@ -148,58 +161,57 @@ const styles = StyleSheet.create({
     borderColor: '#D97706',
   },
   moreText: {
-    fontSize: 6.5,
+    fontSize: 6,
     color: TEXT_MUTED,
     marginTop: 1,
     paddingHorizontal: 3,
+    fontFamily: 'Helvetica-Bold',
   },
   listingTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Helvetica-Bold',
-    color: TEXT_DARK,
-    marginBottom: 10,
+    color: NAVY,
+    textTransform: 'capitalize',
+    marginLeft: 20,
   },
   listingRow: {
     flexDirection: 'row',
-    paddingVertical: 5,
+    paddingVertical: 6,
     borderBottomWidth: 0.5,
     borderBottomColor: BORDER,
+    backgroundColor: WHITE,
   },
-  listingDate: { width: '18%', fontSize: 8, fontFamily: 'Helvetica-Bold' },
+  listingDate: { width: '18%', fontSize: 8, fontFamily: 'Helvetica-Bold', color: NAVY },
   listingTime: { width: '14%', fontSize: 8, color: TEXT_MUTED },
   listingTitleCell: { width: '40%', fontSize: 8 },
-  listingDept: { width: '28%', fontSize: 7, color: TEXT_MUTED },
+  listingDept: { width: '28%', fontSize: 7 },
   badge: {
     paddingVertical: 1,
     paddingHorizontal: 4,
-    borderRadius: 6,
-    fontSize: 6.5,
+    borderRadius: 4,
+    fontSize: 6,
     alignSelf: 'flex-start',
+    marginBottom: 1,
   },
+  listingHeader: {
+    flexDirection: 'row',
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    backgroundColor: NAVY,
+    borderRadius: 4,
+    marginBottom: 2,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 28,
+    borderTopWidth: 1,
+    borderTopColor: BORDER,
+    backgroundColor: WHITE,
+  },
+  footerText: { fontSize: 7, color: TEXT_MUTED },
 })
-
-function ChurchLogoPlaceholder() {
-  return (
-    <Svg viewBox="0 0 56 56" style={styles.logo}>
-      <Circle cx="28" cy="28" r="28" fill={PURPLE} />
-      <Path
-        d="M28 8 C28 8 20 18 20 26 C20 30.4 23.6 34 28 34 C32.4 34 36 30.4 36 26 C36 18 28 8 28 8Z"
-        fill="none"
-        stroke={WHITE}
-        strokeWidth="2"
-      />
-      <Path
-        d="M28 14 C28 14 23 21 23 26 C23 28.8 25.2 31 28 31 C30.8 31 33 28.8 33 26 C33 21 28 14 28 14Z"
-        fill={WHITE}
-      />
-      <Path
-        d="M22 34 L34 34 L34 36 C34 36 32 38 28 38 C24 38 22 36 22 36 Z"
-        fill={WHITE}
-        fillOpacity="0.7"
-      />
-    </Svg>
-  )
-}
 
 function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate())
@@ -263,14 +275,14 @@ function buildBandsForWeek(multiDayEvents: EventResponseDto[], weekDays: Date[])
   return bands
 }
 
-function getDeptColors(name: string | null | undefined) {
-  if (!name) return DEPT_COLORS_DEFAULT
-  return DEPT_COLORS[name] ?? DEPT_COLORS_DEFAULT
+function toInitials(name: string): string {
+  return name.split(/\s+/).filter(Boolean).map((w) => w[0]).join('').toUpperCase().slice(0, 4)
 }
 
-function getDeptLabel(name: string | null | undefined): string | null {
-  if (!name) return null
-  return name
+function formatDateRange(start: Date, end: Date): string {
+  const sameDay = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth() && start.getDate() === end.getDate()
+  if (sameDay) return `${format(start, 'd MMM', { locale: es })} · ${format(start, 'HH:mm')}–${format(end, 'HH:mm')}`
+  return `${format(start, 'd MMM', { locale: es })} – ${format(end, 'd MMM', { locale: es })}`
 }
 
 interface FiltersInfo {
@@ -290,6 +302,8 @@ export function CalendarPdfDocument({ currentMonth, events, filters }: Props) {
   const monthIdx = currentMonth.getMonth()
   const weeks = buildWeeks(currentMonth)
   const monthName = format(currentMonth, "MMMM yyyy", { locale: es })
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
   const multiDayEvents = events.filter(isMultiDay)
   const singleDayEvents = events.filter((e) => !isMultiDay(e))
@@ -303,39 +317,37 @@ export function CalendarPdfDocument({ currentMonth, events, filters }: Props) {
   }
 
   const filterParts: string[] = []
-  if (filters.departmentName) filterParts.push(`Depto: ${getDeptLabel(filters.departmentName) ?? filters.departmentName}`)
+  if (filters.departmentName) filterParts.push(`Depto: ${filters.departmentName}`)
   if (filters.eventType) {
     const label = EVENT_TYPE_LABELS[filters.eventType as keyof typeof EVENT_TYPE_LABELS] ?? filters.eventType
     filterParts.push(`Tipo: ${label}`)
   }
-  const filtersLine = filterParts.length > 0 ? `Filtros: ${filterParts.join(' | ')}` : 'Filtros: ninguno'
+  const filtersLine = filterParts.length > 0 ? `Filtros: ${filterParts.join(' | ')}` : 'Sin filtros activos'
 
   const hasOverflow = Array.from(singleByDay.values()).some((list) => list.length > MAX_EVENTS_PER_CELL)
-
-  const sortedEvents = [...events].sort(
-    (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-  )
+  const sortedEvents = [...events].sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
 
   return (
     <Document>
-      {/* Página 1: Grid */}
+      {/* Página 1: Grid del calendario */}
       <Page size="LETTER" orientation="landscape" style={styles.page}>
         <View style={styles.header}>
-          <ChurchLogoPlaceholder />
-          <View style={styles.headerText}>
-            <Text style={styles.churchName}>Iglesia Adventista del Séptimo Día</Text>
-            <Text style={styles.churchSubtitle}>Osorno Central</Text>
-            <Text style={styles.monthTitle}>{monthName}</Text>
-            <Text style={styles.filtersLine}>{filtersLine}</Text>
+          <Image src={logoFull} style={styles.logo} />
+          <View style={styles.headerLeft}>
+            <View style={styles.headerTopRow}>
+              <Text style={styles.churchName}>Iglesia Adventista del Séptimo Día — Osorno Central</Text>
+              <Text style={styles.monthTitle}>{monthName}</Text>
+            </View>
+            {filtersLine !== 'Sin filtros activos' && (
+              <Text style={styles.filtersLine}>{filtersLine}</Text>
+            )}
           </View>
         </View>
+        <View style={styles.goldBar} />
 
         <View style={styles.weekdayRow}>
           {WEEKDAYS.map((d, i) => (
-            <Text
-              key={d}
-              style={[styles.weekdayCell, i === 6 ? styles.weekdayCellLast : {}]}
-            >
+            <Text key={d} style={[styles.weekdayCell, i === 6 ? styles.weekdayCellLast : {}]}>
               {d}
             </Text>
           ))}
@@ -348,31 +360,29 @@ export function CalendarPdfDocument({ currentMonth, events, filters }: Props) {
               {bands.length > 0 && (
                 <View>
                   {bands.map((band, i) => {
-                    const colors = TYPE_COLORS[band.event.eventType] ?? TYPE_COLORS.local
+                    const typeStyle = EVENT_TYPE_STYLE[band.event.eventType] ?? EVENT_TYPE_STYLE.local
+                    const deptStyle = band.event.departmentName
+                      ? { dotColor: band.event.departmentColor ?? typeStyle.dotColor }
+                      : null
+                    const dotColor = deptStyle ? deptStyle.dotColor : typeStyle.dotColor
                     return (
                       <View key={`${band.event.id}-${i}`} style={styles.bandsRow}>
                         {Array.from({ length: 7 }).map((_, col) => {
                           const inBand = col >= band.startCol && col <= band.endCol
-                          if (!inBand) {
-                            return <View key={col} style={{ flex: 1 }} />
-                          }
+                          if (!inBand) return <View key={col} style={{ flex: 1 }} />
                           if (col === band.startCol) {
                             const span = band.endCol - band.startCol + 1
                             return (
-                              <View
-                                key={col}
-                                style={{
-                                  flex: span,
-                                  flexDirection: 'row',
-                                }}
-                              >
+                              <View key={col} style={{ flex: span, flexDirection: 'row' }}>
                                 <Text
                                   style={[
                                     styles.band,
                                     {
-                                      backgroundColor: colors.bandBg,
-                                      color: colors.bandText,
+                                      backgroundColor: `${dotColor}28`,
+                                      color: dotColor,
                                       flex: 1,
+                                      borderLeftWidth: 2,
+                                      borderLeftColor: dotColor,
                                     },
                                   ]}
                                 >
@@ -392,6 +402,7 @@ export function CalendarPdfDocument({ currentMonth, events, filters }: Props) {
               <View style={styles.daysRow}>
                 {weekDays.map((cell, dayIdx) => {
                   const inMonth = cell.getMonth() === monthIdx
+                  const isToday = startOfDay(cell).getTime() === today.getTime()
                   const key = dayKey(cell)
                   const dayEvents = singleByDay.get(key) ?? []
                   const visible = dayEvents.slice(0, MAX_EVENTS_PER_CELL)
@@ -404,32 +415,37 @@ export function CalendarPdfDocument({ currentMonth, events, filters }: Props) {
                         styles.dayCell,
                         dayIdx === 6 ? styles.dayCellLast : {},
                         inMonth ? {} : styles.outOfMonth,
+                        isToday ? styles.todayCell : {},
                       ]}
                     >
                       <Text style={[styles.dayNumber, inMonth ? {} : styles.dayNumberMuted]}>
                         {cell.getDate()}
                       </Text>
                       {visible.map((event) => {
-                        const colors = TYPE_COLORS[event.eventType] ?? TYPE_COLORS.local
+                        const typeStyle = EVENT_TYPE_STYLE[event.eventType] ?? EVENT_TYPE_STYLE.local
                         const isDraft = event.status === 'draft'
+                        const statusCfg = event.status !== 'published' ? STATUS_COLORS[event.status] : null
                         return (
                           <View
                             key={event.id}
                             style={[
                               styles.eventBox,
-                              { backgroundColor: colors.bg },
+                              {
+                                backgroundColor: statusCfg ? statusCfg.bg : typeStyle.backgroundColor,
+                                borderLeftColor: statusCfg ? statusCfg.text : typeStyle.dotColor,
+                              },
                               isDraft ? styles.eventDraft : {},
                             ]}
                           >
-                            <View style={[styles.eventDot, { backgroundColor: colors.dot }]} />
-                            <Text style={[styles.eventTitle, { color: colors.text }]}>
+                            <View style={[styles.eventDot, { backgroundColor: statusCfg ? statusCfg.text : typeStyle.dotColor }]} />
+                            <Text style={[styles.eventTitle, { color: statusCfg ? statusCfg.text : typeStyle.color }]}>
                               {event.title}
                             </Text>
                           </View>
                         )
                       })}
                       {overflow > 0 && (
-                        <Text style={styles.moreText}>+{overflow} más</Text>
+                        <Text style={styles.moreText}>+{overflow}</Text>
                       )}
                     </View>
                   )
@@ -438,71 +454,78 @@ export function CalendarPdfDocument({ currentMonth, events, filters }: Props) {
             </View>
           )
         })}
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Iglesia Adventista del Séptimo Día — Osorno Central</Text>
+          <Text style={styles.footerText}>Generado: {format(new Date(), "d 'de' MMM yyyy, HH:mm", { locale: es })}</Text>
+        </View>
       </Page>
 
-      {/* Página 2: Listado completo (solo si hay overflow o multi-day events) */}
-      {(hasOverflow || multiDayEvents.length > 0) && (
+      {/* Página 2: Listado completo */}
+      {(hasOverflow || multiDayEvents.length > 0 || events.length > 0) && (
         <Page size="LETTER" style={styles.page}>
           <View style={styles.header}>
-            <View style={styles.headerText}>
-              <Text style={styles.listingTitle}>Listado completo — {monthName}</Text>
-              <Text style={styles.filtersLine}>{filtersLine}</Text>
+            <Image src={logoFull} style={styles.logo} />
+            <View style={styles.headerLeft}>
+              <View style={styles.headerTopRow}>
+                <Text style={styles.churchName}>Iglesia Adventista del Séptimo Día — Osorno Central</Text>
+                <Text style={styles.listingTitle}>Listado completo</Text>
+              </View>
+              {filtersLine !== 'Sin filtros activos' && (
+                <Text style={styles.filtersLine}>{filtersLine}</Text>
+              )}
             </View>
           </View>
+          <View style={styles.goldBar} />
 
-          <View>
-            <View style={[styles.listingRow, { backgroundColor: '#F9FAFB' }]}>
-              <Text style={[styles.listingDate, { color: TEXT_MUTED }]}>FECHA</Text>
-              <Text style={[styles.listingTime, { color: TEXT_MUTED }]}>HORA</Text>
-              <Text style={[styles.listingTitleCell, { color: TEXT_MUTED, fontFamily: 'Helvetica-Bold' }]}>
-                EVENTO
-              </Text>
-              <Text style={[styles.listingDept, { color: TEXT_MUTED, fontFamily: 'Helvetica-Bold' }]}>
-                DEPARTAMENTO / TIPO
-              </Text>
-            </View>
-            {sortedEvents.map((event) => {
-              const start = new Date(event.startDate)
-              const end = new Date(event.endDate)
-              const sameDay =
-                start.getFullYear() === end.getFullYear() &&
-                start.getMonth() === end.getMonth() &&
-                start.getDate() === end.getDate()
-              const dateText = sameDay
-                ? format(start, "EEE d 'de' MMM", { locale: es })
-                : `${format(start, 'd MMM', { locale: es })} – ${format(end, 'd MMM', { locale: es })}`
-              const timeText = sameDay
-                ? `${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`
-                : ''
-              const colors = TYPE_COLORS[event.eventType] ?? TYPE_COLORS.local
-              const deptColors = getDeptColors(event.departmentName)
-              const deptLabel = getDeptLabel(event.departmentName)
-              const typeLabel = EVENT_TYPE_LABELS[event.eventType as keyof typeof EVENT_TYPE_LABELS] ?? event.eventType
-              return (
-                <View key={event.id} style={styles.listingRow}>
-                  <Text style={styles.listingDate}>{dateText}</Text>
-                  <Text style={styles.listingTime}>{timeText}</Text>
-                  <View style={styles.listingTitleCell}>
-                    <Text>{event.title}</Text>
-                    {event.location && (
-                      <Text style={{ fontSize: 6.5, color: TEXT_MUTED, marginTop: 1 }}>
-                        {event.location}
-                      </Text>
-                    )}
-                  </View>
-                  <View style={styles.listingDept}>
-                    {deptLabel && (
-                      <Text style={[styles.badge, { backgroundColor: deptColors.bg, color: deptColors.text }]}>
-                        {deptLabel}
-                      </Text>
-                    )}
-                    <Text style={[styles.badge, { backgroundColor: colors.bg, color: colors.text, marginTop: 1 }]}>
-                      {typeLabel}
+          <View style={styles.listingHeader}>
+            <Text style={[styles.listingDate, { color: WHITE }]}>FECHA</Text>
+            <Text style={[styles.listingTime, { color: WHITE }]}>HORA</Text>
+            <Text style={[styles.listingTitleCell, { color: WHITE, fontFamily: 'Helvetica-Bold' }]}>EVENTO</Text>
+            <Text style={[styles.listingDept, { color: WHITE, fontFamily: 'Helvetica-Bold' }]}>DEPARTAMENTO / TIPO</Text>
+          </View>
+
+          {sortedEvents.map((event) => {
+            const start = new Date(event.startDate)
+            const end = new Date(event.endDate)
+            const typeStyle = EVENT_TYPE_STYLE[event.eventType] ?? EVENT_TYPE_STYLE.local
+            const statusCfg = event.status !== 'published' ? STATUS_COLORS[event.status] : null
+            return (
+              <View key={event.id} style={styles.listingRow}>
+                <Text style={styles.listingDate}>{formatDateRange(start, end)}</Text>
+                <Text style={styles.listingTime}>{event.location ?? '—'}</Text>
+                <View style={styles.listingTitleCell}>
+                  <Text style={{ fontFamily: 'Helvetica-Bold' }}>{event.title}</Text>
+                  {event.organizers && event.organizers.length > 0 && (
+                    <Text style={{ fontSize: 6.5, color: TEXT_MUTED, marginTop: 1 }}>
+                      {event.organizers.map((o) => o.name).join(', ')}
                     </Text>
-                  </View>
+                  )}
                 </View>
-              )
-            })}
+                <View style={styles.listingDept}>
+                  {event.departmentName && (
+                    <View style={[styles.badge, { backgroundColor: `${event.departmentColor ?? typeStyle.dotColor}22`, color: event.departmentColor ?? typeStyle.color }]}>
+                      <Text style={{ color: event.departmentColor ?? typeStyle.color }}>
+                        {toInitials(event.departmentName)}
+                      </Text>
+                    </View>
+                  )}
+                  <View style={[styles.badge, { backgroundColor: typeStyle.backgroundColor, color: typeStyle.color }]}>
+                    <Text>{EVENT_TYPE_LABELS[event.eventType]}</Text>
+                  </View>
+                  {statusCfg && (
+                    <View style={[styles.badge, { backgroundColor: statusCfg.bg, color: statusCfg.text }]}>
+                      <Text>{statusCfg.text === '#92600A' ? 'Borrador' : 'Archivado'}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )
+          })}
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Iglesia Adventista del Séptimo Día — Osorno Central</Text>
+            <Text style={styles.footerText}>Generado: {format(new Date(), "d 'de' MMM yyyy, HH:mm", { locale: es })}</Text>
           </View>
         </Page>
       )}
