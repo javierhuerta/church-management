@@ -13,8 +13,7 @@ import { CalendarService } from '@/lib/api'
 import { useEventBySlug } from '../hooks/use-calendar'
 import { useAuthUser } from '../hooks/use-auth-user'
 import {
-  DEPARTMENT_LABELS,
-  EVENT_TYPE_COLORS,
+  EVENT_TYPE_STYLE,
   EVENT_TYPE_LABELS,
   isEditorRole,
 } from '../utils/labels'
@@ -73,7 +72,7 @@ export function EventDetailPage() {
     )
   }
 
-  const colors = EVENT_TYPE_COLORS[event.eventType]
+  const typeStyle = EVENT_TYPE_STYLE[event.eventType]
   const cover =
     !coverErrored && event.coverImageUrl
       ? event.coverImageUrl
@@ -191,13 +190,14 @@ export function EventDetailPage() {
       <div className="space-y-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span
-            className={`text-xs font-medium px-2 py-1 rounded-full ${colors.bg} ${colors.text}`}
+            className="text-xs font-medium px-2 py-1 rounded-full"
+              style={{ backgroundColor: typeStyle.backgroundColor, color: typeStyle.color }}
           >
             {EVENT_TYPE_LABELS[event.eventType]}
           </span>
           {event.departmentName && (
             <span className="text-xs font-medium px-2 py-1 rounded-full bg-muted text-muted-foreground">
-              {DEPARTMENT_LABELS[event.departmentName as keyof typeof DEPARTMENT_LABELS] ?? event.departmentName}
+              {event.departmentName}
             </span>
           )}
           {event.status === 'draft' && (

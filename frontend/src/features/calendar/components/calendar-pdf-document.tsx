@@ -2,7 +2,7 @@ import { Document, Page, View, Text, StyleSheet, Svg, Path, Circle } from '@reac
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import type { EventResponseDto } from '@/lib/api'
-import { DEPARTMENT_LABELS, EVENT_TYPE_LABELS } from '../utils/labels'
+import { EVENT_TYPE_LABELS } from '../utils/labels'
 
 const PURPLE = '#8B6CC8'
 const WHITE = '#FFFFFF'
@@ -270,7 +270,7 @@ function getDeptColors(name: string | null | undefined) {
 
 function getDeptLabel(name: string | null | undefined): string | null {
   if (!name) return null
-  return DEPARTMENT_LABELS[name as keyof typeof DEPARTMENT_LABELS] ?? name
+  return name
 }
 
 interface FiltersInfo {

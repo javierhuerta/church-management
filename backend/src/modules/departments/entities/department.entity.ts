@@ -7,6 +7,9 @@ export class Department extends BaseEntity {
   @Column({ unique: true })
   name: string;
 
+  @Column({ default: '#1B3A6B' })
+  color: string;
+
   @ManyToMany(() => User, (user) => user.departments)
   users: User[];
 }

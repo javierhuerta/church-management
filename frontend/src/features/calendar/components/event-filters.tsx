@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { EVENT_TYPE_LABELS, DEPARTMENT_LABELS } from '../utils/labels'
+import { EVENT_TYPE_LABELS } from '../utils/labels'
 import { DepartmentsService } from '@/lib/api'
 
 interface EventFiltersProps {
@@ -44,7 +44,7 @@ export function EventFilters({
   })
 
   function getDepartmentLabel(name: string): string {
-    return DEPARTMENT_LABELS[name as keyof typeof DEPARTMENT_LABELS] ?? name
+    return name
   }
 
   return (

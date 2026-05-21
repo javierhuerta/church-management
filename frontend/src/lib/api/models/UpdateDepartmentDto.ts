@@ -4,5 +4,6 @@
 /* eslint-disable */
 export type UpdateDepartmentDto = {
     name?: string;
+    color?: string;
 };
 

@@ -79,6 +79,11 @@ export class EventResponseDto {
 
   @ApiPropertyOptional({ type: String, nullable: true })
   @Expose()
+  @Transform(({ obj }) => (obj as Event).department?.color ?? null)
+  departmentColor: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  @Expose()
   meetingUrl: string | null;
 
   @ApiPropertyOptional({ enum: MeetingType, nullable: true })

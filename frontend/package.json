@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate:api": "openapi --input http://localhost:3000/api-json --output ./src/lib/api --client ts && git checkout -- src/lib/api/core/ src/lib/api/setup.ts src/lib/api/config.ts"
+    "generate:api": "openapi --input http://localhost:3000/api-json --output ./src/lib/api --client ts && git checkout -- src/lib/api/core/ src/lib/api/setup.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -14,6 +14,7 @@ export type EventResponseDto = {
     eventType: EventResponseDto.eventType;
     departmentId?: string | null;
     departmentName?: string | null;
+    departmentColor?: string | null;
     meetingUrl?: string | null;
     meetingType?: EventResponseDto.meetingType | null;
     location?: string | null;

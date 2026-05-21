@@ -10,8 +10,9 @@ export class DirectorSummaryDto {
 export class DepartmentResponseDto {
   @ApiProperty() @Expose() id: string;
   @ApiProperty() @Expose() name: string;
+  @ApiProperty({ type: String }) @Expose() color: string;
   @ApiProperty() @Expose() createdAt: Date;
-  @ApiPropertyOptional({ nullable: true }) @Expose() updatedAt: Date | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) @Expose() updatedAt: Date | null;
 }
 
 export class DepartmentWithDirectorsDto extends DepartmentResponseDto {
@@ -19,11 +20,7 @@ export class DepartmentWithDirectorsDto extends DepartmentResponseDto {
   @Expose()
   @Transform(({ obj }) =>
     ((obj as { directors?: DirectorSummaryDto[] }).directors ?? []).map(
-      (d) => ({
-        id: d.id,
-        name: d.name,
-        email: d.email,
-      }),
+      (d) => ({ id: d.id, name: d.name, email: d.email }),
     ),
   )
   directors: DirectorSummaryDto[];

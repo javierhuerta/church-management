@@ -1,18 +1,38 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Users } from 'lucide-react'
+import { ArrowLeft, Check, Users } from 'lucide-react'
 import { DepartmentsService } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 
+// Brand-aligned palette for department colors
+const DEPT_COLOR_PALETTE = [
+  '#1B3A6B', // navy (primary)
+  '#C9A84C', // gold (accent)
+  '#0F766E', // teal
+  '#7C3AED', // violet
+  '#DC2626', // red
+  '#EA580C', // orange
+  '#CA8A04', // amber
+  '#16A34A', // green
+  '#0891B2', // cyan
+  '#2563EB', // blue
+  '#9333EA', // purple
+  '#DB2777', // pink
+  '#475569', // slate
+  '#92400E', // brown
+  '#064E3B', // emerald dark
+]
+
 const formSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Color inválido'),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -39,15 +59,21 @@ export function DepartmentFormPage() {
   const {
     register,
     handleSubmit,
+    control,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    values: existingDept ? { name: existingDept.name } : { name: '' },
+    values: existingDept
+      ? { name: existingDept.name, color: existingDept.color ?? '#1B3A6B' }
+      : { name: '', color: '#1B3A6B' },
   })
+
+  const selectedColor = watch('color')
 
   const createMutation = useMutation({
     mutationFn: (data: FormValues) =>
-      DepartmentsService.departmentsControllerCreate({ name: data.name }),
+      DepartmentsService.departmentsControllerCreate({ name: data.name, color: data.color }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] })
       toast.success('Departamento creado')
@@ -60,7 +86,7 @@ export function DepartmentFormPage() {
 
   const updateMutation = useMutation({
     mutationFn: (data: FormValues) =>
-      DepartmentsService.departmentsControllerUpdate(id!, { name: data.name }),
+      DepartmentsService.departmentsControllerUpdate(id!, { name: data.name, color: data.color }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] })
       queryClient.invalidateQueries({ queryKey: ['departments', id] })
@@ -100,7 +126,7 @@ export function DepartmentFormPage() {
         </h2>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 bg-card rounded-xl border border-border p-6">
+      <form onSubmit={handleSubmit(onSubmit as Parameters<typeof handleSubmit>[0])} className="space-y-5 bg-card rounded-xl border border-border p-6">
         {serverError && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {serverError}
@@ -113,6 +139,53 @@ export function DepartmentFormPage() {
           {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
         </div>
 
+        <div className="space-y-2">
+          <Label>Color</Label>
+          <Controller
+            name="color"
+            control={control}
+            render={({ field }) => (
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  {DEPT_COLOR_PALETTE.map((hex) => (
+                    <button
+                      key={hex}
+                      type="button"
+                      onClick={() => field.onChange(hex)}
+                      className="h-7 w-7 rounded-full border-2 transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
+                      style={{
+                        backgroundColor: hex,
+                        borderColor: field.value === hex ? '#fff' : 'transparent',
+                        boxShadow: field.value === hex ? `0 0 0 2px ${hex}` : undefined,
+                      }}
+                      title={hex}
+                    >
+                      {field.value === hex && (
+                        <Check className="h-3.5 w-3.5 mx-auto" style={{ color: '#fff' }} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                {/* Preview + manual hex input */}
+                <div className="flex items-center gap-2">
+                  <div
+                    className="h-7 w-7 rounded-full border border-border shrink-0"
+                    style={{ backgroundColor: field.value }}
+                  />
+                  <Input
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    placeholder="#1B3A6B"
+                    className="font-mono text-xs h-8 w-32"
+                    maxLength={7}
+                  />
+                  {errors.color && <p className="text-xs text-red-500">{errors.color.message}</p>}
+                </div>
+              </div>
+            )}
+          />
+        </div>
+
         <div className="flex justify-end gap-2 pt-2 border-t border-border">
           <Button
             type="button"
@@ -121,7 +194,7 @@ export function DepartmentFormPage() {
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} style={{ backgroundColor: selectedColor }}>
             {isSubmitting ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear departamento'}
           </Button>
         </div>

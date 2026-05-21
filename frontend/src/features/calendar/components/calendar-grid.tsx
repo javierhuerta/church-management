@@ -11,10 +11,9 @@ import {
 } from '@/components/ui/popover'
 import { EventCard } from './event-card'
 import {
-  EVENT_TYPE_COLORS,
+  EVENT_TYPE_STYLE,
   EVENT_TYPE_LABELS,
-  DEPARTMENT_LABELS,
-  getDepartmentColors,
+  getDepartmentStyle,
 } from '../utils/labels'
 
 const BAND_BG_COLORS: Record<string, string> = {
@@ -125,12 +124,10 @@ function buildBandsForWeek(multiDayEvents: EventResponseDto[], weekDays: Date[])
 
 function MultiDayBand({ band }: { band: MultiDayBand }) {
   const event = band.event
-  const typeColors = EVENT_TYPE_COLORS[event.eventType]
+  const typeStyle = EVENT_TYPE_STYLE[event.eventType]
   const bandColors = BAND_BG_COLORS[event.eventType] ?? BAND_BG_COLORS.local
-  const deptColors = event.departmentName ? getDepartmentColors(event.departmentName) : null
-  const deptLabel = event.departmentName
-    ? (DEPARTMENT_LABELS[event.departmentName as keyof typeof DEPARTMENT_LABELS] ?? event.departmentName)
-    : null
+  const deptStyle = event.departmentName ? getDepartmentStyle(event.departmentName, event.departmentColor) : null
+  const deptLabel = event.departmentName ?? null
 
   const [open, setOpen] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -179,7 +176,7 @@ function MultiDayBand({ band }: { band: MultiDayBand }) {
         >
           <div className="p-4 space-y-3">
             <div className="flex items-start gap-2">
-              <span className={`mt-1 h-2.5 w-2.5 rounded-full flex-shrink-0 ${typeColors.dot}`} />
+              <span className="mt-1 h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: typeStyle.dotColor }} />
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-muted-foreground leading-tight">
                   {event.title}
@@ -228,11 +225,11 @@ function MultiDayBand({ band }: { band: MultiDayBand }) {
             </div>
 
             <div className="flex flex-wrap gap-1.5 pt-1 border-t border-border">
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${typeColors.bg} ${typeColors.text}`}>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: typeStyle.backgroundColor, color: typeStyle.color }}>
                 {EVENT_TYPE_LABELS[event.eventType]}
               </span>
-              {deptLabel && deptColors && (
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${deptColors.bg} ${deptColors.text} flex items-center gap-1`}>
+              {deptLabel && deptStyle && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-medium flex items-center gap-1" style={{ backgroundColor: deptStyle.backgroundColor, color: deptStyle.color }}>
                   <Building2 className="h-2.5 w-2.5" />
                   {deptLabel}
                 </span>

@@ -32,7 +32,6 @@ import { DepartmentCombobox } from './department-combobox'
 import type { OrganizerEntry } from './organizer-chip'
 import { useCoverUpload } from '../hooks/use-cover-upload'
 import {
-  DEPARTMENT_LABELS,
   EVENT_TYPE_LABELS,
   MEETING_TYPE_LABELS,
 } from '../utils/labels'
@@ -125,7 +124,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
         id: d.id,
         name: d.name,
         label:
-          DEPARTMENT_LABELS[d.name as keyof typeof DEPARTMENT_LABELS] ?? d.name,
+          d.name,
       })),
     [departments],
   )

@@ -5,7 +5,8 @@
 export type DepartmentResponseDto = {
     id: string;
     name: string;
+    color: string;
     createdAt: string;
-    updatedAt?: Record<string, any> | null;
+    updatedAt?: string | null;
 };
 

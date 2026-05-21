@@ -5,7 +5,6 @@ import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { DepartmentsService } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { DEPARTMENT_LABELS } from '@/features/calendar/utils/labels'
 import { toast } from 'sonner'
 
 export function DepartmentsListPage() {
@@ -31,7 +30,7 @@ export function DepartmentsListPage() {
   })
 
   function getDeptDisplayName(name: string): string {
-    return DEPARTMENT_LABELS[name as keyof typeof DEPARTMENT_LABELS] ?? name
+    return name
   }
 
   return (

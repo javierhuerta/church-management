@@ -122,8 +122,9 @@ export function Sidebar() {
       <div className={`border-b border-border bg-card ${isCollapsed ? 'p-3 flex justify-center' : 'px-4 py-5'}`}>
         {isCollapsed ? (
           <button
-            onClick={() => navigate('/')}
+            onClick={() => isSmallScreen ? setIsCollapsed(false) : navigate('/')}
             className="h-10 w-10 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
+            aria-label={isSmallScreen ? 'Expandir menú' : 'Ir al inicio'}
           >
             <img src={logoMark} alt="Logo" className="h-9 w-auto" style={{ filter: logoFilter }} />
           </button>
