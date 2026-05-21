@@ -6,6 +6,7 @@ import {
   EVENT_TYPE_LABELS,
   getDepartmentStyle,
 } from '../utils/labels'
+import defaultCover from '@/assets/images/default-cover.jpg'
 
 interface EventCardProps {
   event: EventResponseDto
@@ -84,7 +85,17 @@ export function EventCard({ event, compact = false }: EventCardProps) {
     >
       {/* Cover area */}
       <div className="relative overflow-hidden" style={hasCover ? undefined : { backgroundImage: TYPE_BG[event.eventType] ?? TYPE_BG.local }}>
-        {/* Image at reduced opacity so card bg shows through and text stays readable */}
+        {/* Default cover image when no custom cover */}
+        {!hasCover && (
+          <img
+            src={defaultCover}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: 0.12 }}
+          />
+        )}
+        {/* Custom cover image */}
         {hasCover && (
           <img
             src={coverUrl}

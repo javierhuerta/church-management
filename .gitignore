@@ -52,3 +52,6 @@ Thumbs.db
 # OpenSpec (local dev artifacts)
 .openspec/
 .claude/
+
+# Uploads generados en runtime
+backend/uploads/

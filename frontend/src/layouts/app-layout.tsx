@@ -2,11 +2,13 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from '@/components/layout/sidebar'
 import { useTextSize } from '@/lib/contexts/text-size-context'
 import { SidebarProvider, useSidebar } from '@/lib/contexts/sidebar-context'
-import { Menu } from 'lucide-react'
+import { useSessionExpiry } from '@/lib/hooks/use-session-expiry'
+import { Menu, Timer } from 'lucide-react'
 
 function AppLayoutInner() {
   const { textSizeClass } = useTextSize()
   const { isOpen, isSmallScreen, open, close } = useSidebar()
+  const session = useSessionExpiry()
 
   return (
     <div className={`flex h-screen ${textSizeClass}`}>
@@ -54,7 +56,10 @@ function AppLayoutInner() {
           <div className="px-6 flex items-center justify-between gap-4 text-xs text-muted-foreground">
             <span className="hidden sm:inline">Iglesia Adventista del Séptimo Día — Osorno Central</span>
             <span className="sm:hidden">I.A. Osorno Central</span>
-            <span>© 2026 — Gestión Eclesiástica</span>
+            <span className={`flex items-center gap-1 ${session.warning ? 'text-destructive font-medium' : ''}`}>
+              <Timer className="h-3 w-3 shrink-0" />
+              Sesión: {session.label}
+            </span>
           </div>
         </footer>
       </div>

@@ -12,7 +12,7 @@ export function defaultCoverForType(type: EventType): string {
       return `https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?${UNSPLASH_PARAMS}`;
     case EventType.Local:
     default:
-      // Church interior / sanctuary
-      return `https://images.unsplash.com/photo-1438232992991-995b7058bbb3?${UNSPLASH_PARAMS}`;
+      // Bible open in hands
+      return `https://images.unsplash.com/photo-1504052434569-70ad5836ab65?${UNSPLASH_PARAMS}`;
   }
 }
