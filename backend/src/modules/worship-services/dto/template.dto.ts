@@ -63,12 +63,17 @@ export class CreateTemplateDto {
   @IsString()
   name: string;
 
-  @ApiPropertyOptional({ example: 'Plantilla estándar para el culto del sábado' })
+  @ApiPropertyOptional({
+    example: 'Plantilla estándar para el culto del sábado',
+  })
   @IsOptional()
   @IsString()
   description?: string;
 
-  @ApiProperty({ enum: ServiceTemplateType, example: ServiceTemplateType.CULTO_SABATICO })
+  @ApiProperty({
+    enum: ServiceTemplateType,
+    example: ServiceTemplateType.CULTO_SABATICO,
+  })
   @IsEnum(ServiceTemplateType)
   type: ServiceTemplateType;
 

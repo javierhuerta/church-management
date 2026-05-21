@@ -120,7 +120,10 @@ export class ProgramLogResponseDto {
   @ApiProperty({ type: () => UserResponseDto })
   user: UserResponseDto;
 
-  @ApiPropertyOptional({ type: () => ProgramSectionResponseDto, nullable: true })
+  @ApiPropertyOptional({
+    type: () => ProgramSectionResponseDto,
+    nullable: true,
+  })
   section: ProgramSectionResponseDto | null;
 }
 

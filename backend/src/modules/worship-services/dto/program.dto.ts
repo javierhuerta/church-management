@@ -1,5 +1,12 @@
 import { Type } from 'class-transformer';
-import { IsString, IsOptional, IsNumber, IsUUID, IsEnum, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsUUID,
+  IsEnum,
+  IsArray,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProgramStatus } from '../entities/service-template-type.enum';
 
@@ -14,7 +21,9 @@ export class GetProgramsFilterDto {
   @IsUUID()
   templateId?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by event date from (YYYY-MM-DD)' })
+  @ApiPropertyOptional({
+    description: 'Filter by event date from (YYYY-MM-DD)',
+  })
   @IsOptional()
   @IsString()
   dateFrom?: string;
@@ -56,7 +65,10 @@ export class UpdateSectionDto {
   @IsString()
   hymnText?: string | null;
 
-  @ApiPropertyOptional({ example: 'Especial: ofrenda de cosecha', nullable: true })
+  @ApiPropertyOptional({
+    example: 'Especial: ofrenda de cosecha',
+    nullable: true,
+  })
   @IsOptional()
   @IsString()
   notes?: string | null;

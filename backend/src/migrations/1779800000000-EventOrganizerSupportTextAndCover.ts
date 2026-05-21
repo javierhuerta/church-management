@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class EventOrganizerSupportTextAndCover1779800000000
-  implements MigrationInterface
-{
+export class EventOrganizerSupportTextAndCover1779800000000 implements MigrationInterface {
   name = 'EventOrganizerSupportTextAndCover1779800000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

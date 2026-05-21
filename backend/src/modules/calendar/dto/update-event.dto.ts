@@ -49,7 +49,11 @@ export class UpdateEventDto {
   @IsEnum(EventStatus)
   status?: EventStatus;
 
-  @ApiPropertyOptional({ type: String, nullable: true, description: 'Department ID (UUID)' })
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description: 'Department ID (UUID)',
+  })
   @IsOptional()
   @IsUUID('4')
   departmentId?: string | null;
@@ -64,7 +68,10 @@ export class UpdateEventDto {
   @IsEnum(MeetingType)
   meetingType?: MeetingType | null;
 
-  @ApiPropertyOptional({ type: String, example: 'Iglesia Adventista Osorno Central' })
+  @ApiPropertyOptional({
+    type: String,
+    example: 'Iglesia Adventista Osorno Central',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(300)

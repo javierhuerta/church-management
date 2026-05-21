@@ -32,7 +32,10 @@ export class UpdateUserDto {
   @IsEnum(UserRole)
   role?: UserRole;
 
-  @ApiPropertyOptional({ type: [String], description: 'Department IDs where user is director' })
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Department IDs where user is director',
+  })
   @IsOptional()
   @IsArray()
   @IsUUID('4', { each: true })

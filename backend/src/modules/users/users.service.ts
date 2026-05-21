@@ -36,7 +36,9 @@ export class UsersService {
   }
 
   async create(dto: CreateUserDto): Promise<UserResponseDto> {
-    const existing = await this.userRepo.findOne({ where: { email: dto.email } });
+    const existing = await this.userRepo.findOne({
+      where: { email: dto.email },
+    });
     if (existing) {
       throw new ConflictException('Email already in use');
     }
@@ -62,7 +64,9 @@ export class UsersService {
     const user = await this.loadOne(id);
 
     if (dto.email && dto.email !== user.email) {
-      const existing = await this.userRepo.findOne({ where: { email: dto.email } });
+      const existing = await this.userRepo.findOne({
+        where: { email: dto.email },
+      });
       if (existing) {
         throw new ConflictException('Email already in use');
       }
@@ -77,7 +81,9 @@ export class UsersService {
 
     if (dto.departmentIds !== undefined) {
       user.departments = dto.departmentIds.length
-        ? await this.departmentRepo.find({ where: { id: In(dto.departmentIds) } })
+        ? await this.departmentRepo.find({
+            where: { id: In(dto.departmentIds) },
+          })
         : [];
     }
 
@@ -91,7 +97,7 @@ export class UsersService {
     // Block deletion if user has created worship programs
     const programCount = await this.userRepo.manager
       .getRepository('service_programs')
-      .count({ where: { createdById: id } } as Record<string, unknown>);
+      .count({ where: { createdById: id } });
 
     if (programCount > 0) {
       throw new BadRequestException(

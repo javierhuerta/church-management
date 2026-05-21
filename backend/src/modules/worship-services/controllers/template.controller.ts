@@ -46,7 +46,11 @@ export class TemplateController {
   @Get()
   @ApiOperation({ summary: 'List all service templates' })
   @ApiQuery({ name: 'type', required: false, enum: ServiceTemplateType })
-  @ApiResponse({ status: 200, description: 'List of templates', type: [ServiceTemplateResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'List of templates',
+    type: [ServiceTemplateResponseDto],
+  })
   async findAll(@Query('type') type?: ServiceTemplateType) {
     if (type) {
       return this.templateService.findByType(type);
@@ -56,7 +60,11 @@ export class TemplateController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get template by ID' })
-  @ApiResponse({ status: 200, description: 'Template details', type: ServiceTemplateResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Template details',
+    type: ServiceTemplateResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Template not found' })
   async findOne(@Param('id') id: string) {
     return this.templateService.findOne(id);
@@ -67,7 +75,10 @@ export class TemplateController {
   @ApiOperation({ summary: 'Create a new service template' })
   @ApiResponse({ status: 201, description: 'Template created' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  async create(@Body() dto: CreateTemplateDto, @Request() req: RequestWithUser) {
+  async create(
+    @Body() dto: CreateTemplateDto,
+    @Request() req: RequestWithUser,
+  ) {
     return this.templateService.create(dto, req.user.role as UserRole);
   }
 

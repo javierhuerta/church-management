@@ -110,7 +110,11 @@ export class TemplateSeeder implements Seeder {
               { name: 'Ofrenda', order: 8, duration: 10 },
               { name: 'Tema principal', order: 9, duration: 30 },
               { name: 'Oración de cierre', order: 10, duration: 10 },
-              { name: 'Invitación al próximo culto JA', order: 11, duration: 5 },
+              {
+                name: 'Invitación al próximo culto JA',
+                order: 11,
+                duration: 5,
+              },
             ],
           },
         ],

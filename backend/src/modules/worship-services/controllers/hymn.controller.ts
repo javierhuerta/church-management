@@ -14,7 +14,10 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { HymnService } from '../services/hymn.service';
-import { HymnResponseDto, HymnAutocompleteResponseDto } from '../dto/hymn-response.dto';
+import {
+  HymnResponseDto,
+  HymnAutocompleteResponseDto,
+} from '../dto/hymn-response.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
 @ApiTags('hymns')
@@ -31,7 +34,11 @@ export class HymnController {
     required: false,
     description: 'Search query (number or name)',
   })
-  @ApiResponse({ status: 200, description: 'List of hymns', type: [HymnResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'List of hymns',
+    type: [HymnResponseDto],
+  })
   async findAll(@Query('q') query?: string) {
     return this.hymnService.search(query || '');
   }
@@ -43,14 +50,22 @@ export class HymnController {
     required: true,
     description: 'Search query (min 1 char)',
   })
-  @ApiResponse({ status: 200, description: 'Autocomplete suggestions', type: [HymnAutocompleteResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Autocomplete suggestions',
+    type: [HymnAutocompleteResponseDto],
+  })
   async autocomplete(@Query('q') query: string) {
     return this.hymnService.autocomplete(query);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get hymn by ID' })
-  @ApiResponse({ status: 200, description: 'Hymn details', type: HymnResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Hymn details',
+    type: HymnResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Hymn not found' })
   async findOne(@Param('id') id: string) {
     const hymn = await this.hymnService.findOne(id);

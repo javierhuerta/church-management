@@ -40,7 +40,9 @@ export class DepartmentsService {
   async getDirectors(id: string): Promise<DirectorSummaryDto[]> {
     await this.loadOne(id);
 
-    const rows = await this.dataSource.query<{ id: string; name: string; email: string }[]>(
+    const rows = await this.dataSource.query<
+      { id: string; name: string; email: string }[]
+    >(
       `SELECT u.id, u.name, u.email
        FROM users u
        JOIN user_departments ud ON ud.user_id = u.id
@@ -52,7 +54,9 @@ export class DepartmentsService {
   }
 
   async create(dto: CreateDepartmentDto): Promise<DepartmentResponseDto> {
-    const existing = await this.departmentRepo.findOne({ where: { name: dto.name } });
+    const existing = await this.departmentRepo.findOne({
+      where: { name: dto.name },
+    });
     if (existing) {
       throw new ConflictException('Department name already exists');
     }
@@ -62,11 +66,16 @@ export class DepartmentsService {
     return this.toResponse(saved);
   }
 
-  async update(id: string, dto: UpdateDepartmentDto): Promise<DepartmentResponseDto> {
+  async update(
+    id: string,
+    dto: UpdateDepartmentDto,
+  ): Promise<DepartmentResponseDto> {
     const dept = await this.loadOne(id);
 
     if (dto.name && dto.name !== dept.name) {
-      const existing = await this.departmentRepo.findOne({ where: { name: dto.name } });
+      const existing = await this.departmentRepo.findOne({
+        where: { name: dto.name },
+      });
       if (existing) {
         throw new ConflictException('Department name already exists');
       }

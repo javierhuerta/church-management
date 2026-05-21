@@ -7,10 +7,7 @@ import { Department } from '../departments/entities/department.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User, Department]),
-    AuthModule,
-  ],
+  imports: [TypeOrmModule.forFeature([User, Department]), AuthModule],
   controllers: [UsersController],
   providers: [UsersService],
 })

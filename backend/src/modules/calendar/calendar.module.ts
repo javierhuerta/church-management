@@ -13,7 +13,13 @@ import { UnsplashProvider } from './providers/unsplash.provider';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Event, EventAttachment, EventOrganizer, User, Department]),
+    TypeOrmModule.forFeature([
+      Event,
+      EventAttachment,
+      EventOrganizer,
+      User,
+      Department,
+    ]),
     AuthModule,
   ],
   controllers: [CalendarController],

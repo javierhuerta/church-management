@@ -83,7 +83,10 @@ export class CalendarController {
   @Roles(...EDITOR_ROLES)
   @ApiOperation({ summary: 'Search cover image suggestions (editor only)' })
   @ApiResponse({ status: 200, description: 'Suggestions retrieved' })
-  @ApiResponse({ status: 503, description: 'Cover image provider not configured' })
+  @ApiResponse({
+    status: 503,
+    description: 'Cover image provider not configured',
+  })
   async coverSuggestions(
     @Query('query') query?: string,
     @Query('page') page?: string,
@@ -136,7 +139,11 @@ export class CalendarController {
   @ApiOperation({
     summary: 'Get event by share slug (public for published events)',
   })
-  @ApiResponse({ status: 200, description: 'Event not found', type: EventResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Event not found',
+    type: EventResponseDto,
+  })
   findBySlug(
     @Param('slug') slug: string,
     @Request() req: RequestWithUser,
@@ -147,7 +154,11 @@ export class CalendarController {
   @Get(':id')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: 'Get event by ID (public for published events)' })
-  @ApiResponse({ status: 200, description: 'Event not found', type: EventResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Event not found',
+    type: EventResponseDto,
+  })
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: RequestWithUser,
@@ -272,12 +283,10 @@ export class CalendarController {
     if (!file) {
       throw new BadRequestException('Imagen requerida');
     }
-    return this.calendarService.replaceCover(
-      id,
-      file,
-      viewerFromReq(req),
-      { sourceAuthor, sourceUrl },
-    );
+    return this.calendarService.replaceCover(id, file, viewerFromReq(req), {
+      sourceAuthor,
+      sourceUrl,
+    });
   }
 
   @Patch(':id/attachments/:attachmentId/cover')

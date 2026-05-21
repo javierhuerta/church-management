@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class DepartmentEntityAndUserDepartments1779700000000
-  implements MigrationInterface
-{
+export class DepartmentEntityAndUserDepartments1779700000000 implements MigrationInterface {
   name = 'DepartmentEntityAndUserDepartments1779700000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -32,10 +30,14 @@ export class DepartmentEntityAndUserDepartments1779700000000
     `);
 
     // 4. Drop old department enum column
-    await queryRunner.query(`ALTER TABLE "events" DROP COLUMN IF EXISTS "department"`);
+    await queryRunner.query(
+      `ALTER TABLE "events" DROP COLUMN IF EXISTS "department"`,
+    );
 
     // 5. Drop the enum type if it exists
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."events_department_enum"`);
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."events_department_enum"`,
+    );
 
     // 6. Create user_departments join table
     await queryRunner.query(`
@@ -62,8 +64,12 @@ export class DepartmentEntityAndUserDepartments1779700000000
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP TABLE IF EXISTS "user_departments"`);
-    await queryRunner.query(`ALTER TABLE "events" DROP CONSTRAINT IF EXISTS "FK_events_department"`);
-    await queryRunner.query(`ALTER TABLE "events" DROP COLUMN IF EXISTS "department_id"`);
+    await queryRunner.query(
+      `ALTER TABLE "events" DROP CONSTRAINT IF EXISTS "FK_events_department"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "events" DROP COLUMN IF EXISTS "department_id"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "departments"`);
   }
 }

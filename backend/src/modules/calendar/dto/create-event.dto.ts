@@ -54,7 +54,10 @@ export class CreateEventDto {
   @IsEnum(MeetingType)
   meetingType?: MeetingType;
 
-  @ApiPropertyOptional({ type: String, example: 'Iglesia Adventista Osorno Central' })
+  @ApiPropertyOptional({
+    type: String,
+    example: 'Iglesia Adventista Osorno Central',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(300)
