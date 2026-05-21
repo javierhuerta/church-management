@@ -11,5 +11,8 @@ const ds = new DataSource({
 } as any);
 
 ds.initialize()
-  .then(() => { console.log('ok - entities loaded in SQLite'); return ds.destroy(); })
+  .then(() => {
+    console.log('ok - entities loaded in SQLite');
+    return ds.destroy();
+  })
   .catch((e: Error) => console.error('ERR:', e.message));

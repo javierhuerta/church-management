@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
   Request,
 } from '@nestjs/common';
 import {
@@ -17,6 +18,7 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
+import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
 import { TemplateCrudService } from '../services/template-crud.service';
 import { CreateTemplateDto, UpdateTemplateDto } from '../dto/template.dto';
 import { ServiceTemplateResponseDto } from '../dto/template-response.dto';
@@ -34,6 +36,9 @@ export class TemplateController {
   constructor(private readonly templateService: TemplateCrudService) {}
 
   @Get()
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('templates:all')
+  @CacheTTL(300000) // 5 minutes
   @ApiOperation({ summary: 'List all service templates' })
   @ApiQuery({ name: 'type', required: false, enum: ServiceTemplateType })
   @ApiResponse({
@@ -49,6 +54,8 @@ export class TemplateController {
   }
 
   @Get(':id')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(300000) // 5 minutes — keyed by URL (/templates/:id)
   @ApiOperation({ summary: 'Get template by ID' })
   @ApiResponse({
     status: 200,

@@ -4,6 +4,7 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -13,6 +14,7 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
+import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
 import { HymnService } from '../services/hymn.service';
 import {
   HymnResponseDto,
@@ -29,6 +31,9 @@ export class HymnController {
   constructor(private readonly hymnService: HymnService) {}
 
   @Get()
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('hymns:all')
+  @CacheTTL(300000) // 5 minutes — stable catalogue
   @ApiOperation({ summary: 'List all hymns or search by number/name' })
   @ApiQuery({
     name: 'q',
@@ -45,6 +50,8 @@ export class HymnController {
   }
 
   @Get('autocomplete')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(60000) // 1 minute — keyed by URL (includes ?q=)
   @ApiOperation({ summary: 'Autocomplete hymns by number or name' })
   @ApiQuery({
     name: 'q',

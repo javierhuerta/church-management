@@ -73,6 +73,10 @@ describe('TemplateCrudService', () => {
           provide: getRepositoryToken(ServiceTemplateSection),
           useValue: sectionRepo,
         },
+        {
+          provide: 'CACHE_MANAGER',
+          useValue: { del: jest.fn(), get: jest.fn(), set: jest.fn() },
+        },
       ],
     }).compile();
 

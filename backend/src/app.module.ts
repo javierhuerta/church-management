@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { CacheModule } from '@nestjs/cache-manager';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import * as Joi from 'joi';
@@ -74,6 +75,8 @@ const ENTITIES = [
         UPLOAD_MAX_BYTES: Joi.number().optional(),
         COVER_MAX_BYTES: Joi.number().optional(),
         MAX_ATTACHMENTS_PER_EVENT: Joi.number().optional(),
+        CACHE_TTL_DEFAULT: Joi.number().default(60000),
+        CACHE_MAX: Joi.number().default(500),
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -99,6 +102,14 @@ const ENTITIES = [
             limit: config.get<number>('THROTTLE_LIMIT', 100),
           },
         ],
+      }),
+    }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        ttl: config.get<number>('CACHE_TTL_DEFAULT', 60000),
+        max: config.get<number>('CACHE_MAX', 500),
       }),
     }),
     ServeStaticModule.forRoot({

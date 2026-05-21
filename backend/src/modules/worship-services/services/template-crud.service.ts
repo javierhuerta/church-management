@@ -2,9 +2,12 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import {
   ServiceTemplate,
   ServiceTemplateGroup,
@@ -24,6 +27,8 @@ export class TemplateCrudService {
     private readonly groupRepo: Repository<ServiceTemplateGroup>,
     @InjectRepository(ServiceTemplateSection)
     private readonly sectionRepo: Repository<ServiceTemplateSection>,
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
   ) {}
 
   async findAll(): Promise<ServiceTemplate[]> {
@@ -113,7 +118,17 @@ export class TemplateCrudService {
       }
     }
 
-    return this.findOne(savedTemplate.id);
+    const result = await this.findOne(savedTemplate.id);
+    await this.invalidateTemplateCache();
+    return result;
+  }
+
+  private async invalidateTemplateCache(id?: string): Promise<void> {
+    await this.cacheManager.del('templates:all');
+    if (id) {
+      // CacheInterceptor keys the response by the full URL path
+      await this.cacheManager.del(`/api/worship-services/templates/${id}`);
+    }
   }
 
   async update(
@@ -180,7 +195,9 @@ export class TemplateCrudService {
       }
     }
 
-    return this.findOne(id);
+    const updated = await this.findOne(id);
+    await this.invalidateTemplateCache(id);
+    return updated;
   }
 
   async delete(id: string, userRole: UserRole): Promise<void> {
@@ -192,6 +209,7 @@ export class TemplateCrudService {
 
     await this.findOne(id);
     await this.templateRepo.delete(id);
+    await this.invalidateTemplateCache(id);
   }
 
   private canManageTemplates(role: UserRole): boolean {
