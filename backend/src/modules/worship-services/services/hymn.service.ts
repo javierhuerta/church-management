@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Hymn } from '../entities';
 
 @Injectable()
@@ -37,10 +37,14 @@ export class HymnService {
       });
     }
 
-    return this.hymnRepo.find({
-      where: { name: Like(`%${query}%`), isActive: true },
-      order: { number: 'ASC' },
-    });
+    return this.hymnRepo
+      .createQueryBuilder('hymn')
+      .where('hymn.isActive = :isActive', { isActive: true })
+      .andWhere('unaccent(lower(hymn.name)) LIKE unaccent(lower(:query))', {
+        query: `%${query}%`,
+      })
+      .orderBy('hymn.number', 'ASC')
+      .getMany();
   }
 
   async autocomplete(
@@ -51,22 +55,25 @@ export class HymnService {
     }
 
     const numericQuery = parseInt(query, 10);
-    let results: Hymn[];
 
     if (!isNaN(numericQuery)) {
-      results = await this.hymnRepo.find({
+      const results = await this.hymnRepo.find({
         where: { number: numericQuery, isActive: true },
         order: { number: 'ASC' },
         take: 10,
       });
-    } else {
-      results = await this.hymnRepo.find({
-        where: { name: Like(`%${query}%`), isActive: true },
-        order: { number: 'ASC' },
-        take: 10,
-      });
+      return results.map((h) => ({ number: h.number, name: h.name }));
     }
 
-    return results.map((h) => ({ number: h.number, name: h.name }));
+    return this.hymnRepo
+      .createQueryBuilder('hymn')
+      .where('hymn.isActive = :isActive', { isActive: true })
+      .andWhere('unaccent(lower(hymn.name)) LIKE unaccent(lower(:query))', {
+        query: `%${query}%`,
+      })
+      .orderBy('hymn.number', 'ASC')
+      .take(10)
+      .getMany()
+      .then((results) => results.map((h) => ({ number: h.number, name: h.name })));
   }
 }
