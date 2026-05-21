@@ -14,6 +14,7 @@ import {
   DataSource,
   EntityManager,
 } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
 import { unlink, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { randomBytes } from 'crypto';
@@ -34,7 +35,6 @@ import {
 import { PaginatedResponseDto } from '../common/dto/pagination.dto';
 import { UserRole } from '../common/entities/user-role.enum';
 import { EventStatus } from './entities/event-status.enum';
-import { EventType } from './entities/event-type.enum';
 import { MeetingType } from './entities/meeting-type.enum';
 import { MAX_ATTACHMENTS_PER_EVENT, UPLOAD_DIR } from './config/upload.config';
 
@@ -521,87 +521,14 @@ export class CalendarService {
   }
 
   private toResponse(event: Event): EventResponseDto {
-    const attachments = (event.attachments ?? []).map((a) =>
-      this.toAttachmentResponse(a),
-    );
-    const coverImage = attachments.find(
-      (a) => a.isCover && a.mimeType.startsWith('image/'),
-    );
-
-    const organizers: OrganizerResponseDto[] = (event.organizers ?? [])
-      .filter((o) => o.user || o.displayName)
-      .map((o) =>
-        o.user
-          ? {
-              id: o.id,
-              kind: 'user' as const,
-              userId: o.user.id,
-              name: o.user.name,
-              email: o.user.email,
-              role: o.user.role,
-            }
-          : {
-              id: o.id,
-              kind: 'text' as const,
-              userId: null,
-              name: o.displayName!,
-              email: null,
-              role: null,
-            },
-      );
-
-    return {
-      id: event.id,
-      title: event.title,
-      description: event.description,
-      startDate: event.startDate,
-      endDate: event.endDate,
-      status: event.status,
-      eventType: event.eventType,
-      departmentId: event.departmentId,
-      departmentName: event.department?.name ?? null,
-      meetingUrl: event.meetingUrl,
-      meetingType: event.meetingType,
-      location: event.location,
-      shareSlug: event.shareSlug,
-      creatorId: event.creatorId,
-      attachments,
-      organizers,
-      coverImageUrl: coverImage?.url ?? defaultCoverForType(event.eventType),
-      createdAt: event.createdAt,
-      updatedAt: event.updatedAt,
-    };
+    return plainToInstance(EventResponseDto, event, {
+      excludeExtraneousValues: true,
+    });
   }
 
   private toAttachmentResponse(a: EventAttachment): AttachmentResponseDto {
-    return {
-      id: a.id,
-      filename: a.filename,
-      originalName: a.originalName,
-      mimeType: a.mimeType,
-      size: a.size,
-      isCover: a.isCover,
-      url: a.url,
-      sourceAuthor: a.sourceAuthor ?? null,
-      sourceUrl: a.sourceUrl ?? null,
-      createdAt: a.createdAt,
-    };
-  }
-}
-
-const UNSPLASH_PARAMS = 'w=1600&h=900&fit=crop&q=80&auto=format';
-
-function defaultCoverForType(type: EventType): string {
-  switch (type) {
-    case EventType.Asach:
-      // Conference / gathering of people
-      return `https://images.unsplash.com/photo-1505373877841-8d25f7d46678?${UNSPLASH_PARAMS}`;
-    case EventType.Distrital:
-      // Outdoor camp / mountain retreat
-      return `https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?${UNSPLASH_PARAMS}`;
-    case EventType.Local:
-    default:
-      // Church interior / sanctuary
-      return `https://images.unsplash.com/photo-1438232992991-995b7058bbb3?${UNSPLASH_PARAMS}`;
+    return plainToInstance(AttachmentResponseDto, a, {
+      excludeExtraneousValues: true,
+    });
   }
 }

@@ -1,18 +1,21 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Expose, Type } from 'class-transformer';
 import { UserRole } from '../../common/entities/user-role.enum';
 
 export class DepartmentSummaryDto {
-  @ApiProperty() id: string;
-  @ApiProperty() name: string;
+  @ApiProperty() @Expose() id: string;
+  @ApiProperty() @Expose() name: string;
 }
 
 export class UserResponseDto {
-  @ApiProperty() id: string;
-  @ApiProperty() name: string;
-  @ApiProperty() email: string;
-  @ApiProperty({ enum: UserRole }) role: UserRole;
+  @ApiProperty() @Expose() id: string;
+  @ApiProperty() @Expose() name: string;
+  @ApiProperty() @Expose() email: string;
+  @ApiProperty({ enum: UserRole }) @Expose() role: UserRole;
   @ApiProperty({ type: [DepartmentSummaryDto] })
+  @Expose()
+  @Type(() => DepartmentSummaryDto)
   departments: DepartmentSummaryDto[];
-  @ApiProperty() createdAt: Date;
-  @ApiPropertyOptional({ nullable: true }) updatedAt: Date | null;
+  @ApiProperty() @Expose() createdAt: Date;
+  @ApiPropertyOptional({ nullable: true }) @Expose() updatedAt: Date | null;
 }

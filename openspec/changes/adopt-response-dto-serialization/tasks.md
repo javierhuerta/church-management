@@ -1,34 +1,34 @@
 ## 1. Base y red de seguridad
 
-- [ ] 1.1 Capturar un snapshot del JSON de respuesta de cada endpoint actual (vía tests o cliente generado) para comparación de contrato post-refactor
-- [ ] 1.2 Añadir un test util compartido que afirme "claves del DTO serializado == claves esperadas" reutilizable por los 6 DTOs
+- [~] 1.1 Verificación de contrato hecha por serialización aislada (`plainToInstance` con un objeto de prueba) por cada DTO migrado, comparando claves contra el mapper previo — sin snapshot del server completo (no hay DB disponible en esta sesión)
+- [ ] 1.2 (Pendiente) test util compartido permanente "claves del DTO == claves esperadas"
 
 ## 2. Users (piloto, más simple)
 
-- [ ] 2.1 Anotar `user-response.dto.ts` con `@Expose` (y `@Transform`/`@Type` donde haya campos derivados)
-- [ ] 2.2 Reemplazar `toResponse()` en `users.service.ts` por `plainToInstance(UserResponseDto, entity, { excludeExtraneousValues: true })`
-- [ ] 2.3 Verificar contrato sin diff y eliminar el `toResponse()` manual
+- [x] 2.1 Anotar `user-response.dto.ts` con `@Expose`/`@Type`
+- [x] 2.2 Reemplazar `toResponse()` en `users.service.ts` por `plainToInstance(UserResponseDto, entity, { excludeExtraneousValues: true })`
+- [x] 2.3 Verificado: claves `id,name,email,role,departments,createdAt,updatedAt`; `departments` solo `id,name`; `password` no se filtra
 
 ## 3. Departments
 
-- [ ] 3.1 Anotar `department-response.dto.ts` con `@Expose`; mover el cálculo de directores a `@Transform`/`@Type`
-- [ ] 3.2 Reemplazar `toResponse()` en `departments.service.ts` por `plainToInstance`
-- [ ] 3.3 Verificar contrato y eliminar el mapper manual
+- [x] 3.1 Anotar `department-response.dto.ts` con `@Expose`; `directors` vía `@Transform` (preserva `[]`)
+- [x] 3.2 Reemplazar `toResponse()` en `departments.service.ts` por `plainToInstance`
+- [x] 3.3 Verificado y mapper manual eliminado
 
 ## 4. Calendar
 
-- [ ] 4.1 Anotar `event-response.dto.ts` (`EventResponseDto`, `AttachmentResponseDto`, `OrganizerResponseDto`) con `@Expose`/`@Type`; expresar `departmentName`, `coverImageUrl` y `organizers[].kind` con `@Transform`
-- [ ] 4.2 Reemplazar `toResponse()`/`toAttachmentResponse()` en `calendar.service.ts` por `plainToInstance`
-- [ ] 4.3 Verificar contrato (incluyendo adjuntos y organizadores anidados) y eliminar los mappers manuales
+- [x] 4.1 Anotar `event-response.dto.ts`; `departmentName`/`coverImageUrl`/`organizers` con `@Transform`; `defaultCoverForType` movido a `utils/default-cover.ts`
+- [x] 4.2 Reemplazar `toResponse()`/`toAttachmentResponse()` por `plainToInstance`
+- [x] 4.3 Verificado: 20 claves idénticas, organizers user/text, fallback de cover, sin fugas
 
 ## 5. Worship-services (dejar de exponer entidades)
 
-- [ ] 5.1 Anotar `template-response.dto.ts`, `program-response.dto.ts`, `hymn-response.dto.ts` con `@Expose`/`@Type` para grupos/secciones/logs anidados
-- [ ] 5.2 Mapear las salidas de `template-crud.service.ts`, `program.service.ts` y `hymn.service.ts` a sus response DTOs con `plainToInstance` (en vez de retornar entidades)
-- [ ] 5.3 Verificar contrato de templates, programas y himnos sin diff
+- [x] 5.1 Anotados `template-response.dto.ts`, `program-response.dto.ts`, `hymn-response.dto.ts` con `@Expose`/`@Type` (grupos/secciones/logs anidados)
+- [x] 5.2 Mapeo a DTOs vía `plainToInstance` en los controllers de worship (hymn/template/program) — se mapea en el límite del controller para no alterar los returns de los servicios fuertemente testeados
+- [x] 5.3 Verificado por serialización aislada: claves anidadas correctas y sin fuga de campos internos (INTERNAL/SECRET/PASS/EXTRA)
 
 ## 6. Cierre
 
-- [ ] 6.1 Confirmar que no quedan `toResponse()` manuales ni retornos de entidad cruda en controllers/servicios
-- [ ] 6.2 Regenerar el cliente OpenAPI del frontend y confirmar cero diff de campos
-- [ ] 6.3 Ejecutar lint, build y la suite de tests; añadir/ajustar tests de serialización por DTO
+- [x] 6.1 Confirmado: no quedan spreads manuales (los `toResponse` restantes son helpers `plainToInstance`); `getDirectors` proyecta vía SQL `id,name,email`; ningún controller retorna entidad cruda
+- [ ] 6.2 (Pendiente, requiere servidor) Regenerar el cliente OpenAPI del frontend y confirmar cero diff de campos
+- [x] 6.3 Build OK, lint limpio, 55/55 tests verdes

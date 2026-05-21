@@ -17,6 +17,7 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
+import { plainToInstance } from 'class-transformer';
 import { TemplateCrudService } from '../services/template-crud.service';
 import { CreateTemplateDto, UpdateTemplateDto } from '../dto/template.dto';
 import { ServiceTemplateResponseDto } from '../dto/template-response.dto';
@@ -52,10 +53,12 @@ export class TemplateController {
     type: [ServiceTemplateResponseDto],
   })
   async findAll(@Query('type') type?: ServiceTemplateType) {
-    if (type) {
-      return this.templateService.findByType(type);
-    }
-    return this.templateService.findAll();
+    const templates = type
+      ? await this.templateService.findByType(type)
+      : await this.templateService.findAll();
+    return plainToInstance(ServiceTemplateResponseDto, templates, {
+      excludeExtraneousValues: true,
+    });
   }
 
   @Get(':id')
@@ -67,7 +70,11 @@ export class TemplateController {
   })
   @ApiResponse({ status: 404, description: 'Template not found' })
   async findOne(@Param('id') id: string) {
-    return this.templateService.findOne(id);
+    return plainToInstance(
+      ServiceTemplateResponseDto,
+      await this.templateService.findOne(id),
+      { excludeExtraneousValues: true },
+    );
   }
 
   @Post()
@@ -79,7 +86,11 @@ export class TemplateController {
     @Body() dto: CreateTemplateDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.templateService.create(dto, req.user.role as UserRole);
+    return plainToInstance(
+      ServiceTemplateResponseDto,
+      await this.templateService.create(dto, req.user.role as UserRole),
+      { excludeExtraneousValues: true },
+    );
   }
 
   @Patch(':id')
@@ -93,7 +104,11 @@ export class TemplateController {
     @Body() dto: UpdateTemplateDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.templateService.update(id, dto, req.user.role as UserRole);
+    return plainToInstance(
+      ServiceTemplateResponseDto,
+      await this.templateService.update(id, dto, req.user.role as UserRole),
+      { excludeExtraneousValues: true },
+    );
   }
 
   @Delete(':id')

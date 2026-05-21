@@ -16,6 +16,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { plainToInstance } from 'class-transformer';
 import { ProgramService } from '../services/program.service';
 import {
   CreateProgramDto,
@@ -29,8 +30,12 @@ import {
 } from '../dto/program.dto';
 import {
   ServiceProgramResponseDto,
+  ProgramGroupResponseDto,
+  ProgramSectionResponseDto,
   ProgramLogResponseDto,
 } from '../dto/program-response.dto';
+
+const TO_DTO = { excludeExtraneousValues: true } as const;
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { UserRole } from '../../common/entities/user-role.enum';
@@ -63,7 +68,11 @@ export class ProgramController {
     type: [ServiceProgramResponseDto],
   })
   async findAll(@Query() filters: GetProgramsFilterDto) {
-    return this.programService.findAll(filters);
+    return plainToInstance(
+      ServiceProgramResponseDto,
+      await this.programService.findAll(filters),
+      TO_DTO,
+    );
   }
 
   @Get(':id')
@@ -75,7 +84,11 @@ export class ProgramController {
   })
   @ApiResponse({ status: 404, description: 'Program not found' })
   async findOne(@Param('id') id: string) {
-    return this.programService.findOne(id);
+    return plainToInstance(
+      ServiceProgramResponseDto,
+      await this.programService.findOne(id),
+      TO_DTO,
+    );
   }
 
   @Get(':id/logs')
@@ -86,7 +99,11 @@ export class ProgramController {
     type: [ProgramLogResponseDto],
   })
   async getLogs(@Param('id') id: string) {
-    return this.programService.getLogs(id);
+    return plainToInstance(
+      ProgramLogResponseDto,
+      await this.programService.getLogs(id),
+      TO_DTO,
+    );
   }
 
   @Post()
@@ -100,10 +117,14 @@ export class ProgramController {
   @ApiResponse({ status: 201, description: 'Program created' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async create(@Body() dto: CreateProgramDto, @Request() req: RequestWithUser) {
-    return this.programService.createFromTemplate(
-      dto,
-      req.user!.userId,
-      req.user!.role,
+    return plainToInstance(
+      ServiceProgramResponseDto,
+      await this.programService.createFromTemplate(
+        dto,
+        req.user!.userId,
+        req.user!.role,
+      ),
+      TO_DTO,
     );
   }
 
@@ -121,11 +142,15 @@ export class ProgramController {
     @Body() dto: CreateGroupInProgramDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.programService.addGroup(
-      id,
-      dto,
-      req.user!.userId,
-      req.user!.role,
+    return plainToInstance(
+      ProgramGroupResponseDto,
+      await this.programService.addGroup(
+        id,
+        dto,
+        req.user!.userId,
+        req.user!.role,
+      ),
+      TO_DTO,
     );
   }
 
@@ -143,11 +168,15 @@ export class ProgramController {
     @Body() dto: CreateSectionInGroupDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.programService.addSectionToGroup(
-      groupId,
-      dto,
-      req.user!.userId,
-      req.user!.role,
+    return plainToInstance(
+      ProgramSectionResponseDto,
+      await this.programService.addSectionToGroup(
+        groupId,
+        dto,
+        req.user!.userId,
+        req.user!.role,
+      ),
+      TO_DTO,
     );
   }
 
@@ -167,11 +196,15 @@ export class ProgramController {
     @Body() dto: UpdateSectionDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.programService.updateSection(
-      sectionId,
-      dto,
-      req.user!.userId,
-      req.user!.role,
+    return plainToInstance(
+      ProgramSectionResponseDto,
+      await this.programService.updateSection(
+        sectionId,
+        dto,
+        req.user!.userId,
+        req.user!.role,
+      ),
+      TO_DTO,
     );
   }
 
@@ -182,7 +215,11 @@ export class ProgramController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Program not found' })
   async publish(@Param('id') id: string, @Request() req: RequestWithUser) {
-    return this.programService.publish(id, req.user!.userId, req.user!.role);
+    return plainToInstance(
+      ServiceProgramResponseDto,
+      await this.programService.publish(id, req.user!.userId, req.user!.role),
+      TO_DTO,
+    );
   }
 
   @Patch(':id/archive')
@@ -197,7 +234,11 @@ export class ProgramController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Program not found' })
   async archive(@Param('id') id: string, @Request() req: RequestWithUser) {
-    return this.programService.archive(id, req.user!.userId, req.user!.role);
+    return plainToInstance(
+      ServiceProgramResponseDto,
+      await this.programService.archive(id, req.user!.userId, req.user!.role),
+      TO_DTO,
+    );
   }
 
   @Delete(':id')
@@ -277,11 +318,15 @@ export class ProgramController {
     @Body() dto: UpdateGroupDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.programService.updateGroup(
-      groupId,
-      dto,
-      req.user!.userId,
-      req.user!.role,
+    return plainToInstance(
+      ProgramGroupResponseDto,
+      await this.programService.updateGroup(
+        groupId,
+        dto,
+        req.user!.userId,
+        req.user!.role,
+      ),
+      TO_DTO,
     );
   }
 
@@ -335,11 +380,15 @@ export class ProgramController {
     @Body() dto: UpdateProgramDateDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.programService.updateProgram(
-      id,
-      dto,
-      req.user!.userId,
-      req.user!.role,
+    return plainToInstance(
+      ServiceProgramResponseDto,
+      await this.programService.updateProgram(
+        id,
+        dto,
+        req.user!.userId,
+        req.user!.role,
+      ),
+      TO_DTO,
     );
   }
 }

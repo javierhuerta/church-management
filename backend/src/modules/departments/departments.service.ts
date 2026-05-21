@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
 import { Department } from './entities/department.entity';
 import { User } from '../auth/entities/user.entity';
 import { CreateDepartmentDto } from './dto/create-department.dto';
@@ -102,12 +103,8 @@ export class DepartmentsService {
   }
 
   private toResponse(dept: Department): DepartmentWithDirectorsDto {
-    return {
-      id: dept.id,
-      name: dept.name,
-      createdAt: dept.createdAt,
-      updatedAt: dept.updatedAt,
-      directors: [],
-    };
+    return plainToInstance(DepartmentWithDirectorsDto, dept, {
+      excludeExtraneousValues: true,
+    });
   }
 }

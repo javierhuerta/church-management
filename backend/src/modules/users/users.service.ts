@@ -6,12 +6,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
 import { User } from '../auth/entities/user.entity';
 import { Department } from '../departments/entities/department.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserResponseDto, DepartmentSummaryDto } from './dto/user-response.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 
 @Injectable()
 export class UsersService {
@@ -120,17 +121,8 @@ export class UsersService {
   }
 
   private toResponse(user: User): UserResponseDto {
-    const departments: DepartmentSummaryDto[] = (user.departments ?? []).map(
-      (d) => ({ id: d.id, name: d.name }),
-    );
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      departments,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
+    return plainToInstance(UserResponseDto, user, {
+      excludeExtraneousValues: true,
+    });
   }
 }
