@@ -2,7 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import request from 'supertest';
 import * as bcrypt from 'bcrypt';
-import { createE2EApp } from './helpers/create-e2e-app';
+import { createE2EApp, getServer } from './helpers/create-e2e-app';
 import { User } from '../src/modules/auth/entities/user.entity';
 import { UserRole } from '../src/modules/common/entities/user-role.enum';
 
@@ -36,7 +36,7 @@ describe('Auth — login & refresh (e2e)', () => {
   });
 
   it('POST /api/auth/login — 201 with tokens on valid credentials', async () => {
-    const res = await request(app.getHttpServer())
+    const res = await request(getServer(app))
       .post('/api/auth/login')
       .send({ email: TEST_EMAIL, password: TEST_PASSWORD })
       .expect(201);
@@ -48,7 +48,7 @@ describe('Auth — login & refresh (e2e)', () => {
   });
 
   it('POST /api/auth/login — 401 on wrong password', async () => {
-    const res = await request(app.getHttpServer())
+    const res = await request(getServer(app))
       .post('/api/auth/login')
       .send({ email: TEST_EMAIL, password: 'wrong-password' })
       .expect(401);
@@ -57,21 +57,21 @@ describe('Auth — login & refresh (e2e)', () => {
   });
 
   it('POST /api/auth/login — 401 on unknown email', async () => {
-    await request(app.getHttpServer())
+    await request(getServer(app))
       .post('/api/auth/login')
       .send({ email: 'nobody@church.test', password: TEST_PASSWORD })
       .expect(401);
   });
 
   it('POST /api/auth/refresh — 201 with new tokens on valid refresh token', async () => {
-    const loginRes = await request(app.getHttpServer())
+    const loginRes = await request(getServer(app))
       .post('/api/auth/login')
       .send({ email: TEST_EMAIL, password: TEST_PASSWORD });
 
     expect(loginRes.status).toBe(201);
     const { refreshToken } = loginRes.body as { refreshToken: string };
 
-    const res = await request(app.getHttpServer())
+    const res = await request(getServer(app))
       .post('/api/auth/refresh')
       .send({ refreshToken })
       .expect(201);
@@ -80,7 +80,7 @@ describe('Auth — login & refresh (e2e)', () => {
   });
 
   it('POST /api/auth/refresh — 401 on invalid refresh token', async () => {
-    await request(app.getHttpServer())
+    await request(getServer(app))
       .post('/api/auth/refresh')
       .send({ refreshToken: 'invalid.token.here' })
       .expect(401);
@@ -105,10 +105,10 @@ describe('Auth — rate limiting (e2e)', () => {
     const badCreds = { email: 'rate@church.test', password: 'wrong' };
 
     for (let i = 0; i < 5; i++) {
-      await request(app.getHttpServer()).post('/api/auth/login').send(badCreds);
+      await request(getServer(app)).post('/api/auth/login').send(badCreds);
     }
 
-    const res = await request(app.getHttpServer())
+    const res = await request(getServer(app))
       .post('/api/auth/login')
       .send(badCreds);
 

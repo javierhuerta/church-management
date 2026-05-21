@@ -8,7 +8,7 @@ const ds = new DataSource({
   synchronize: true,
   entities: [User, Department],
   logging: false,
-} as any);
+});
 
 ds.initialize()
   .then(() => {

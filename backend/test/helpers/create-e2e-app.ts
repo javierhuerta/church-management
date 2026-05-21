@@ -47,6 +47,7 @@ AbstractSqliteDriver.prototype.normalizeType = function (col: {
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import type { Server } from 'http';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule, getDataSourceToken } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -97,6 +98,14 @@ const TEST_ENTITIES = [
   ServiceProgramLog,
   Hymn,
 ];
+
+/**
+ * Type-safe wrapper around app.getHttpServer() for use with supertest.
+ * Avoids `any` propagation into test files.
+ */
+export function getServer(app: INestApplication): Server {
+  return app.getHttpServer() as Server;
+}
 
 export async function createE2EApp(): Promise<{
   app: INestApplication;

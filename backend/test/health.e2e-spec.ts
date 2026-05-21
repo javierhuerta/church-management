@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { createE2EApp } from './helpers/create-e2e-app';
+import { createE2EApp, getServer } from './helpers/create-e2e-app';
 
 describe('Health (e2e)', () => {
   let app: INestApplication;
@@ -14,9 +14,7 @@ describe('Health (e2e)', () => {
   });
 
   it('GET /api/health — 200 with database status', async () => {
-    const res = await request(app.getHttpServer())
-      .get('/api/health')
-      .expect(200);
+    const res = await request(getServer(app)).get('/api/health').expect(200);
 
     expect(res.body).toMatchObject({
       status: 'ok',
