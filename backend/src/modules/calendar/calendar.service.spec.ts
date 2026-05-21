@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import {
   BadRequestException,
   NotFoundException,
@@ -85,6 +86,25 @@ describe('CalendarService', () => {
     organizerRepo = createMockRepo<EventOrganizer>();
     userRepo = createMockRepo<User>();
 
+    // Manager mock: Event create/save delegate to eventRepo (so existing
+    // assertions hold); getRepository routes related entities to their mocks.
+    const manager = {
+      create: jest.fn((_entity: unknown, data: unknown) =>
+        eventRepo.create(data),
+      ),
+      save: jest.fn((entity: unknown) => eventRepo.save(entity)),
+      getRepository: jest.fn((entity: unknown) => {
+        if (entity === EventOrganizer) return organizerRepo;
+        if (entity === User) return userRepo;
+        return eventRepo;
+      }),
+    };
+    const dataSource = {
+      transaction: jest.fn(async (cb: (m: typeof manager) => unknown) =>
+        cb(manager),
+      ),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CalendarService,
@@ -98,6 +118,7 @@ describe('CalendarService', () => {
           useValue: organizerRepo,
         },
         { provide: getRepositoryToken(User), useValue: userRepo },
+        { provide: DataSource, useValue: dataSource },
       ],
     }).compile();
 

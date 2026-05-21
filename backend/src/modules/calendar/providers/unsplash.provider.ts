@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   CoverImageProvider,
   CoverSuggestion,
@@ -36,8 +37,9 @@ export class UnsplashProvider implements CoverImageProvider {
     { expiresAt: number; value: CoverSuggestionsResult }
   >();
 
-  constructor() {
-    this.accessKey = process.env.UNSPLASH_ACCESS_KEY?.trim() || undefined;
+  constructor(config: ConfigService) {
+    this.accessKey =
+      config.get<string>('UNSPLASH_ACCESS_KEY')?.trim() || undefined;
     if (!this.accessKey) {
       this.logger.warn(
         'UNSPLASH_ACCESS_KEY is not set; cover suggestions will be unavailable.',
@@ -49,10 +51,7 @@ export class UnsplashProvider implements CoverImageProvider {
     return !!this.accessKey;
   }
 
-  async search(
-    query: string,
-    page = 1,
-  ): Promise<CoverSuggestionsResult> {
+  async search(query: string, page = 1): Promise<CoverSuggestionsResult> {
     if (!this.accessKey) {
       throw new Error('Unsplash provider is not configured');
     }
@@ -126,7 +125,7 @@ export class UnsplashProvider implements CoverImageProvider {
 
   private setCache(key: string, value: CoverSuggestionsResult): void {
     if (this.cache.size >= CACHE_MAX) {
-      const oldestKey = this.cache.keys().next().value;
+      const oldestKey = this.cache.keys().next().value as string | undefined;
       if (oldestKey) this.cache.delete(oldestKey);
     }
     this.cache.set(key, { expiresAt: Date.now() + CACHE_TTL_MS, value });

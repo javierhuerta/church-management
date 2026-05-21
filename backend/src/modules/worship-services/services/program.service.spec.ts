@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import {
   BadRequestException,
   ForbiddenException,
@@ -16,7 +17,10 @@ import {
   ServiceTemplateSection,
   ProgramSectionTargetType,
 } from '../entities';
-import { ProgramStatus, ServiceTemplateType } from '../entities/service-template-type.enum';
+import {
+  ProgramStatus,
+  ServiceTemplateType,
+} from '../entities/service-template-type.enum';
 import { UserRole } from '../../common/entities/user-role.enum';
 
 interface MockRepo<T> {
@@ -26,6 +30,7 @@ interface MockRepo<T> {
   save: jest.Mock;
   delete: jest.Mock;
   createQueryBuilder?: jest.Mock;
+  _entities?: T[];
 }
 
 function createMockRepo<T>(): MockRepo<T> {
@@ -38,7 +43,67 @@ function createMockRepo<T>(): MockRepo<T> {
   };
 }
 
-function makeTemplate(overrides: Partial<ServiceTemplate> = {}): ServiceTemplate {
+interface ProgramRepos {
+  programRepo: MockRepo<ServiceProgram>;
+  programGroupRepo: MockRepo<ServiceProgramGroup>;
+  templateGroupRepo: MockRepo<ServiceTemplateGroup>;
+  templateSectionRepo: MockRepo<ServiceTemplateSection>;
+  sectionRepo: MockRepo<ServiceProgramSection>;
+  logRepo: MockRepo<ServiceProgramLog>;
+  templateRepo: MockRepo<ServiceTemplate>;
+}
+
+// Builds a DataSource mock whose transaction() runs the callback with an
+// EntityManager-like mock. create/find are routed to the matching repo mock so
+// existing per-repo assertions keep working; save is a standalone mock that
+// assigns an id, mirroring how TypeORM persists new rows inside a transaction.
+function createTxMocks(repos: ProgramRepos) {
+  const repoFor = (entity: unknown): MockRepo<unknown> => {
+    switch (entity) {
+      case ServiceProgram:
+        return repos.programRepo;
+      case ServiceProgramGroup:
+        return repos.programGroupRepo;
+      case ServiceTemplateGroup:
+        return repos.templateGroupRepo;
+      case ServiceTemplateSection:
+        return repos.templateSectionRepo;
+      case ServiceProgramSection:
+        return repos.sectionRepo;
+      case ServiceProgramLog:
+        return repos.logRepo;
+      case ServiceTemplate:
+        return repos.templateRepo;
+      default:
+        throw new Error('Unknown entity passed to manager');
+    }
+  };
+
+  const manager = {
+    create: jest.fn((entity: unknown, data: unknown) =>
+      repoFor(entity).create(data),
+    ),
+    find: jest.fn((entity: unknown, opts: unknown) =>
+      repoFor(entity).find(opts),
+    ),
+    save: jest.fn(async (entity: { id?: string }) => ({
+      ...entity,
+      id: entity.id ?? 'gen-id',
+    })),
+  };
+
+  const dataSource = {
+    transaction: jest.fn(async (cb: (m: typeof manager) => unknown) =>
+      cb(manager),
+    ),
+  };
+
+  return { manager, dataSource };
+}
+
+function makeTemplate(
+  overrides: Partial<ServiceTemplate> = {},
+): ServiceTemplate {
   return {
     id: 'tmpl-1',
     name: 'Culto Sabático',
@@ -50,7 +115,7 @@ function makeTemplate(overrides: Partial<ServiceTemplate> = {}): ServiceTemplate
     createdAt: new Date(),
     updatedAt: null,
     ...overrides,
-  } as ServiceTemplate;
+  };
 }
 
 function makeProgram(overrides: Partial<ServiceProgram> = {}): ServiceProgram {
@@ -70,7 +135,9 @@ function makeProgram(overrides: Partial<ServiceProgram> = {}): ServiceProgram {
   } as ServiceProgram;
 }
 
-function makeSection(overrides: Partial<ServiceProgramSection> = {}): ServiceProgramSection {
+function makeSection(
+  overrides: Partial<ServiceProgramSection> = {},
+): ServiceProgramSection {
   return {
     id: 'sec-1',
     programId: 'prog-1',
@@ -107,16 +174,42 @@ describe('ProgramService — unit tests', () => {
     logRepo = createMockRepo<ServiceProgramLog>();
     templateRepo = createMockRepo<ServiceTemplate>();
 
+    const { dataSource } = createTxMocks({
+      programRepo,
+      programGroupRepo,
+      templateGroupRepo,
+      templateSectionRepo,
+      sectionRepo,
+      logRepo,
+      templateRepo,
+    });
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProgramService,
         { provide: getRepositoryToken(ServiceProgram), useValue: programRepo },
-        { provide: getRepositoryToken(ServiceProgramGroup), useValue: programGroupRepo },
-        { provide: getRepositoryToken(ServiceTemplateGroup), useValue: templateGroupRepo },
-        { provide: getRepositoryToken(ServiceTemplateSection), useValue: templateSectionRepo },
-        { provide: getRepositoryToken(ServiceProgramSection), useValue: sectionRepo },
+        {
+          provide: getRepositoryToken(ServiceProgramGroup),
+          useValue: programGroupRepo,
+        },
+        {
+          provide: getRepositoryToken(ServiceTemplateGroup),
+          useValue: templateGroupRepo,
+        },
+        {
+          provide: getRepositoryToken(ServiceTemplateSection),
+          useValue: templateSectionRepo,
+        },
+        {
+          provide: getRepositoryToken(ServiceProgramSection),
+          useValue: sectionRepo,
+        },
         { provide: getRepositoryToken(ServiceProgramLog), useValue: logRepo },
-        { provide: getRepositoryToken(ServiceTemplate), useValue: templateRepo },
+        {
+          provide: getRepositoryToken(ServiceTemplate),
+          useValue: templateRepo,
+        },
+        { provide: DataSource, useValue: dataSource },
       ],
     }).compile();
 
@@ -127,7 +220,9 @@ describe('ProgramService — unit tests', () => {
     it('throws NotFoundException when program does not exist', async () => {
       programRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.findOne('nonexistent')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
 
     it('returns the program when found', async () => {
@@ -152,7 +247,6 @@ describe('ProgramService — unit tests', () => {
       const template = makeTemplate();
       const savedProgram = makeProgram({ id: 'prog-new' });
       templateRepo.findOne.mockResolvedValue(template);
-      programRepo.save.mockResolvedValue(savedProgram);
       templateGroupRepo.find.mockResolvedValue([]);
       templateSectionRepo.find.mockResolvedValue([]);
       programRepo.findOne.mockResolvedValue(savedProgram);
@@ -162,14 +256,15 @@ describe('ProgramService — unit tests', () => {
       expect(result.id).toBe('prog-new');
     });
 
-    it.each([UserRole.Secretaria, UserRole.MaestroClase, UserRole.CoordinadorMisionero])(
-      'rejects %s with ForbiddenException',
-      async (role) => {
-        await expect(
-          service.createFromTemplate(dto, 'user-1', role),
-        ).rejects.toBeInstanceOf(ForbiddenException);
-      },
-    );
+    it.each([
+      UserRole.Secretaria,
+      UserRole.MaestroClase,
+      UserRole.CoordinadorMisionero,
+    ])('rejects %s with ForbiddenException', async (role) => {
+      await expect(
+        service.createFromTemplate(dto, 'user-1', role),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
   });
 
   describe('createFromTemplate — validation', () => {
@@ -216,7 +311,12 @@ describe('ProgramService — unit tests', () => {
       programRepo.findOne.mockResolvedValue(program);
 
       await expect(
-        service.updateSection(section.id, { responsible: 'Juan' }, 'user-1', UserRole.Secretaria),
+        service.updateSection(
+          section.id,
+          { responsible: 'Juan' },
+          'user-1',
+          UserRole.Secretaria,
+        ),
       ).rejects.toBeInstanceOf(ForbiddenException);
     });
   });
@@ -224,45 +324,77 @@ describe('ProgramService — unit tests', () => {
   describe('updateSection — permission for PUBLISHED programs', () => {
     it('allows Admin to edit PUBLISHED programs', async () => {
       const section = makeSection();
-      const program = makeProgram({ status: ProgramStatus.PUBLISHED, createdById: 'owner' });
+      const program = makeProgram({
+        status: ProgramStatus.PUBLISHED,
+        createdById: 'owner',
+      });
       sectionRepo.findOne.mockResolvedValue(section);
       programRepo.findOne.mockResolvedValue(program);
 
-      await service.updateSection(section.id, { notes: 'Cambio' }, 'admin-user', UserRole.Admin);
+      await service.updateSection(
+        section.id,
+        { notes: 'Cambio' },
+        'admin-user',
+        UserRole.Admin,
+      );
 
       expect(sectionRepo.save).toHaveBeenCalled();
     });
 
     it('allows original Pastor creator to edit PUBLISHED programs', async () => {
       const section = makeSection();
-      const program = makeProgram({ status: ProgramStatus.PUBLISHED, createdById: 'pastor-1' });
+      const program = makeProgram({
+        status: ProgramStatus.PUBLISHED,
+        createdById: 'pastor-1',
+      });
       sectionRepo.findOne.mockResolvedValue(section);
       programRepo.findOne.mockResolvedValue(program);
 
-      await service.updateSection(section.id, { notes: 'Cambio' }, 'pastor-1', UserRole.Pastor);
+      await service.updateSection(
+        section.id,
+        { notes: 'Cambio' },
+        'pastor-1',
+        UserRole.Pastor,
+      );
 
       expect(sectionRepo.save).toHaveBeenCalled();
     });
 
     it('rejects Pastor who is not the creator from editing PUBLISHED programs', async () => {
       const section = makeSection();
-      const program = makeProgram({ status: ProgramStatus.PUBLISHED, createdById: 'other-pastor' });
+      const program = makeProgram({
+        status: ProgramStatus.PUBLISHED,
+        createdById: 'other-pastor',
+      });
       sectionRepo.findOne.mockResolvedValue(section);
       programRepo.findOne.mockResolvedValue(program);
 
       await expect(
-        service.updateSection(section.id, { notes: 'Cambio' }, 'pastor-1', UserRole.Pastor),
+        service.updateSection(
+          section.id,
+          { notes: 'Cambio' },
+          'pastor-1',
+          UserRole.Pastor,
+        ),
       ).rejects.toBeInstanceOf(ForbiddenException);
     });
 
     it('rejects Anciano from editing PUBLISHED programs', async () => {
       const section = makeSection();
-      const program = makeProgram({ status: ProgramStatus.PUBLISHED, createdById: 'user-1' });
+      const program = makeProgram({
+        status: ProgramStatus.PUBLISHED,
+        createdById: 'user-1',
+      });
       sectionRepo.findOne.mockResolvedValue(section);
       programRepo.findOne.mockResolvedValue(program);
 
       await expect(
-        service.updateSection(section.id, { notes: 'Cambio' }, 'user-1', UserRole.Anciano),
+        service.updateSection(
+          section.id,
+          { notes: 'Cambio' },
+          'user-1',
+          UserRole.Anciano,
+        ),
       ).rejects.toBeInstanceOf(ForbiddenException);
     });
   });
@@ -305,7 +437,9 @@ describe('ProgramService — unit tests', () => {
     });
 
     it('throws ForbiddenException for non-Admin roles', async () => {
-      await expect(service.delete('prog-1', UserRole.Pastor)).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(
+        service.delete('prog-1', UserRole.Pastor),
+      ).rejects.toBeInstanceOf(ForbiddenException);
       expect(programRepo.delete).not.toHaveBeenCalled();
     });
   });
@@ -313,8 +447,18 @@ describe('ProgramService — unit tests', () => {
   describe('getLogs', () => {
     it('returns logs for the given program in descending order', async () => {
       const logs = [
-        { id: 'log-2', programId: 'prog-1', action: 'cambió himno', createdAt: new Date('2026-05-17T11:00:00Z') },
-        { id: 'log-1', programId: 'prog-1', action: 'creó programa', createdAt: new Date('2026-05-17T10:00:00Z') },
+        {
+          id: 'log-2',
+          programId: 'prog-1',
+          action: 'cambió himno',
+          createdAt: new Date('2026-05-17T11:00:00Z'),
+        },
+        {
+          id: 'log-1',
+          programId: 'prog-1',
+          action: 'creó programa',
+          createdAt: new Date('2026-05-17T10:00:00Z'),
+        },
       ] as ServiceProgramLog[];
       logRepo.find.mockResolvedValue(logs);
 
@@ -339,38 +483,54 @@ describe('ProgramService — createFromTemplate workflow', () => {
   let sectionRepo: MockRepo<ServiceProgramSection>;
   let logRepo: MockRepo<ServiceProgramLog>;
   let templateRepo: MockRepo<ServiceTemplate>;
+  let dataSource: { transaction: jest.Mock };
 
   beforeEach(async () => {
-    programRepo = {
-      findOne: jest.fn(),
-      find: jest.fn(),
-      create: jest.fn((d) => ({ ...d })),
-      save: jest.fn(async (e) => ({ ...e, id: e.id ?? 'prog-new' })),
-      delete: jest.fn(),
-    };
-    programGroupRepo = {
-      findOne: jest.fn(),
-      find: jest.fn(),
-      create: jest.fn((d) => ({ ...d })),
-      save: jest.fn(async (e) => ({ ...e, id: e.id ?? 'grp-new' })),
-      delete: jest.fn(),
-    };
-    templateGroupRepo = { findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn(), delete: jest.fn() };
-    templateSectionRepo = { findOne: jest.fn(), find: jest.fn(), create: jest.fn((d) => ({ ...d })), save: jest.fn(async (e) => e), delete: jest.fn() };
-    sectionRepo = { findOne: jest.fn(), find: jest.fn(), create: jest.fn((d) => ({ ...d })), save: jest.fn(async (e) => e), delete: jest.fn() };
-    logRepo = { findOne: jest.fn(), find: jest.fn(), create: jest.fn((d) => ({ ...d })), save: jest.fn(async (e) => e), delete: jest.fn() };
-    templateRepo = { findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn(), delete: jest.fn() };
+    programRepo = createMockRepo<ServiceProgram>();
+    programGroupRepo = createMockRepo<ServiceProgramGroup>();
+    templateGroupRepo = createMockRepo<ServiceTemplateGroup>();
+    templateSectionRepo = createMockRepo<ServiceTemplateSection>();
+    sectionRepo = createMockRepo<ServiceProgramSection>();
+    logRepo = createMockRepo<ServiceProgramLog>();
+    templateRepo = createMockRepo<ServiceTemplate>();
+
+    const tx = createTxMocks({
+      programRepo,
+      programGroupRepo,
+      templateGroupRepo,
+      templateSectionRepo,
+      sectionRepo,
+      logRepo,
+      templateRepo,
+    });
+    dataSource = tx.dataSource;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProgramService,
         { provide: getRepositoryToken(ServiceProgram), useValue: programRepo },
-        { provide: getRepositoryToken(ServiceProgramGroup), useValue: programGroupRepo },
-        { provide: getRepositoryToken(ServiceTemplateGroup), useValue: templateGroupRepo },
-        { provide: getRepositoryToken(ServiceTemplateSection), useValue: templateSectionRepo },
-        { provide: getRepositoryToken(ServiceProgramSection), useValue: sectionRepo },
+        {
+          provide: getRepositoryToken(ServiceProgramGroup),
+          useValue: programGroupRepo,
+        },
+        {
+          provide: getRepositoryToken(ServiceTemplateGroup),
+          useValue: templateGroupRepo,
+        },
+        {
+          provide: getRepositoryToken(ServiceTemplateSection),
+          useValue: templateSectionRepo,
+        },
+        {
+          provide: getRepositoryToken(ServiceProgramSection),
+          useValue: sectionRepo,
+        },
         { provide: getRepositoryToken(ServiceProgramLog), useValue: logRepo },
-        { provide: getRepositoryToken(ServiceTemplate), useValue: templateRepo },
+        {
+          provide: getRepositoryToken(ServiceTemplate),
+          useValue: templateRepo,
+        },
+        { provide: DataSource, useValue: dataSource },
       ],
     }).compile();
 
@@ -378,32 +538,48 @@ describe('ProgramService — createFromTemplate workflow', () => {
   });
 
   it('copies groups and their sections from the template', async () => {
-    templateRepo.findOne.mockResolvedValue(
-      makeTemplate({ isActive: true }),
+    templateRepo.findOne.mockResolvedValue(makeTemplate({ isActive: true }));
+    programRepo.findOne.mockResolvedValue(
+      makeProgram({ id: 'prog-new', groups: [], sections: [] }),
     );
-    programRepo.save.mockResolvedValue({ id: 'prog-new', date: '2026-05-17', status: ProgramStatus.DRAFT, createdById: 'user-1' });
-    programRepo.findOne.mockResolvedValue(makeProgram({ id: 'prog-new', groups: [], sections: [] }));
 
     const templateGroups = [
-      { id: 'tgrp-1', name: 'Escuela Sabática', order: 1, startTime: '09:00', endTime: '10:30', templateId: 'tmpl-1' },
+      {
+        id: 'tgrp-1',
+        name: 'Escuela Sabática',
+        order: 1,
+        startTime: '09:00',
+        endTime: '10:30',
+        templateId: 'tmpl-1',
+      },
     ] as ServiceTemplateGroup[];
     const groupSections = [
-      { id: 'tsec-1', name: 'Lección', order: 1, groupId: 'tgrp-1', templateId: 'tmpl-1' },
+      {
+        id: 'tsec-1',
+        name: 'Lección',
+        order: 1,
+        groupId: 'tgrp-1',
+        templateId: 'tmpl-1',
+      },
     ] as ServiceTemplateSection[];
 
     templateGroupRepo.find.mockResolvedValue(templateGroups);
     templateSectionRepo.find
-      .mockResolvedValueOnce(groupSections)   // sections for tgrp-1
-      .mockResolvedValueOnce([]);             // top-level sections
+      .mockResolvedValueOnce(groupSections) // sections for tgrp-1
+      .mockResolvedValueOnce([]); // top-level sections
 
-    await service.createFromTemplate({ templateId: 'tmpl-1', date: '2026-05-17' }, 'user-1', UserRole.Admin);
+    await service.createFromTemplate(
+      { templateId: 'tmpl-1', date: '2026-05-17' },
+      'user-1',
+      UserRole.Admin,
+    );
 
-    expect(programGroupRepo.save).toHaveBeenCalledTimes(1);
+    expect(programGroupRepo.create).toHaveBeenCalledTimes(1);
     const savedGroup = programGroupRepo.create.mock.calls[0][0];
     expect(savedGroup.name).toBe('Escuela Sabática');
-    expect(savedGroup.programId).toBe('prog-new');
+    expect(savedGroup.programId).toBe('gen-id');
 
-    expect(sectionRepo.save).toHaveBeenCalledTimes(1);
+    expect(sectionRepo.create).toHaveBeenCalledTimes(1);
     const savedSection = sectionRepo.create.mock.calls[0][0];
     expect(savedSection.targetType).toBe(ProgramSectionTargetType.GROUP);
     expect(savedSection.templateSectionId).toBe('tsec-1');
@@ -411,39 +587,87 @@ describe('ProgramService — createFromTemplate workflow', () => {
 
   it('copies top-level sections (without group) from the template', async () => {
     templateRepo.findOne.mockResolvedValue(makeTemplate({ isActive: true }));
-    programRepo.save.mockResolvedValue({ id: 'prog-new', status: ProgramStatus.DRAFT, createdById: 'user-1' });
-    programRepo.findOne.mockResolvedValue(makeProgram({ id: 'prog-new', groups: [], sections: [] }));
+    programRepo.findOne.mockResolvedValue(
+      makeProgram({ id: 'prog-new', groups: [], sections: [] }),
+    );
 
     const topLevelSections = [
-      { id: 'tsec-top-1', name: 'Apertura', order: 1, groupId: null, templateId: 'tmpl-1' },
-      { id: 'tsec-top-2', name: 'Oración', order: 2, groupId: null, templateId: 'tmpl-1' },
+      {
+        id: 'tsec-top-1',
+        name: 'Apertura',
+        order: 1,
+        groupId: null,
+        templateId: 'tmpl-1',
+      },
+      {
+        id: 'tsec-top-2',
+        name: 'Oración',
+        order: 2,
+        groupId: null,
+        templateId: 'tmpl-1',
+      },
     ] as ServiceTemplateSection[];
 
     templateGroupRepo.find.mockResolvedValue([]);
     templateSectionRepo.find.mockResolvedValue(topLevelSections);
 
-    await service.createFromTemplate({ templateId: 'tmpl-1', date: '2026-05-17' }, 'user-1', UserRole.Admin);
+    await service.createFromTemplate(
+      { templateId: 'tmpl-1', date: '2026-05-17' },
+      'user-1',
+      UserRole.Admin,
+    );
 
-    expect(sectionRepo.save).toHaveBeenCalledTimes(2);
+    expect(sectionRepo.create).toHaveBeenCalledTimes(2);
     const targets = sectionRepo.create.mock.calls.map((c) => c[0].targetType);
-    expect(targets).toEqual([ProgramSectionTargetType.PROGRAM, ProgramSectionTargetType.PROGRAM]);
+    expect(targets).toEqual([
+      ProgramSectionTargetType.PROGRAM,
+      ProgramSectionTargetType.PROGRAM,
+    ]);
   });
 
   it('creates an audit log entry for program creation', async () => {
     templateRepo.findOne.mockResolvedValue(makeTemplate({ isActive: true }));
-    programRepo.save.mockResolvedValue({ id: 'prog-new', status: ProgramStatus.DRAFT, createdById: 'user-1' });
-    programRepo.findOne.mockResolvedValue(makeProgram({ id: 'prog-new', groups: [], sections: [] }));
+    programRepo.findOne.mockResolvedValue(
+      makeProgram({ id: 'prog-new', groups: [], sections: [] }),
+    );
     templateGroupRepo.find.mockResolvedValue([]);
     templateSectionRepo.find.mockResolvedValue([]);
 
-    await service.createFromTemplate({ templateId: 'tmpl-1', date: '2026-05-17' }, 'user-1', UserRole.Pastor);
+    await service.createFromTemplate(
+      { templateId: 'tmpl-1', date: '2026-05-17' },
+      'user-1',
+      UserRole.Pastor,
+    );
 
-    expect(logRepo.save).toHaveBeenCalledTimes(1);
+    expect(logRepo.create).toHaveBeenCalledTimes(1);
     const log = logRepo.create.mock.calls[0][0];
     expect(log.action).toBe('creó programa');
-    expect(log.programId).toBe('prog-new');
+    expect(log.programId).toBe('gen-id');
     expect(log.userId).toBe('user-1');
     expect(log.sectionId).toBeNull();
+  });
+
+  it('runs creation inside a transaction and rolls back on failure', async () => {
+    templateRepo.findOne.mockResolvedValue(makeTemplate({ isActive: true }));
+    templateGroupRepo.find.mockResolvedValue([]);
+    templateSectionRepo.find.mockResolvedValue([]);
+
+    // Simulate a DB failure on the very first persist inside the transaction.
+    dataSource.transaction.mockImplementationOnce(() => {
+      throw new Error('db failure');
+    });
+
+    await expect(
+      service.createFromTemplate(
+        { templateId: 'tmpl-1', date: '2026-05-17' },
+        'user-1',
+        UserRole.Admin,
+      ),
+    ).rejects.toThrow('db failure');
+
+    expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+    // findOne (which reloads the program after commit) must not run on rollback.
+    expect(programRepo.findOne).not.toHaveBeenCalled();
   });
 });
 
@@ -460,16 +684,48 @@ describe('ProgramService — audit logging on updateSection', () => {
     sectionRepo: MockRepo<ServiceProgramSection>;
     logRepo: MockRepo<ServiceProgramLog>;
   }) {
+    const { dataSource } = createTxMocks({
+      programRepo: repos.programRepo,
+      programGroupRepo: createMockRepo<ServiceProgramGroup>(),
+      templateGroupRepo: createMockRepo<ServiceTemplateGroup>(),
+      templateSectionRepo: createMockRepo<ServiceTemplateSection>(),
+      sectionRepo: repos.sectionRepo,
+      logRepo: repos.logRepo,
+      templateRepo: createMockRepo<ServiceTemplate>(),
+    });
+
     return Test.createTestingModule({
       providers: [
         ProgramService,
-        { provide: getRepositoryToken(ServiceProgram), useValue: repos.programRepo },
-        { provide: getRepositoryToken(ServiceProgramGroup), useValue: { findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn(), delete: jest.fn() } },
-        { provide: getRepositoryToken(ServiceTemplateGroup), useValue: { findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn(), delete: jest.fn() } },
-        { provide: getRepositoryToken(ServiceTemplateSection), useValue: { findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn(), delete: jest.fn() } },
-        { provide: getRepositoryToken(ServiceProgramSection), useValue: repos.sectionRepo },
-        { provide: getRepositoryToken(ServiceProgramLog), useValue: repos.logRepo },
-        { provide: getRepositoryToken(ServiceTemplate), useValue: { findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn(), delete: jest.fn() } },
+        {
+          provide: getRepositoryToken(ServiceProgram),
+          useValue: repos.programRepo,
+        },
+        {
+          provide: getRepositoryToken(ServiceProgramGroup),
+          useValue: createMockRepo<ServiceProgramGroup>(),
+        },
+        {
+          provide: getRepositoryToken(ServiceTemplateGroup),
+          useValue: createMockRepo<ServiceTemplateGroup>(),
+        },
+        {
+          provide: getRepositoryToken(ServiceTemplateSection),
+          useValue: createMockRepo<ServiceTemplateSection>(),
+        },
+        {
+          provide: getRepositoryToken(ServiceProgramSection),
+          useValue: repos.sectionRepo,
+        },
+        {
+          provide: getRepositoryToken(ServiceProgramLog),
+          useValue: repos.logRepo,
+        },
+        {
+          provide: getRepositoryToken(ServiceTemplate),
+          useValue: createMockRepo<ServiceTemplate>(),
+        },
+        { provide: DataSource, useValue: dataSource },
       ],
     })
       .compile()
@@ -477,19 +733,26 @@ describe('ProgramService — audit logging on updateSection', () => {
   }
 
   beforeEach(async () => {
-    programRepo = { findOne: jest.fn(), find: jest.fn(), create: jest.fn((d) => d), save: jest.fn(async (e) => e), delete: jest.fn() };
-    sectionRepo = { findOne: jest.fn(), find: jest.fn(), create: jest.fn((d) => d), save: jest.fn(async (e) => e), delete: jest.fn() };
-    logRepo = { findOne: jest.fn(), find: jest.fn(), create: jest.fn((d) => d), save: jest.fn(async (e) => e), delete: jest.fn() };
+    programRepo = createMockRepo<ServiceProgram>();
+    sectionRepo = createMockRepo<ServiceProgramSection>();
+    logRepo = createMockRepo<ServiceProgramLog>();
 
     service = await buildService({ programRepo, sectionRepo, logRepo });
   });
 
   it('creates a log entry when responsible changes', async () => {
     const section = makeSection({ responsible: 'Pedro' });
-    programRepo.findOne.mockResolvedValue(makeProgram({ status: ProgramStatus.DRAFT }));
+    programRepo.findOne.mockResolvedValue(
+      makeProgram({ status: ProgramStatus.DRAFT }),
+    );
     sectionRepo.findOne.mockResolvedValue(section);
 
-    await service.updateSection('sec-1', { responsible: 'Juan' }, 'user-1', UserRole.Admin);
+    await service.updateSection(
+      'sec-1',
+      { responsible: 'Juan' },
+      'user-1',
+      UserRole.Admin,
+    );
 
     expect(logRepo.save).toHaveBeenCalledTimes(1);
     const log = logRepo.create.mock.calls[0][0];
@@ -500,10 +763,17 @@ describe('ProgramService — audit logging on updateSection', () => {
 
   it('creates a log entry when hymnText changes', async () => {
     const section = makeSection({ hymnText: '23' });
-    programRepo.findOne.mockResolvedValue(makeProgram({ status: ProgramStatus.DRAFT }));
+    programRepo.findOne.mockResolvedValue(
+      makeProgram({ status: ProgramStatus.DRAFT }),
+    );
     sectionRepo.findOne.mockResolvedValue(section);
 
-    await service.updateSection('sec-1', { hymnText: '125' }, 'user-1', UserRole.Admin);
+    await service.updateSection(
+      'sec-1',
+      { hymnText: '125' },
+      'user-1',
+      UserRole.Admin,
+    );
 
     expect(logRepo.save).toHaveBeenCalledTimes(1);
     const log = logRepo.create.mock.calls[0][0];
@@ -513,8 +783,14 @@ describe('ProgramService — audit logging on updateSection', () => {
   });
 
   it('creates one log per changed field when multiple fields change at once', async () => {
-    const section = makeSection({ responsible: null, notes: null, startTime: null });
-    programRepo.findOne.mockResolvedValue(makeProgram({ status: ProgramStatus.DRAFT }));
+    const section = makeSection({
+      responsible: null,
+      notes: null,
+      startTime: null,
+    });
+    programRepo.findOne.mockResolvedValue(
+      makeProgram({ status: ProgramStatus.DRAFT }),
+    );
     sectionRepo.findOne.mockResolvedValue(section);
 
     await service.updateSection(
@@ -533,7 +809,9 @@ describe('ProgramService — audit logging on updateSection', () => {
 
   it('does not create a log entry when the field value is unchanged', async () => {
     const section = makeSection({ responsible: 'Juan', notes: 'Sin cambios' });
-    programRepo.findOne.mockResolvedValue(makeProgram({ status: ProgramStatus.DRAFT }));
+    programRepo.findOne.mockResolvedValue(
+      makeProgram({ status: ProgramStatus.DRAFT }),
+    );
     sectionRepo.findOne.mockResolvedValue(section);
 
     await service.updateSection(
@@ -548,10 +826,17 @@ describe('ProgramService — audit logging on updateSection', () => {
 
   it('attaches sectionId to each log entry', async () => {
     const section = makeSection({ id: 'sec-42', hymnText: null });
-    programRepo.findOne.mockResolvedValue(makeProgram({ id: 'prog-99', status: ProgramStatus.DRAFT }));
+    programRepo.findOne.mockResolvedValue(
+      makeProgram({ id: 'prog-99', status: ProgramStatus.DRAFT }),
+    );
     sectionRepo.findOne.mockResolvedValue(section);
 
-    await service.updateSection('sec-42', { hymnText: '300' }, 'user-1', UserRole.Pastor);
+    await service.updateSection(
+      'sec-42',
+      { hymnText: '300' },
+      'user-1',
+      UserRole.Pastor,
+    );
 
     const log = logRepo.create.mock.calls[0][0];
     expect(log.sectionId).toBe('sec-42');

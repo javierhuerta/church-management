@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, DataSource } from 'typeorm';
 import {
   ServiceProgram,
   ServiceProgramGroup,
@@ -18,7 +18,14 @@ import {
 } from '../entities';
 import { ProgramStatus } from '../entities/service-template-type.enum';
 import { UserRole } from '../../common/entities/user-role.enum';
-import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto, CreateGroupInProgramDto, CreateSectionInGroupDto, ReorderDto } from '../dto/program.dto';
+import {
+  CreateProgramDto,
+  UpdateSectionDto,
+  UpdateGroupDto,
+  CreateGroupInProgramDto,
+  CreateSectionInGroupDto,
+  ReorderDto,
+} from '../dto/program.dto';
 
 @Injectable()
 export class ProgramService {
@@ -37,15 +44,18 @@ export class ProgramService {
     private readonly logRepo: Repository<ServiceProgramLog>,
     @InjectRepository(ServiceTemplate)
     private readonly templateRepo: Repository<ServiceTemplate>,
+    private readonly dataSource: DataSource,
   ) {}
 
-  async findAll(filters: {
-    createdById?: string;
-    templateId?: string;
-    dateFrom?: string;
-    dateTo?: string;
-    status?: ProgramStatus;
-  } = {}): Promise<ServiceProgram[]> {
+  async findAll(
+    filters: {
+      createdById?: string;
+      templateId?: string;
+      dateFrom?: string;
+      dateTo?: string;
+      status?: ProgramStatus;
+    } = {},
+  ): Promise<ServiceProgram[]> {
     const qb = this.programRepo
       .createQueryBuilder('program')
       .leftJoinAndSelect('program.template', 'template')
@@ -56,10 +66,14 @@ export class ProgramService {
       .addOrderBy('program.createdAt', 'DESC');
 
     if (filters.createdById) {
-      qb.andWhere('program.created_by_id = :createdById', { createdById: filters.createdById });
+      qb.andWhere('program.created_by_id = :createdById', {
+        createdById: filters.createdById,
+      });
     }
     if (filters.templateId) {
-      qb.andWhere('program.template_id = :templateId', { templateId: filters.templateId });
+      qb.andWhere('program.template_id = :templateId', {
+        templateId: filters.templateId,
+      });
     }
     if (filters.dateFrom) {
       qb.andWhere('program.date >= :dateFrom', { dateFrom: filters.dateFrom });
@@ -129,67 +143,75 @@ export class ProgramService {
       throw new BadRequestException('Template is not active');
     }
 
-    const program = this.programRepo.create({
-      date: dto.date,
-      templateId: dto.templateId,
-      status: ProgramStatus.DRAFT,
-      createdById: userId,
-    });
-    const savedProgram = await this.programRepo.save(program);
-
-    const templateGroups = await this.templateGroupRepo.find({
-      where: { templateId: dto.templateId },
-    });
-    for (const tGroup of templateGroups) {
-      const group = this.programGroupRepo.create({
-        name: tGroup.name,
-        startTime: tGroup.startTime,
-        endTime: tGroup.endTime,
-        order: tGroup.order,
-        programId: savedProgram.id,
+    const savedProgram = await this.dataSource.transaction(async (manager) => {
+      const program = manager.create(ServiceProgram, {
+        date: dto.date,
+        templateId: dto.templateId,
+        status: ProgramStatus.DRAFT,
+        createdById: userId,
       });
-      const savedGroup = await this.programGroupRepo.save(group);
+      const persistedProgram = await manager.save(program);
 
-      const templateSections = await this.templateSectionRepo.find({
-        where: { groupId: tGroup.id },
+      const templateGroups = await manager.find(ServiceTemplateGroup, {
+        where: { templateId: dto.templateId },
       });
-      for (const tSection of templateSections) {
-        const section = this.sectionRepo.create({
-          order: tSection.order,
-          startTime: tSection.startTime ?? null,
-          duration: tSection.duration ?? null,
-          targetType: ProgramSectionTargetType.GROUP,
-          groupId: savedGroup.id,
-          programId: savedProgram.id,
-          templateSectionId: tSection.id,
+      for (const tGroup of templateGroups) {
+        const group = manager.create(ServiceProgramGroup, {
+          name: tGroup.name,
+          startTime: tGroup.startTime,
+          endTime: tGroup.endTime,
+          order: tGroup.order,
+          programId: persistedProgram.id,
         });
-        await this.sectionRepo.save(section);
+        const savedGroup = await manager.save(group);
+
+        const groupSections = await manager.find(ServiceTemplateSection, {
+          where: { groupId: tGroup.id },
+        });
+        for (const tSection of groupSections) {
+          await manager.save(
+            manager.create(ServiceProgramSection, {
+              order: tSection.order,
+              startTime: tSection.startTime ?? null,
+              duration: tSection.duration ?? null,
+              targetType: ProgramSectionTargetType.GROUP,
+              groupId: savedGroup.id,
+              programId: persistedProgram.id,
+              templateSectionId: tSection.id,
+            }),
+          );
+        }
       }
-    }
 
-    const templateSections = await this.templateSectionRepo.find({
-      where: { templateId: dto.templateId, groupId: IsNull() },
-    });
-    for (const tSection of templateSections) {
-      const section = this.sectionRepo.create({
-        order: tSection.order,
-        startTime: tSection.startTime ?? null,
-        duration: tSection.duration ?? null,
-        targetType: ProgramSectionTargetType.PROGRAM,
-        programId: savedProgram.id,
-        templateSectionId: tSection.id,
+      const programSections = await manager.find(ServiceTemplateSection, {
+        where: { templateId: dto.templateId, groupId: IsNull() },
       });
-      await this.sectionRepo.save(section);
-    }
+      for (const tSection of programSections) {
+        await manager.save(
+          manager.create(ServiceProgramSection, {
+            order: tSection.order,
+            startTime: tSection.startTime ?? null,
+            duration: tSection.duration ?? null,
+            targetType: ProgramSectionTargetType.PROGRAM,
+            programId: persistedProgram.id,
+            templateSectionId: tSection.id,
+          }),
+        );
+      }
 
-    await this.createLog(
-      savedProgram.id,
-      userId,
-      null,
-      'creó programa',
-      null,
-      `Fecha: ${dto.date}`,
-    );
+      await manager.save(
+        manager.create(ServiceProgramLog, {
+          programId: persistedProgram.id,
+          userId,
+          sectionId: null,
+          action: 'creó programa',
+          previousValue: null,
+          newValue: `Fecha: ${dto.date}`,
+        }),
+      );
+
+      return persistedProgram;
+    });
 
     return this.findOne(savedProgram.id);
   }
@@ -200,7 +222,9 @@ export class ProgramService {
     userId: string,
     userRole: UserRole,
   ): Promise<ServiceProgramGroup> {
-    const program = await this.programRepo.findOne({ where: { id: programId } });
+    const program = await this.programRepo.findOne({
+      where: { id: programId },
+    });
     if (!program) throw new NotFoundException(`Program ${programId} not found`);
     if (!this.canEditProgram(program, userId, userRole)) {
       throw new ForbiddenException('Not authorized to edit this program');
@@ -216,7 +240,14 @@ export class ProgramService {
     });
     const saved = await this.programGroupRepo.save(group);
 
-    await this.createLog(programId, userId, null, 'agregó grupo', null, dto.name);
+    await this.createLog(
+      programId,
+      userId,
+      null,
+      'agregó grupo',
+      null,
+      dto.name,
+    );
     return saved;
   }
 
@@ -226,10 +257,14 @@ export class ProgramService {
     userId: string,
     userRole: UserRole,
   ): Promise<ServiceProgramSection> {
-    const group = await this.programGroupRepo.findOne({ where: { id: groupId } });
+    const group = await this.programGroupRepo.findOne({
+      where: { id: groupId },
+    });
     if (!group) throw new NotFoundException(`Group ${groupId} not found`);
 
-    const program = await this.programRepo.findOne({ where: { id: group.programId } });
+    const program = await this.programRepo.findOne({
+      where: { id: group.programId },
+    });
     if (!program) throw new NotFoundException(`Program not found`);
     if (!this.canEditProgram(program, userId, userRole)) {
       throw new ForbiddenException('Not authorized to edit this program');
@@ -245,7 +280,14 @@ export class ProgramService {
     });
     const saved = await this.sectionRepo.save(section);
 
-    await this.createLog(program.id, userId, saved.id, 'agregó sección', null, dto.name);
+    await this.createLog(
+      program.id,
+      userId,
+      saved.id,
+      'agregó sección',
+      null,
+      dto.name,
+    );
     return saved;
   }
 
@@ -435,7 +477,9 @@ export class ProgramService {
     userId: string,
     userRole: UserRole,
   ) {
-    const program = await this.programRepo.findOne({ where: { id: programId } });
+    const program = await this.programRepo.findOne({
+      where: { id: programId },
+    });
     if (!program) {
       throw new NotFoundException(`Program ${programId} not found`);
     }
@@ -508,7 +552,14 @@ export class ProgramService {
     program.status = ProgramStatus.ARCHIVED;
     await this.programRepo.save(program);
 
-    await this.createLog(programId, userId, null, 'archivó programa', null, null);
+    await this.createLog(
+      programId,
+      userId,
+      null,
+      'archivó programa',
+      null,
+      null,
+    );
 
     return program;
   }
@@ -528,14 +579,21 @@ export class ProgramService {
     userId: string,
     userRole: UserRole,
   ): Promise<void> {
-    const program = await this.programRepo.findOne({ where: { id: programId } });
+    const program = await this.programRepo.findOne({
+      where: { id: programId },
+    });
     if (!program) throw new NotFoundException(`Program ${programId} not found`);
     if (!this.canEditProgram(program, userId, userRole)) {
       throw new ForbiddenException('Not authorized to edit this program');
     }
 
-    const group = await this.programGroupRepo.findOne({ where: { id: groupId, programId } });
-    if (!group) throw new NotFoundException(`Group ${groupId} not found in program ${programId}`);
+    const group = await this.programGroupRepo.findOne({
+      where: { id: groupId, programId },
+    });
+    if (!group)
+      throw new NotFoundException(
+        `Group ${groupId} not found in program ${programId}`,
+      );
 
     // Nullify log references to sections in this group before deleting them
     const sectionsInGroup = await this.sectionRepo.find({ where: { groupId } });
@@ -550,7 +608,14 @@ export class ProgramService {
     }
     await this.sectionRepo.delete({ groupId });
     await this.programGroupRepo.delete(groupId);
-    await this.createLog(programId, userId, null, 'eliminó grupo', group.name, null);
+    await this.createLog(
+      programId,
+      userId,
+      null,
+      'eliminó grupo',
+      group.name,
+      null,
+    );
   }
 
   async deleteSection(
@@ -559,14 +624,21 @@ export class ProgramService {
     userId: string,
     userRole: UserRole,
   ): Promise<void> {
-    const program = await this.programRepo.findOne({ where: { id: programId } });
+    const program = await this.programRepo.findOne({
+      where: { id: programId },
+    });
     if (!program) throw new NotFoundException(`Program ${programId} not found`);
     if (!this.canEditProgram(program, userId, userRole)) {
       throw new ForbiddenException('Not authorized to edit this program');
     }
 
-    const section = await this.sectionRepo.findOne({ where: { id: sectionId, programId } });
-    if (!section) throw new NotFoundException(`Section ${sectionId} not found in program ${programId}`);
+    const section = await this.sectionRepo.findOne({
+      where: { id: sectionId, programId },
+    });
+    if (!section)
+      throw new NotFoundException(
+        `Section ${sectionId} not found in program ${programId}`,
+      );
 
     // Nullify log references to this section before deleting it
     await this.logRepo
@@ -576,7 +648,14 @@ export class ProgramService {
       .where('section_id = :sectionId', { sectionId })
       .execute();
     await this.sectionRepo.delete(sectionId);
-    await this.createLog(programId, userId, null, 'eliminó sección', section.name, null);
+    await this.createLog(
+      programId,
+      userId,
+      null,
+      'eliminó sección',
+      section.name,
+      null,
+    );
   }
 
   async getLogs(programId: string): Promise<ServiceProgramLog[]> {

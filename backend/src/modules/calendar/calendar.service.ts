@@ -11,11 +11,13 @@ import {
   MoreThanOrEqual,
   LessThanOrEqual,
   In,
+  DataSource,
+  EntityManager,
 } from 'typeorm';
 import { unlink, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { randomBytes } from 'crypto';
-import sharp = require('sharp');
+import sharp from 'sharp';
 import { Event } from './entities/event.entity';
 import { EventAttachment } from './entities/event-attachment.entity';
 import { EventOrganizer } from './entities/event-organizer.entity';
@@ -65,6 +67,7 @@ export class CalendarService {
     private readonly organizerRepository: Repository<EventOrganizer>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(
@@ -82,28 +85,36 @@ export class CalendarService {
       startDate,
     );
 
-    const event = this.eventRepository.create({
-      title: createEventDto.title,
-      description: createEventDto.description ?? null,
-      startDate,
-      endDate,
-      eventType: createEventDto.eventType,
-      departmentId: createEventDto.departmentId ?? null,
-      meetingUrl: createEventDto.meetingUrl ?? null,
-      meetingType:
-        createEventDto.meetingType ??
-        detectMeetingType(createEventDto.meetingUrl),
-      location: createEventDto.location ?? null,
-      status: EventStatus.Draft,
-      shareSlug,
-      creatorId: userId,
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const event = manager.create(Event, {
+        title: createEventDto.title,
+        description: createEventDto.description ?? null,
+        startDate,
+        endDate,
+        eventType: createEventDto.eventType,
+        departmentId: createEventDto.departmentId ?? null,
+        meetingUrl: createEventDto.meetingUrl ?? null,
+        meetingType:
+          createEventDto.meetingType ??
+          detectMeetingType(createEventDto.meetingUrl),
+        location: createEventDto.location ?? null,
+        status: EventStatus.Draft,
+        shareSlug,
+        creatorId: userId,
+      });
+
+      const persisted = await manager.save(event);
+
+      if (createEventDto.organizers?.length) {
+        await this.setOrganizers(
+          persisted.id,
+          createEventDto.organizers,
+          manager,
+        );
+      }
+
+      return persisted;
     });
-
-    const saved = await this.eventRepository.save(event);
-
-    if (createEventDto.organizers?.length) {
-      await this.setOrganizers(saved.id, createEventDto.organizers);
-    }
 
     return this.toResponse(await this.loadOne(saved.id));
   }
@@ -214,11 +225,13 @@ export class CalendarService {
     if (updateEventDto.location !== undefined)
       event.location = updateEventDto.location ?? null;
 
-    await this.eventRepository.save(event);
+    await this.dataSource.transaction(async (manager) => {
+      await manager.save(event);
 
-    if (updateEventDto.organizers !== undefined) {
-      await this.setOrganizers(event.id, updateEventDto.organizers);
-    }
+      if (updateEventDto.organizers !== undefined) {
+        await this.setOrganizers(event.id, updateEventDto.organizers, manager);
+      }
+    });
 
     return this.toResponse(await this.loadOne(event.id));
   }
@@ -406,7 +419,15 @@ export class CalendarService {
   private async setOrganizers(
     eventId: string,
     organizers: OrganizerInputDto[],
+    manager?: EntityManager,
   ): Promise<void> {
+    const organizerRepo = manager
+      ? manager.getRepository(EventOrganizer)
+      : this.organizerRepository;
+    const userRepo = manager
+      ? manager.getRepository(User)
+      : this.userRepository;
+
     if (organizers.length > MAX_ORGANIZERS_PER_EVENT) {
       throw new BadRequestException(
         `Máximo ${MAX_ORGANIZERS_PER_EVENT} organizadores por evento`,
@@ -433,14 +454,14 @@ export class CalendarService {
       }
     }
 
-    await this.organizerRepository.delete({ eventId });
+    await organizerRepo.delete({ eventId });
     if (organizers.length === 0) return;
 
     const userIds = organizers
       .map((o) => o.userId)
       .filter((id): id is string => !!id);
     const existingUsers = userIds.length
-      ? await this.userRepository.find({ where: { id: In(userIds) } })
+      ? await userRepo.find({ where: { id: In(userIds) } })
       : [];
     const existingUserIds = new Set(existingUsers.map((u) => u.id));
 
@@ -448,13 +469,13 @@ export class CalendarService {
       .map((o) => {
         if (o.userId) {
           if (!existingUserIds.has(o.userId)) return null;
-          return this.organizerRepository.create({
+          return organizerRepo.create({
             eventId,
             userId: o.userId,
             displayName: null,
           });
         }
-        return this.organizerRepository.create({
+        return organizerRepo.create({
           eventId,
           userId: null,
           displayName: o.displayName!.trim(),
@@ -463,7 +484,7 @@ export class CalendarService {
       .filter((r): r is EventOrganizer => r !== null);
 
     if (rows.length > 0) {
-      await this.organizerRepository.save(rows);
+      await organizerRepo.save(rows);
     }
   }
 

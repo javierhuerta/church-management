@@ -15,11 +15,22 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiQuery,
 } from '@nestjs/swagger';
 import { ProgramService } from '../services/program.service';
-import { CreateProgramDto, UpdateSectionDto, UpdateGroupDto, UpdateProgramDateDto, CreateGroupInProgramDto, CreateSectionInGroupDto, GetProgramsFilterDto, ReorderDto } from '../dto/program.dto';
-import { ServiceProgramResponseDto, ProgramLogResponseDto } from '../dto/program-response.dto';
+import {
+  CreateProgramDto,
+  UpdateSectionDto,
+  UpdateGroupDto,
+  UpdateProgramDateDto,
+  CreateGroupInProgramDto,
+  CreateSectionInGroupDto,
+  GetProgramsFilterDto,
+  ReorderDto,
+} from '../dto/program.dto';
+import {
+  ServiceProgramResponseDto,
+  ProgramLogResponseDto,
+} from '../dto/program-response.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { UserRole } from '../../common/entities/user-role.enum';
@@ -43,15 +54,25 @@ export class ProgramController {
   constructor(private readonly programService: ProgramService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List programs with optional filters (sorted by date DESC)' })
-  @ApiResponse({ status: 200, description: 'List of programs', type: [ServiceProgramResponseDto] })
+  @ApiOperation({
+    summary: 'List programs with optional filters (sorted by date DESC)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of programs',
+    type: [ServiceProgramResponseDto],
+  })
   async findAll(@Query() filters: GetProgramsFilterDto) {
     return this.programService.findAll(filters);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get program by ID' })
-  @ApiResponse({ status: 200, description: 'Program details', type: ServiceProgramResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Program details',
+    type: ServiceProgramResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Program not found' })
   async findOne(@Param('id') id: string) {
     return this.programService.findOne(id);
@@ -59,7 +80,11 @@ export class ProgramController {
 
   @Get(':id/logs')
   @ApiOperation({ summary: 'Get program audit logs' })
-  @ApiResponse({ status: 200, description: 'Program logs', type: [ProgramLogResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Program logs',
+    type: [ProgramLogResponseDto],
+  })
   async getLogs(@Param('id') id: string) {
     return this.programService.getLogs(id);
   }
@@ -96,7 +121,12 @@ export class ProgramController {
     @Body() dto: CreateGroupInProgramDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.programService.addGroup(id, dto, req.user!.userId, req.user!.role);
+    return this.programService.addGroup(
+      id,
+      dto,
+      req.user!.userId,
+      req.user!.role,
+    );
   }
 
   @Post('groups/:groupId/sections')
@@ -113,7 +143,12 @@ export class ProgramController {
     @Body() dto: CreateSectionInGroupDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.programService.addSectionToGroup(groupId, dto, req.user!.userId, req.user!.role);
+    return this.programService.addSectionToGroup(
+      groupId,
+      dto,
+      req.user!.userId,
+      req.user!.role,
+    );
   }
 
   @Patch('sections/:sectionId')
@@ -153,7 +188,11 @@ export class ProgramController {
   @Patch(':id/archive')
   @Roles(UserRole.Admin)
   @ApiOperation({ summary: 'Archive a program (Admin only)' })
-  @ApiResponse({ status: 200, description: 'Program archived', type: ServiceProgramResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Program archived',
+    type: ServiceProgramResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Already archived' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Program not found' })
@@ -173,7 +212,12 @@ export class ProgramController {
   }
 
   @Delete(':programId/groups/:groupId')
-  @Roles(UserRole.Admin, UserRole.Pastor, UserRole.Anciano, UserRole.DirectorDepartamento)
+  @Roles(
+    UserRole.Admin,
+    UserRole.Pastor,
+    UserRole.Anciano,
+    UserRole.DirectorDepartamento,
+  )
   @ApiOperation({ summary: 'Delete a group and its sections from a program' })
   @ApiResponse({ status: 200, description: 'Group deleted' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -183,12 +227,22 @@ export class ProgramController {
     @Param('groupId') groupId: string,
     @Request() req: RequestWithUser,
   ) {
-    await this.programService.deleteGroup(programId, groupId, req.user!.userId, req.user!.role);
+    await this.programService.deleteGroup(
+      programId,
+      groupId,
+      req.user!.userId,
+      req.user!.role,
+    );
     return { message: 'Group deleted' };
   }
 
   @Delete(':programId/sections/:sectionId')
-  @Roles(UserRole.Admin, UserRole.Pastor, UserRole.Anciano, UserRole.DirectorDepartamento)
+  @Roles(
+    UserRole.Admin,
+    UserRole.Pastor,
+    UserRole.Anciano,
+    UserRole.DirectorDepartamento,
+  )
   @ApiOperation({ summary: 'Delete a section from a program' })
   @ApiResponse({ status: 200, description: 'Section deleted' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -198,7 +252,12 @@ export class ProgramController {
     @Param('sectionId') sectionId: string,
     @Request() req: RequestWithUser,
   ) {
-    await this.programService.deleteSection(programId, sectionId, req.user!.userId, req.user!.role);
+    await this.programService.deleteSection(
+      programId,
+      sectionId,
+      req.user!.userId,
+      req.user!.role,
+    );
     return { message: 'Section deleted' };
   }
 
@@ -227,7 +286,12 @@ export class ProgramController {
   }
 
   @Patch(':programId/groups/reorder')
-  @Roles(UserRole.Admin, UserRole.Pastor, UserRole.Anciano, UserRole.DirectorDepartamento)
+  @Roles(
+    UserRole.Admin,
+    UserRole.Pastor,
+    UserRole.Anciano,
+    UserRole.DirectorDepartamento,
+  )
   @ApiOperation({ summary: 'Reorder groups in a program' })
   @ApiResponse({ status: 200, description: 'Groups reordered' })
   async reorderGroups(
@@ -239,7 +303,12 @@ export class ProgramController {
   }
 
   @Patch(':programId/sections/reorder')
-  @Roles(UserRole.Admin, UserRole.Pastor, UserRole.Anciano, UserRole.DirectorDepartamento)
+  @Roles(
+    UserRole.Admin,
+    UserRole.Pastor,
+    UserRole.Anciano,
+    UserRole.DirectorDepartamento,
+  )
   @ApiOperation({ summary: 'Reorder sections in a program' })
   @ApiResponse({ status: 200, description: 'Sections reordered' })
   async reorderSections(
@@ -266,6 +335,11 @@ export class ProgramController {
     @Body() dto: UpdateProgramDateDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.programService.updateProgram(id, dto, req.user!.userId, req.user!.role);
+    return this.programService.updateProgram(
+      id,
+      dto,
+      req.user!.userId,
+      req.user!.role,
+    );
   }
 }

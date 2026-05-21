@@ -1,4 +1,5 @@
 import { Entity, Column, ManyToMany, JoinTable } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { UserRole } from '../../common/entities/user-role.enum';
 import { Department } from '../../departments/entities/department.entity';
@@ -8,6 +9,7 @@ export class User extends BaseEntity {
   @Column({ unique: true })
   email: string;
 
+  @Exclude()
   @Column()
   password: string;
 

@@ -17,6 +17,7 @@ interface MockRepo<T> {
   create: jest.Mock;
   save: jest.Mock;
   delete: jest.Mock;
+  _entities?: T[];
 }
 
 function createMockRepo<T>(): MockRepo<T> {
@@ -29,7 +30,9 @@ function createMockRepo<T>(): MockRepo<T> {
   };
 }
 
-function makeTemplate(overrides: Partial<ServiceTemplate> = {}): ServiceTemplate {
+function makeTemplate(
+  overrides: Partial<ServiceTemplate> = {},
+): ServiceTemplate {
   return {
     id: 'tmpl-1',
     name: 'Culto Sabático',
@@ -41,7 +44,7 @@ function makeTemplate(overrides: Partial<ServiceTemplate> = {}): ServiceTemplate
     createdAt: new Date(),
     updatedAt: null,
     ...overrides,
-  } as ServiceTemplate;
+  };
 }
 
 describe('TemplateCrudService', () => {
@@ -58,9 +61,18 @@ describe('TemplateCrudService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TemplateCrudService,
-        { provide: getRepositoryToken(ServiceTemplate), useValue: templateRepo },
-        { provide: getRepositoryToken(ServiceTemplateGroup), useValue: groupRepo },
-        { provide: getRepositoryToken(ServiceTemplateSection), useValue: sectionRepo },
+        {
+          provide: getRepositoryToken(ServiceTemplate),
+          useValue: templateRepo,
+        },
+        {
+          provide: getRepositoryToken(ServiceTemplateGroup),
+          useValue: groupRepo,
+        },
+        {
+          provide: getRepositoryToken(ServiceTemplateSection),
+          useValue: sectionRepo,
+        },
       ],
     }).compile();
 
@@ -80,7 +92,9 @@ describe('TemplateCrudService', () => {
     it('throws NotFoundException when template does not exist', async () => {
       templateRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.findOne('nonexistent')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 
@@ -104,13 +118,16 @@ describe('TemplateCrudService', () => {
       },
     );
 
-    it.each([UserRole.Anciano, UserRole.DirectorDepartamento, UserRole.Secretaria])(
-      'rejects %s with ForbiddenException',
-      async (role) => {
-        await expect(service.create(dto, role)).rejects.toBeInstanceOf(ForbiddenException);
-        expect(templateRepo.save).not.toHaveBeenCalled();
-      },
-    );
+    it.each([
+      UserRole.Anciano,
+      UserRole.DirectorDepartamento,
+      UserRole.Secretaria,
+    ])('rejects %s with ForbiddenException', async (role) => {
+      await expect(service.create(dto, role)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
+      expect(templateRepo.save).not.toHaveBeenCalled();
+    });
   });
 
   describe('create — groups and sections', () => {
@@ -119,7 +136,10 @@ describe('TemplateCrudService', () => {
       templateRepo.save.mockResolvedValue(savedTemplate);
       templateRepo.findOne.mockResolvedValue(savedTemplate);
 
-      const savedGroup = { id: 'grp-1', name: 'Escuela Sabática' } as ServiceTemplateGroup;
+      const savedGroup = {
+        id: 'grp-1',
+        name: 'Escuela Sabática',
+      } as ServiceTemplateGroup;
       groupRepo.save.mockResolvedValue(savedGroup);
 
       const dto = {
@@ -161,7 +181,9 @@ describe('TemplateCrudService', () => {
 
       expect(groupRepo.save).not.toHaveBeenCalled();
       expect(sectionRepo.save).toHaveBeenCalledTimes(2);
-      const sectionTargets = sectionRepo.create.mock.calls.map((c) => c[0].targetType);
+      const sectionTargets = sectionRepo.create.mock.calls.map(
+        (c) => c[0].targetType,
+      );
       expect(sectionTargets).toEqual([
         TemplateSectionTargetType.TEMPLATE,
         TemplateSectionTargetType.TEMPLATE,
@@ -180,7 +202,11 @@ describe('TemplateCrudService', () => {
       const existing = makeTemplate({ id: 'tmpl-1', name: 'Viejo nombre' });
       templateRepo.findOne.mockResolvedValue(existing);
 
-      await service.update('tmpl-1', { name: 'Nuevo nombre', isActive: false }, UserRole.Admin);
+      await service.update(
+        'tmpl-1',
+        { name: 'Nuevo nombre', isActive: false },
+        UserRole.Admin,
+      );
 
       expect(templateRepo.save).toHaveBeenCalled();
       const saved = templateRepo.save.mock.calls[0][0] as ServiceTemplate;
@@ -191,7 +217,9 @@ describe('TemplateCrudService', () => {
     it('replaces groups when dto.groups is provided', async () => {
       const existing = makeTemplate({ id: 'tmpl-1' });
       templateRepo.findOne.mockResolvedValue(existing);
-      groupRepo.save.mockResolvedValue({ id: 'new-grp' } as ServiceTemplateGroup);
+      groupRepo.save.mockResolvedValue({
+        id: 'new-grp',
+      });
 
       await service.update(
         'tmpl-1',
@@ -223,7 +251,9 @@ describe('TemplateCrudService', () => {
     it('throws NotFoundException when template does not exist', async () => {
       templateRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.delete('bad-id', UserRole.Admin)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(
+        service.delete('bad-id', UserRole.Admin),
+      ).rejects.toBeInstanceOf(NotFoundException);
       expect(templateRepo.delete).not.toHaveBeenCalled();
     });
   });
