@@ -1,7 +1,12 @@
 import { Link } from 'react-router-dom'
-import { Calendar, FileText, Heart, ArrowRight } from 'lucide-react'
+import { Calendar, FileText, Heart, ArrowRight, Loader2 } from 'lucide-react'
+import { format, parseISO } from 'date-fns'
+import { es } from 'date-fns/locale'
 import logoFull from '@/assets/images/logo.png'
 import { useTheme } from '@/components/theme-provider'
+import { useCalendar } from '@/features/calendar/hooks/use-calendar'
+import { usePrograms } from '@/features/worship-services/hooks/use-worship-services'
+import { Button } from '@/components/ui/button'
 
 const quickActions = [
   {
@@ -30,14 +35,88 @@ const quickActions = [
   },
 ]
 
+const EVENT_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
+  published: { bg: '#0F766E22', color: '#0F766E' },
+  draft:     { bg: '#C9A84C22', color: '#92600A' },
+  archived:  { bg: '#47556922', color: '#475569' },
+}
+
+const PROGRAM_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
+  published: { bg: '#0F766E22', color: '#0F766E' },
+  draft:     { bg: '#C9A84C22', color: '#92600A' },
+  archived:  { bg: '#47556922', color: '#475569' },
+}
+
+function ActivityItem({
+  icon: Icon,
+  title,
+  subtitle,
+  badge,
+  badgeStyle,
+  href,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  subtitle: string
+  badge: string
+  badgeStyle: { bg: string; color: string }
+  href?: string
+}) {
+  const content = (
+    <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-xl hover:bg-muted/60 transition-colors">
+      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-foreground truncate">{title}</p>
+        <p className="text-xs text-muted-foreground">{subtitle}</p>
+      </div>
+      <span
+        className="shrink-0 text-xs px-2 py-1 rounded-full font-medium"
+        style={{ backgroundColor: badgeStyle.bg, color: badgeStyle.color }}
+      >
+        {badge}
+      </span>
+    </div>
+  )
+
+  if (href) {
+    return (
+      <Link to={href} className="block">
+        {content}
+      </Link>
+    )
+  }
+  return content
+}
+
 export function DashboardPage() {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const logoFilter = isDark ? 'brightness(0) invert(1)' : undefined
 
+  const today = new Date()
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString()
+  const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString()
+
+  const { data: calendarData, isLoading: loadingEvents } = useCalendar({
+    startDate: todayStart,
+    endDate: todayEnd,
+  })
+
+  const { data: programsData, isLoading: loadingPrograms } = usePrograms({
+    dateFrom: today.toISOString().split('T')[0],
+    dateTo: today.toISOString().split('T')[0],
+  })
+
+  const events = calendarData?.data ?? []
+  const programs = programsData ?? []
+
+  const isLoading = loadingEvents || loadingPrograms
+  const hasActivity = events.length > 0 || programs.length > 0
+
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex items-center gap-5">
         <img src={logoFull} alt="Adventistas Central Osorno" className="h-20 w-auto shrink-0" style={{ filter: logoFilter }} />
         <div>
@@ -50,7 +129,6 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Module cards */}
       <div className="grid gap-4 md:grid-cols-3">
         {quickActions.map((action) => {
           const Icon = action.icon
@@ -105,37 +183,78 @@ export function DashboardPage() {
         })}
       </div>
 
-      {/* Recent activity */}
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-foreground mb-4">
-          Actividad Reciente
-        </h3>
-        <div className="space-y-4">
-          <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-xl">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Calendar className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">Culto del Sábado</p>
-              <p className="text-xs text-muted-foreground">Hoy, 10:00 AM</p>
-            </div>
-            <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ backgroundColor: '#0F766E', color: '#fff' }}>
-              Próximo
-            </span>
-          </div>
-          <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-xl">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <FileText className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">Escuela Sabática</p>
-              <p className="text-xs text-muted-foreground">Hoy, 9:00 AM</p>
-            </div>
-            <span className="text-xs px-2 py-1 rounded-full font-medium bg-muted text-muted-foreground">
-              Completado
-            </span>
-          </div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-foreground">
+            Actividad de Hoy
+          </h3>
+          <span className="text-sm text-muted-foreground">
+            {format(today, "EEEE d 'de' MMMM", { locale: es })}
+          </span>
         </div>
+
+        {isLoading && (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        {!isLoading && !hasActivity && (
+          <div className="text-center py-8">
+            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+              <Calendar className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground">Sin actividad programada para hoy</p>
+            <div className="flex items-center justify-center gap-3 mt-4">
+              <Link to="/calendario">
+                <Button variant="outline" size="sm">
+                  Ver calendario
+                </Button>
+              </Link>
+              <Link to="/cultos/programas">
+                <Button variant="outline" size="sm">
+                  Ver programas
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {!isLoading && hasActivity && (
+          <div className="space-y-3">
+            {programs.map((program) => {
+              const style = PROGRAM_STATUS_COLORS[program.status] ?? PROGRAM_STATUS_COLORS.DRAFT
+              const dateStr = format(parseISO(program.date), "h:mm a", { locale: es })
+              return (
+                <ActivityItem
+                  key={`program-${program.id}`}
+                  icon={FileText}
+                  title={program.template?.name ?? 'Programa de Culto'}
+                  subtitle={`${dateStr} — ${program.groups?.length ?? 0} grupos`}
+                  badge={program.status === 'PUBLISHED' ? 'Publicado' : program.status === 'DRAFT' ? 'Borrador' : 'Archivado'}
+                  badgeStyle={style}
+                  href={`/cultos/programas/${program.id}`}
+                />
+              )
+            })}
+
+            {events.map((event) => {
+              const style = EVENT_STATUS_COLORS[event.status] ?? EVENT_STATUS_COLORS.DRAFT
+              const timeStr = format(parseISO(event.startDate), 'h:mm a', { locale: es })
+              return (
+                <ActivityItem
+                  key={`event-${event.id}`}
+                  icon={Calendar}
+                  title={event.title}
+                  subtitle={event.departmentName ? `${timeStr} — ${event.departmentName}` : timeStr}
+                  badge={event.status === 'published' ? 'Publicado' : event.status === 'draft' ? 'Borrador' : 'Archivado'}
+                  badgeStyle={style}
+                  href={`/calendario/${event.id}`}
+                />
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )
