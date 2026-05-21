@@ -8,7 +8,7 @@ Allow editors to set a cover image for calendar events, either by uploading a lo
 
 ### Requirement: Editor can upload a custom cover image from the event form
 
-The system SHALL allow editors to upload an image file from their device and set it as the event's cover image, directly from the event create/edit form (not hidden under the attachments section).
+The system SHALL allow editors to upload an image file from their device and set it as the event's cover image. The upload SHALL use the generated OpenAPI client (`CalendarService.calendarControllerUploadCover`) instead of a direct `fetch()` call with manual token management.
 
 #### Scenario: Editor uploads a JPEG cover for a new event
 - **WHEN** editor opens the cover image picker, selects a local JPEG, crops it to the 16:9 ratio shown in the picker, and confirms
@@ -25,6 +25,12 @@ The system SHALL allow editors to upload an image file from their device and set
 #### Scenario: Editor uploads a file larger than 10 MB
 - **WHEN** editor selects an image larger than 10 MB
 - **THEN** the picker rejects the file with a visible error before sending anything to the server
+
+#### Scenario: Upload uses the generated OpenAPI client
+- **WHEN** editor confirms the cropped cover image
+- **THEN** the upload is performed via `CalendarService.calendarControllerUploadCover(eventId, formData)`
+- **AND** the Bearer token is injected automatically by the OpenAPI client (not manually added to headers)
+- **AND** the `API_URL` constant from `src/lib/api-client.ts` is NOT used in this flow
 
 ### Requirement: Cover image is cropped to 16:9 and optimized before storage
 

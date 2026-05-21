@@ -52,7 +52,7 @@ function Calendar({
         weekdays: cn(defaultClassNames.weekdays, 'flex'),
         weekday: cn(
           defaultClassNames.weekday,
-          'text-neutral-500 rounded-md w-9 font-normal text-[0.8rem]'
+          'text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]'
         ),
         week: cn(defaultClassNames.week, 'flex w-full mt-2'),
         day: cn(
@@ -65,17 +65,17 @@ function Calendar({
         ),
         selected: cn(
           defaultClassNames.selected,
-          '[&>button]:bg-neutral-900 [&>button]:text-neutral-50 [&>button]:hover:bg-neutral-900 [&>button]:hover:text-neutral-50'
+          '[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground'
         ),
         today: cn(
           defaultClassNames.today,
-          '[&>button]:bg-neutral-100 [&>button]:text-neutral-900'
+          '[&>button]:bg-accent [&>button]:text-accent-foreground'
         ),
-        outside: cn(defaultClassNames.outside, 'text-neutral-400 opacity-50'),
-        disabled: cn(defaultClassNames.disabled, 'text-neutral-400 opacity-50'),
+        outside: cn(defaultClassNames.outside, 'text-muted-foreground opacity-50'),
+        disabled: cn(defaultClassNames.disabled, 'text-muted-foreground opacity-50'),
         range_middle: cn(
           defaultClassNames.range_middle,
-          '[&>button]:bg-neutral-100 [&>button]:text-neutral-900 [&>button]:rounded-none'
+          '[&>button]:bg-accent [&>button]:text-accent-foreground [&>button]:rounded-none'
         ),
         range_start: cn(defaultClassNames.range_start, 'rounded-l-md'),
         range_end: cn(defaultClassNames.range_end, 'rounded-r-md'),

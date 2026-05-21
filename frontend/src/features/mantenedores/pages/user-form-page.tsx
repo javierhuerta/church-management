@@ -156,7 +156,7 @@ export function UserFormPage() {
   }
 
   if (isEdit && isLoadingUser) {
-    return <div className="text-sm text-neutral-500">Cargando usuario...</div>
+    return <div className="text-sm text-muted-foreground">Cargando usuario...</div>
   }
 
   return (
@@ -169,14 +169,14 @@ export function UserFormPage() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-lg font-semibold text-neutral-900">
+        <h2 className="text-lg font-semibold text-foreground">
           {isEdit ? 'Editar usuario' : 'Nuevo usuario'}
         </h2>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 bg-white rounded-xl border border-neutral-200 p-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 bg-card rounded-xl border border-border p-6">
         {serverError && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
             {serverError}
           </div>
         )}
@@ -184,13 +184,13 @@ export function UserFormPage() {
         <div className="space-y-2">
           <Label htmlFor="name">Nombre *</Label>
           <Input id="name" {...register('name')} />
-          {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+          {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="email">Email *</Label>
           <Input id="email" type="email" {...register('email')} />
-          {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
+          {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
 
         <div className="space-y-2">
@@ -198,7 +198,7 @@ export function UserFormPage() {
             {isEdit ? 'Nueva contraseña (dejar vacío para no cambiar)' : 'Contraseña *'}
           </Label>
           <Input id="password" type="password" {...register('password')} />
-          {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
+          {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
         </div>
 
         <div className="space-y-2">
@@ -221,13 +221,13 @@ export function UserFormPage() {
               </Select>
             )}
           />
-          {errors.role && <p className="text-xs text-red-500">{errors.role.message}</p>}
+          {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label>Departamentos donde es director</Label>
           {departments.length === 0 ? (
-            <p className="text-xs text-neutral-400">No hay departamentos disponibles.</p>
+            <p className="text-xs text-muted-foreground">No hay departamentos disponibles.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {departments.map((dept) => {
@@ -239,8 +239,8 @@ export function UserFormPage() {
                     onClick={() => toggleDepartment(dept.id)}
                     className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
                       selected
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-neutral-600 border-neutral-300 hover:border-blue-400'
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-card text-foreground border-border hover:border-primary/50'
                     }`}
                   >
                     {dept.name}
@@ -251,7 +251,7 @@ export function UserFormPage() {
           )}
         </div>
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-neutral-100">
+        <div className="flex justify-end gap-2 pt-2 border-t border-border">
           <Button
             type="button"
             variant="outline"

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { API_URL } from '@/lib/api-client'
+import { CalendarService } from '@/lib/api/services/CalendarService'
 import type { AttachmentResponseDto } from '@/lib/api'
 
 export interface CoverMetadata {
@@ -16,30 +16,11 @@ export async function uploadEventCover(
   blob: Blob,
   metadata: CoverMetadata = {},
 ): Promise<AttachmentResponseDto> {
-  const formData = new FormData()
-  formData.append('file', blob, 'cover.jpg')
-  if (metadata.sourceAuthor) formData.append('sourceAuthor', metadata.sourceAuthor)
-  if (metadata.sourceUrl) formData.append('sourceUrl', metadata.sourceUrl)
-
-  const res = await fetch(`${API_URL}/api/calendar/${eventId}/cover`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-    body: formData,
-  })
-
-  if (!res.ok) {
-    let message = 'Error subiendo la imagen de portada'
-    try {
-      const body = (await res.json()) as { message?: string | string[] }
-      if (body.message) {
-        message = Array.isArray(body.message) ? body.message.join(', ') : body.message
-      }
-    } catch {
-      // ignore
-    }
-    throw new Error(message)
-  }
-  return (await res.json()) as AttachmentResponseDto
+  return CalendarService.calendarControllerUploadCover(eventId, {
+    file: blob as unknown as string,
+    sourceAuthor: metadata.sourceAuthor,
+    sourceUrl: metadata.sourceUrl,
+  }) as Promise<AttachmentResponseDto>
 }
 
 export interface PendingCover {

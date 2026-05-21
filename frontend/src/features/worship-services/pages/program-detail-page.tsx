@@ -92,13 +92,13 @@ export function ProgramDetailPage() {
     queryClient.invalidateQueries({ queryKey: ['worship-services', 'programs', id] })
 
   if (isLoading) {
-    return <div className="text-neutral-500">Cargando programa...</div>
+    return <div className="text-muted-foreground">Cargando programa...</div>
   }
 
   if (!program) {
     return (
-      <div className="rounded-2xl border border-neutral-200 bg-white p-12 text-center">
-        <h2 className="text-xl font-semibold text-neutral-900">Programa no encontrado</h2>
+      <div className="rounded-2xl border border-border bg-card p-12 text-center">
+        <h2 className="text-xl font-semibold text-foreground">Programa no encontrado</h2>
       </div>
     )
   }
@@ -214,7 +214,7 @@ export function ProgramDetailPage() {
             </div>
           ) : (
             <div className="flex items-center gap-2 mt-2">
-              <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+              <h2 className="text-3xl font-bold tracking-tight text-foreground">
                 {formattedDate}
               </h2>
               {canEdit && (
@@ -224,19 +224,19 @@ export function ProgramDetailPage() {
               )}
             </div>
           )}
-          <p className="text-neutral-500 mt-1">{program.template?.name}</p>
+          <p className="text-muted-foreground mt-1">{program.template?.name}</p>
         </div>
         <div className="flex items-center gap-2">
           {isArchived ? (
-            <span className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-sm font-medium text-neutral-600">
+            <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
               <Archive className="h-4 w-4 mr-1" /> Archivado
             </span>
           ) : isPublished ? (
-            <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
+            <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-900/20 px-3 py-1 text-sm font-medium text-green-700 dark:text-green-400">
               <CheckCircle className="h-4 w-4 mr-1" /> Publicado
             </span>
           ) : (
-            <span className="inline-flex items-center rounded-full bg-yellow-50 px-3 py-1 text-sm font-medium text-yellow-700">
+            <span className="inline-flex items-center rounded-full bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1 text-sm font-medium text-yellow-700 dark:text-yellow-400">
               Borrador
             </span>
           )}
@@ -276,7 +276,7 @@ export function ProgramDetailPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={() => setDeleteDialogOpen(true)}
             >
               <Trash2 className="h-4 w-4 mr-1" /> Eliminar
@@ -346,7 +346,7 @@ export function ProgramDetailPage() {
             ) : (
               <button
                 onClick={() => setAddingGroup(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed border-neutral-200 text-sm text-neutral-500 hover:border-blue-300 hover:text-blue-600 transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed border-border text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
               >
                 <Plus className="h-4 w-4" /> Agregar grupo
               </button>
@@ -537,12 +537,12 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, onDelete, o
             placeholder="Nombre del responsable"
           />
           {userSuggestions && userSuggestions.length > 0 && (
-            <div className="border rounded bg-white shadow-sm mt-1 max-h-24 overflow-y-auto">
+            <div className="border rounded bg-card shadow-sm mt-1 max-h-24 overflow-y-auto">
               {userSuggestions.map((u) => (
                 <button
                   key={u.id}
                   type="button"
-                  className="w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50"
+                  className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent"
                   onClick={() => setFormData({ ...formData, responsible: u.name })}
                 >
                   {u.name}
@@ -560,12 +560,12 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, onDelete, o
             placeholder="Número o nombre del himno"
           />
           {hymnSuggestions && hymnSuggestions.length > 0 && (
-            <div className="border rounded bg-white shadow-sm mt-1 max-h-24 overflow-y-auto">
+            <div className="border rounded bg-card shadow-sm mt-1 max-h-24 overflow-y-auto">
               {hymnSuggestions.map((h) => (
                 <button
                   key={h.number}
                   type="button"
-                  className="w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50"
+                  className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent"
                   onClick={() => setFormData({ ...formData, hymnText: `Himno ${h.number} - ${h.name}` })}
                 >
                   {h.number} - {h.name}
@@ -598,30 +598,30 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, onDelete, o
     <div className="p-4 flex items-start justify-between gap-4">
       <div className="flex-1 space-y-2">
         {displayName && (
-          <p className="text-xs font-semibold text-neutral-700 uppercase tracking-wide">{displayName}</p>
+          <p className="text-xs font-semibold text-foreground uppercase tracking-wide">{displayName}</p>
         )}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           {section.startTime && (
-            <div className="flex items-center gap-1 text-neutral-500">
+            <div className="flex items-center gap-1 text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />
               {section.startTime}
             </div>
           )}
           {section.responsible && (
             <div className="flex items-center gap-1">
-              <User className="h-3.5 w-3.5 text-neutral-400" />
+              <User className="h-3.5 w-3.5 text-muted-foreground" />
               {section.responsible}
             </div>
           )}
           {section.hymnText && (
             <div className="flex items-center gap-1">
-              <Music className="h-3.5 w-3.5 text-neutral-400" />
+              <Music className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="truncate">{section.hymnText}</span>
             </div>
           )}
           {section.notes && (
             <div className="flex items-center gap-1">
-              <FileText className="h-3.5 w-3.5 text-neutral-400" />
+              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="truncate">{section.notes}</span>
             </div>
           )}
@@ -635,7 +635,7 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, onDelete, o
           <Button
             variant="ghost"
             size="sm"
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={onDelete}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -672,8 +672,8 @@ function AddGroupForm({
   }
 
   return (
-    <div className="rounded-2xl border-2 border-blue-200 bg-blue-50 p-4">
-      <p className="text-sm font-medium text-blue-900 mb-3">Nuevo grupo</p>
+    <div className="rounded-2xl border-2 border-primary/20 bg-primary/5 p-4">
+      <p className="text-sm font-medium text-foreground mb-3">Nuevo grupo</p>
       <form onSubmit={handleSubmit} className="space-y-3">
         <Input
           autoFocus
@@ -730,7 +730,7 @@ function AddSectionForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-3 flex items-center gap-2 bg-neutral-50 border-t border-neutral-100">
+    <form onSubmit={handleSubmit} className="p-3 flex items-center gap-2 bg-muted border-t border-border">
       <Input
         autoFocus
         placeholder="Nombre de la sección (ej: Canto de apertura)"
@@ -791,8 +791,8 @@ function SortableGroupCard({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-2xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
-      <div className="bg-blue-50 px-4 py-3 border-b border-blue-100">
+    <div ref={setNodeRef} style={style} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="bg-primary/5 px-4 py-3 border-b border-primary/10">
         <div className="flex items-center justify-between">
           {isEditingGroup ? (
             <GroupEditForm
@@ -814,18 +814,18 @@ function SortableGroupCard({
               <div className="flex items-center gap-2">
                 {canEdit && (
                   <button
-                    className="cursor-grab touch-none text-blue-300 hover:text-blue-500"
+                    className="cursor-grab touch-none text-primary/30 hover:text-primary/60"
                     {...attributes}
                     {...listeners}
                   >
                     <GripVertical className="h-4 w-4" />
                   </button>
                 )}
-                <h3 className="font-semibold text-blue-900">{group.name}</h3>
+                <h3 className="font-semibold text-foreground">{group.name}</h3>
               </div>
               <div className="flex items-center gap-2">
                 {(group.startTime || group.endTime) && (
-                  <span className="text-xs text-blue-600 flex items-center">
+                  <span className="text-xs text-primary/70 flex items-center">
                     <Clock className="h-3 w-3 mr-1" />
                     {group.startTime}
                     {group.startTime && group.endTime && ' - '}
@@ -841,7 +841,7 @@ function SortableGroupCard({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       onClick={onDeleteGroup}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -853,7 +853,7 @@ function SortableGroupCard({
           )}
         </div>
       </div>
-      <div className="divide-y divide-neutral-100">
+      <div className="divide-y divide-border">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -921,7 +921,7 @@ function SortableSectionRow(props: Parameters<typeof SectionRow>[0]) {
     <div ref={setNodeRef} style={style} className="relative">
       {props.canEdit && !props.isEditing && (
         <button
-          className="absolute left-1 top-1/2 -translate-y-1/2 z-10 cursor-grab touch-none text-neutral-300 hover:text-neutral-500 p-1"
+          className="absolute left-1 top-1/2 -translate-y-1/2 z-10 cursor-grab touch-none text-muted-foreground/30 hover:text-muted-foreground p-1"
           {...attributes}
           {...listeners}
         >

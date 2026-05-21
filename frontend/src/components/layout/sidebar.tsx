@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Calendar, FileText, Heart, LogOut, User, ChevronDown, ChevronLeft, Settings } from 'lucide-react'
+import { Calendar, FileText, Heart, LogOut, User, ChevronDown, ChevronLeft, Settings, Sun, Moon, Monitor } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import {
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useTextSize } from '@/lib/contexts/text-size-context'
 import type { TextSize } from '@/lib/contexts/text-size-context'
+import { useTheme } from '@/components/theme-provider'
 import { AuthService } from '@/lib/api'
 
 interface NavItem {
@@ -59,10 +60,19 @@ function getInitials(name: string): string {
     .slice(0, 2)
 }
 
+type Theme = 'light' | 'dark' | 'system'
+
+const themeOptions: { value: Theme; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { value: 'light', label: 'Claro', icon: Sun },
+  { value: 'dark', label: 'Oscuro', icon: Moon },
+  { value: 'system', label: 'Sistema', icon: Monitor },
+]
+
 export function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const { textSize, setTextSize } = useTextSize()
+  const { theme, setTheme } = useTheme()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isCollapsedDropdownOpen, setIsCollapsedDropdownOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -70,8 +80,6 @@ export function Sidebar() {
   const [openSections, setOpenSections] = useState<string[]>(['modules'])
   const user = getUserFromStorage()
 
-  // Auto-collapse on small viewports; track isSmallScreen separately so the
-  // expanded header can show a collapse button when manually opened on mobile.
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 1023px)')
     const handleChange = (e: MediaQueryListEvent) => {
@@ -102,36 +110,34 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`flex flex-col bg-neutral-50 border-r border-neutral-200 h-full transition-all duration-300 ease-in-out ${
+      className={`flex flex-col bg-card border-r border-border h-full transition-all duration-300 ease-in-out ${
         isCollapsed ? 'w-16' : 'w-64'
       }`}
     >
       {/* Header */}
-      <div className={`border-b border-neutral-200 bg-white ${isCollapsed ? 'p-3 flex justify-center' : 'p-6'}`}>
+      <div className={`border-b border-border bg-card ${isCollapsed ? 'p-3 flex justify-center' : 'p-6'}`}>
         {isCollapsed ? (
-          // Task 1.3: Clicking IA logo expands sidebar
           <button
             onClick={() => setIsCollapsed(false)}
-            className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-sm hover:opacity-90 transition-opacity cursor-pointer"
+            className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm hover:opacity-90 transition-opacity cursor-pointer"
           >
-            <span className="text-white font-bold text-sm">IA</span>
+            <span className="text-primary-foreground font-bold text-sm">IA</span>
           </button>
         ) : (
-          // Task 2.3: Full header text when expanded
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-sm">IA</span>
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm">
+                <span className="text-primary-foreground font-bold text-sm">IA</span>
               </div>
               <div>
-                <h2 className="text-base font-semibold text-neutral-900">Iglesia Adventista</h2>
-                <p className="text-xs text-neutral-500">Osorno Central</p>
+                <h2 className="text-base font-semibold text-foreground">Iglesia Adventista</h2>
+                <p className="text-xs text-muted-foreground">Osorno Central</p>
               </div>
             </div>
             {isSmallScreen && (
               <button
                 onClick={() => setIsCollapsed(true)}
-                className="h-8 w-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
+                className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                 aria-label="Colapsar sidebar"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -144,7 +150,6 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 p-4">
         {isCollapsed ? (
-          // Task 3.1, 3.2, 3.3: Icon-only nav in collapsed mode
           <div className="flex flex-col items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon
@@ -160,14 +165,14 @@ export function Sidebar() {
                   className={`
                     w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200
                     ${isActive
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                      ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm'
                       : item.disabled
-                        ? 'text-neutral-400 cursor-not-allowed hover:bg-neutral-100'
-                        : 'text-neutral-600 hover:bg-white hover:text-neutral-900 border border-transparent hover:shadow-sm'
+                        ? 'text-muted-foreground cursor-not-allowed hover:bg-accent'
+                        : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground border border-transparent hover:shadow-sm'
                     }
                   `}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-neutral-400'}`} />
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
                 </button>
               )
             })}
@@ -184,12 +189,12 @@ export function Sidebar() {
                   className={`
                     w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200
                     ${isActive
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
-                      : 'text-neutral-600 hover:bg-white hover:text-neutral-900 border border-transparent hover:shadow-sm'
+                      ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground border border-transparent hover:shadow-sm'
                     }
                   `}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-neutral-400'}`} />
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
                 </button>
               )
             })}
@@ -213,22 +218,22 @@ export function Sidebar() {
                         className={`
                           w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                           ${isActive
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                            ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm'
                             : item.disabled
-                              ? 'text-neutral-400 cursor-not-allowed hover:bg-neutral-100'
-                              : 'text-neutral-600 hover:bg-white hover:text-neutral-900 border border-transparent hover:shadow-sm'
+                              ? 'text-muted-foreground cursor-not-allowed hover:bg-accent'
+                              : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground border border-transparent hover:shadow-sm'
                           }
                         `}
                       >
-                        <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-neutral-400'}`} />
+                        <Icon className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
                         <span>{item.label}</span>
                         {item.disabled && (
-                          <span className="ml-auto text-xs px-1.5 py-0.5 bg-neutral-100 rounded text-neutral-400">
+                          <span className="ml-auto text-xs px-1.5 py-0.5 bg-muted rounded text-muted-foreground">
                             Pronto
                           </span>
                         )}
                         {isActive && (
-                          <div className="ml-auto h-1.5 w-1.5 rounded-full bg-blue-500" />
+                          <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
                         )}
                       </button>
                     )
@@ -253,15 +258,15 @@ export function Sidebar() {
                           className={`
                             w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                             ${isActive
-                              ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
-                              : 'text-neutral-600 hover:bg-white hover:text-neutral-900 border border-transparent hover:shadow-sm'
+                              ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm'
+                              : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground border border-transparent hover:shadow-sm'
                             }
                           `}
                         >
-                          <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-neutral-400'}`} />
+                          <Icon className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
                           <span>{item.label}</span>
                           {isActive && (
-                            <div className="ml-auto h-1.5 w-1.5 rounded-full bg-blue-500" />
+                            <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
                           )}
                         </button>
                       )
@@ -275,9 +280,8 @@ export function Sidebar() {
       </nav>
 
       {/* Profile Section */}
-      <div className="p-4 border-t border-neutral-200 bg-white">
+      <div className="p-4 border-t border-border bg-card">
         {isCollapsed ? (
-          // Task 4.2: Collapsed — avatar triggers dropdown positioned to the right
           <div className="flex justify-center">
             <DropdownMenu className="relative">
               <DropdownMenuTrigger
@@ -285,7 +289,7 @@ export function Sidebar() {
                 className="rounded-full hover:opacity-90 transition-opacity"
               >
                 <Avatar className="h-10 w-10 shadow-sm">
-                  <AvatarFallback className="bg-gradient-to-br from-neutral-700 to-neutral-800 text-white text-sm font-medium">
+                  <AvatarFallback className="bg-gradient-to-br from-muted-foreground to-foreground text-background text-sm font-medium">
                     {user ? getInitials(user.name) : 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -297,24 +301,23 @@ export function Sidebar() {
                     className="fixed inset-0 z-40"
                     onClick={() => setIsCollapsedDropdownOpen(false)}
                   />
-                  {/* Task 4.3, 4.4: Dropdown content with profile info, text size, logout */}
-                  <DropdownMenuContent className="absolute bottom-0 left-full ml-3 w-56 z-50 rounded-xl shadow-lg border border-neutral-200 p-3">
-                    <div className="mb-2 pb-2 border-b border-neutral-100">
-                      <DropdownMenuLabel className="p-0 text-sm font-medium text-neutral-900 truncate">
+                  <DropdownMenuContent className="absolute bottom-0 left-full ml-3 w-56 z-50 rounded-xl shadow-lg border border-border p-3">
+                    <div className="mb-2 pb-2 border-b border-border">
+                      <DropdownMenuLabel className="p-0 text-sm font-medium text-foreground truncate">
                         {user?.name || 'Usuario'}
                       </DropdownMenuLabel>
-                      <p className="text-xs text-neutral-500 truncate px-2">{user?.role || 'Miembro'}</p>
+                      <p className="text-xs text-muted-foreground truncate px-2">{user?.role || 'Miembro'}</p>
                     </div>
                     <DropdownMenuItem
                       onSelect={() => setIsCollapsedDropdownOpen(false)}
-                      className="flex items-center gap-2 text-neutral-600"
+                      className="flex items-center gap-2 text-foreground"
                     >
                       <User className="h-4 w-4" />
                       Ver Perfil
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <div className="px-2 py-1">
-                      <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-2">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                         Tamaño de texto
                       </p>
                       <div className="flex gap-1">
@@ -325,8 +328,8 @@ export function Sidebar() {
                             className={`
                               flex-1 py-1.5 text-xs font-medium rounded-lg transition-all
                               ${textSize === size
-                                ? 'bg-blue-600 text-white shadow-sm'
-                                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                                ? 'bg-primary text-primary-foreground shadow-sm'
+                                : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                               }
                             `}
                           >
@@ -335,10 +338,33 @@ export function Sidebar() {
                         ))}
                       </div>
                     </div>
+                    <div className="px-2 py-1 mt-1">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                        Tema
+                      </p>
+                      <div className="flex gap-1">
+                        {themeOptions.map(({ value, label, icon: Icon }) => (
+                          <button
+                            key={value}
+                            onClick={() => setTheme(value)}
+                            title={label}
+                            className={`
+                              flex-1 py-1.5 flex items-center justify-center rounded-lg transition-all
+                              ${theme === value
+                                ? 'bg-primary text-primary-foreground shadow-sm'
+                                : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                              }
+                            `}
+                          >
+                            <Icon className="h-3.5 w-3.5" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onSelect={handleLogout}
-                      className="flex items-center gap-2 text-red-600 hover:bg-red-50"
+                      className="flex items-center gap-2 text-destructive hover:bg-destructive/10"
                     >
                       <LogOut className="h-4 w-4" />
                       Cerrar Sesión
@@ -349,26 +375,25 @@ export function Sidebar() {
             </DropdownMenu>
           </div>
         ) : (
-          // Expanded: original dropdown implementation
           <div className="relative">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full flex items-center gap-3 p-3 rounded-xl bg-neutral-50 hover:bg-neutral-100 transition-colors border border-neutral-200"
+              className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted hover:bg-accent transition-colors border border-border"
             >
               <Avatar className="h-10 w-10 shadow-sm">
-                <AvatarFallback className="bg-gradient-to-br from-neutral-700 to-neutral-800 text-white text-sm font-medium">
+                <AvatarFallback className="bg-gradient-to-br from-muted-foreground to-foreground text-background text-sm font-medium">
                   {user ? getInitials(user.name) : 'U'}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-medium text-neutral-900 truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {user?.name || 'Usuario'}
                 </p>
-                <p className="text-xs text-neutral-500 truncate">
+                <p className="text-xs text-muted-foreground truncate">
                   {user?.role || 'Miembro'}
                 </p>
               </div>
-              <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isDropdownOpen && (
@@ -377,21 +402,21 @@ export function Sidebar() {
                   className="fixed inset-0 z-40"
                   onClick={() => setIsDropdownOpen(false)}
                 />
-                <div className="absolute bottom-full left-0 right-0 mb-2 p-3 bg-white rounded-xl shadow-lg border border-neutral-200 z-50">
-                  <div className="mb-2 pb-2 border-b border-neutral-100">
-                    <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
+                <div className="absolute bottom-full left-0 right-0 mb-2 p-3 bg-card rounded-xl shadow-lg border border-border z-50">
+                  <div className="mb-2 pb-2 border-b border-border">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Mi Cuenta
                     </p>
                   </div>
                   <button
                     onClick={() => setIsDropdownOpen(false)}
-                    className="w-full flex items-center gap-2 px-2 py-2 text-sm text-neutral-600 hover:bg-neutral-50 rounded-lg transition-colors"
+                    className="w-full flex items-center gap-2 px-2 py-2 text-sm text-foreground hover:bg-accent rounded-lg transition-colors"
                   >
                     <User className="h-4 w-4" />
                     Ver Perfil
                   </button>
                   <div className="mt-3 mb-2 px-2">
-                    <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                       Tamaño de texto
                     </p>
                     <div className="flex gap-1">
@@ -402,8 +427,8 @@ export function Sidebar() {
                           className={`
                             flex-1 py-1.5 text-xs font-medium rounded-lg transition-all
                             ${textSize === size
-                              ? 'bg-blue-600 text-white shadow-sm'
-                              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                              ? 'bg-primary text-primary-foreground shadow-sm'
+                              : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                             }
                           `}
                         >
@@ -412,10 +437,33 @@ export function Sidebar() {
                       ))}
                     </div>
                   </div>
-                  <div className="mt-2 pt-2 border-t border-neutral-100">
+                  <div className="mt-2 mb-2 px-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                      Tema
+                    </p>
+                    <div className="flex gap-1">
+                      {themeOptions.map(({ value, label, icon: Icon }) => (
+                        <button
+                          key={value}
+                          onClick={() => setTheme(value)}
+                          className={`
+                            flex-1 py-1.5 flex items-center justify-center gap-1 text-xs font-medium rounded-lg transition-all
+                            ${theme === value
+                              ? 'bg-primary text-primary-foreground shadow-sm'
+                              : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                            }
+                          `}
+                        >
+                          <Icon className="h-3.5 w-3.5" />
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-border">
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-2 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="w-full flex items-center gap-2 px-2 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                     >
                       <LogOut className="h-4 w-4" />
                       Cerrar Sesión

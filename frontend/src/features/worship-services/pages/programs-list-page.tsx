@@ -56,10 +56,10 @@ export function ProgramsListPage() {
 
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
             Programas de Culto
           </h2>
-          <p className="text-neutral-500 mt-1">
+          <p className="text-muted-foreground mt-1">
             Programas de culto creados a partir de plantillas
           </p>
         </div>
@@ -68,12 +68,12 @@ export function ProgramsListPage() {
             variant="outline"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className={hasActiveFilters ? 'border-blue-300 text-blue-700 bg-blue-50' : ''}
+            className={hasActiveFilters ? 'border-primary/30 text-primary bg-primary/5' : ''}
           >
             <Filter className="h-4 w-4 mr-1" />
             Filtros
             {hasActiveFilters && (
-              <span className="ml-1.5 rounded-full bg-blue-600 text-white text-xs px-1.5">
+              <span className="ml-1.5 rounded-full bg-primary text-primary-foreground text-xs px-1.5">
                 {Object.values(filters).filter(Boolean).length}
               </span>
             )}
@@ -89,12 +89,12 @@ export function ProgramsListPage() {
       </div>
 
       {showFilters && (
-        <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm space-y-4">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-neutral-600">Estado</label>
+              <label className="text-xs font-medium text-muted-foreground">Estado</label>
               <select
-                className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 value={filters.status || ''}
                 onChange={(e) => setFilters({ ...filters, status: (e.target.value as ProgramFilters['status']) || undefined })}
               >
@@ -106,9 +106,9 @@ export function ProgramsListPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-neutral-600">Plantilla</label>
+              <label className="text-xs font-medium text-muted-foreground">Plantilla</label>
               <select
-                className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 value={filters.templateId || ''}
                 onChange={(e) => setFilters({ ...filters, templateId: e.target.value || undefined })}
               >
@@ -120,7 +120,7 @@ export function ProgramsListPage() {
             </div>
 
             <div className="space-y-1 sm:col-span-2">
-              <label className="text-xs font-medium text-neutral-600">Rango de fechas</label>
+              <label className="text-xs font-medium text-muted-foreground">Rango de fechas</label>
               <DateRangePicker
                 value={{ from: filters.dateFrom, to: filters.dateTo }}
                 onChange={(range) =>
@@ -146,7 +146,7 @@ export function ProgramsListPage() {
 
       {isLoading && <ProgramsSkeleton />}
       {isError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
           No se pudieron cargar los programas. Intenta nuevamente.
         </div>
       )}
@@ -184,15 +184,15 @@ function ProgramCard({
   const status = program.status as string
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm hover:shadow-md transition-shadow">
+    <div className="rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-start gap-4 p-5">
         <Link to={`/cultos/programas/${program.id}`} className="flex-1 flex items-start gap-3 min-w-0">
-          <div className="mt-1 rounded-lg bg-blue-100 p-2 shrink-0">
-            <Calendar className="h-5 w-5 text-blue-600" />
+          <div className="mt-1 rounded-lg bg-primary/10 p-2 shrink-0">
+            <Calendar className="h-5 w-5 text-primary" />
           </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-neutral-900 truncate">{formattedDate}</h3>
-            <p className="text-sm text-neutral-500 mt-0.5">{program.template?.name}</p>
+            <h3 className="font-semibold text-foreground truncate">{formattedDate}</h3>
+            <p className="text-sm text-muted-foreground mt-0.5">{program.template?.name}</p>
           </div>
         </Link>
 
@@ -202,7 +202,7 @@ function ProgramCard({
             <Button
               variant="ghost"
               size="sm"
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={(e) => {
                 e.preventDefault()
                 onDelete()
@@ -215,7 +215,7 @@ function ProgramCard({
       </div>
 
       <Link to={`/cultos/programas/${program.id}`}>
-        <div className="px-5 pb-4 flex flex-wrap items-center gap-3 text-sm text-neutral-500">
+        <div className="px-5 pb-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
           {program.groups && program.groups.length > 0 && (
             <span>{program.groups.length} grupos</span>
           )}
@@ -231,20 +231,20 @@ function ProgramCard({
 function StatusBadge({ status }: { status: string }) {
   if (status === 'PUBLISHED') {
     return (
-      <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">
+      <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-900/20 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
         <Clock className="h-3 w-3 mr-1" /> Publicado
       </span>
     )
   }
   if (status === 'ARCHIVED') {
     return (
-      <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-600">
+      <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
         <Archive className="h-3 w-3 mr-1" /> Archivado
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center rounded-full bg-yellow-50 px-2.5 py-0.5 text-xs font-medium text-yellow-700">
+    <span className="inline-flex items-center rounded-full bg-yellow-50 dark:bg-yellow-900/20 px-2.5 py-0.5 text-xs font-medium text-yellow-700 dark:text-yellow-400">
       {STATUS_LABELS[status] ?? status}
     </span>
   )
@@ -254,12 +254,12 @@ function ProgramsSkeleton() {
   return (
     <div className="grid gap-4">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+        <div key={i} className="rounded-xl border border-border bg-card p-5 shadow-sm">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 bg-neutral-200 rounded-lg animate-pulse" />
+            <div className="h-10 w-10 bg-muted rounded-lg animate-pulse" />
             <div className="flex-1">
-              <div className="h-5 w-48 bg-neutral-200 rounded animate-pulse" />
-              <div className="mt-1 h-4 w-32 bg-neutral-100 rounded animate-pulse" />
+              <div className="h-5 w-48 bg-muted rounded animate-pulse" />
+              <div className="mt-1 h-4 w-32 bg-muted/60 rounded animate-pulse" />
             </div>
           </div>
         </div>
@@ -270,14 +270,14 @@ function ProgramsSkeleton() {
 
 function EmptyState({ canCreate, hasFilters }: { canCreate: boolean; hasFilters: boolean }) {
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-12 text-center shadow-sm">
-      <div className="mx-auto h-12 w-12 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
+    <div className="rounded-2xl border border-border bg-card p-12 text-center shadow-sm">
+      <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
         <span className="text-2xl">📅</span>
       </div>
-      <h3 className="text-base font-semibold text-neutral-900">
+      <h3 className="text-base font-semibold text-foreground">
         {hasFilters ? 'Sin resultados' : 'Sin programas'}
       </h3>
-      <p className="text-sm text-neutral-500 mt-1">
+      <p className="text-sm text-muted-foreground mt-1">
         {hasFilters
           ? 'No hay programas que coincidan con los filtros aplicados.'
           : canCreate

@@ -10,6 +10,7 @@ import {
   WorshipServicesTemplatesService,
   WorshipServicesProgramsService,
   HymnsService,
+  AuthService,
 } from '@/lib/api';
 
 export type ServiceTemplateType = ServiceTemplateResponseDto.type;
@@ -160,15 +161,8 @@ export function useHymnSearch(query: string) {
 export function useUserSearch(query: string) {
   return useQuery({
     queryKey: ['users', 'search', query],
-    queryFn: async () => {
-      const response = await fetch(`/auth/autocomplete?q=${encodeURIComponent(query)}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to search users');
-      return response.json() as Promise<{ id: string; name: string; email: string }[]>;
-    },
+    queryFn: () =>
+      AuthService.authControllerAutocomplete(query) as Promise<{ id: string; name: string; email: string }[]>,
     enabled: query.length >= 1,
   });
 }

@@ -30,7 +30,7 @@ const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenuContent
   ({ className, align = "start", children, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("z-50 min-w-[8rem] overflow-hidden rounded-md border bg-white p-1 shadow-md", className)}
+      className={cn("z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-card p-1 shadow-md", className)}
       data-align={align}
       {...props}
     >
@@ -48,7 +48,7 @@ const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownMenuItemProps>
   ({ className, onSelect, children, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 focus:bg-neutral-100", className)}
+      className={cn("relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground", className)}
       onClick={onSelect}
       {...props}
     >
@@ -67,7 +67,7 @@ DropdownMenuLabel.displayName = "DropdownMenuLabel"
 
 const DropdownMenuSeparator = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("-mx-1 my-1 h-px bg-neutral-100", className)} {...props} />
+    <div ref={ref} className={cn("-mx-1 my-1 h-px bg-border", className)} {...props} />
   )
 )
 DropdownMenuSeparator.displayName = "DropdownMenuSeparator"

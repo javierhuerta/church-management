@@ -58,7 +58,7 @@ const AccordionItem = React.forwardRef<HTMLDivElement, AccordionItemProps>(
     return (
       <div
         ref={ref}
-        className={cn("border-b border-neutral-200", className)}
+        className={cn("border-b border-border", className)}
         {...props}
       >
         {React.Children.map(children, (child) => {
@@ -90,14 +90,14 @@ const AccordionTrigger = React.forwardRef<HTMLButtonElement, AccordionTriggerPro
       ref={ref}
       type="button"
       className={cn(
-        "flex w-full items-center justify-between py-3 px-1 text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors",
+        "flex w-full items-center justify-between py-3 px-1 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors",
         className
       )}
       onClick={() => onValueChange?.(value || "")}
       {...props}
     >
       {children}
-      <ChevronDown className={cn("h-4 w-4 text-neutral-400 transition-transform duration-200", isOpen && "rotate-180")} />
+      <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", isOpen && "rotate-180")} />
     </button>
   )
 )
