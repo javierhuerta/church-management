@@ -99,4 +99,4 @@ jobs:
       - name: Trigger Portainer deploy
         run: |
           curl -s -o /dev/null -w "%{http_code}" \
-            -X POST "https://portainer.unach.app/api/stacks/webhooks/6d64895d-dc93-4414-95eb-b3bf21ffc066"
+            -X POST "https://portainer.unach.app/api/stacks/webhooks/643cc059-6896-4ed0-886b-11ff772245e8"
