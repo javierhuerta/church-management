@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Calendar, FileText, Heart, ArrowRight } from 'lucide-react'
 import logoFull from '@/assets/images/logo.png'
+import { useTheme } from '@/components/theme-provider'
 
 const quickActions = [
   {
@@ -30,11 +31,15 @@ const quickActions = [
 ]
 
 export function DashboardPage() {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+  const logoFilter = isDark ? 'brightness(0) invert(1)' : undefined
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center gap-5">
-        <img src={logoFull} alt="Adventistas Central Osorno" className="h-16 w-auto shrink-0" />
+        <img src={logoFull} alt="Adventistas Central Osorno" className="h-20 w-auto shrink-0" style={{ filter: logoFilter }} />
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>
             Bienvenido
