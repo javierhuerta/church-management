@@ -36,10 +36,8 @@ const templateTypeLabels: Record<ServiceTemplateType, string> = {
 
 function SectionPreviewRow({
   section,
-  variant = 'group',
 }: {
   section: TemplateSectionResponseDto
-  variant?: 'group' | 'standalone'
 }) {
   return (
     <div className="flex items-center justify-between gap-2 text-xs">
@@ -120,7 +118,7 @@ function TemplatePreview({ template }: { template: ServiceTemplateResponseDto })
               {[...group.sections]
                 .sort((a, b) => a.order - b.order)
                 .map((s) => (
-                  <SectionPreviewRow key={s.id} section={s} variant="group" />
+                  <SectionPreviewRow key={s.id} section={s} />
                 ))}
             </div>
           )}
@@ -133,7 +131,7 @@ function TemplatePreview({ template }: { template: ServiceTemplateResponseDto })
             <p className="text-xs font-semibold text-primary mb-1.5">Secciones adicionales</p>
           )}
           {standaloneSections.map((s) => (
-            <SectionPreviewRow key={s.id} section={s} variant="standalone" />
+            <SectionPreviewRow key={s.id} section={s} />
           ))}
         </div>
       )}

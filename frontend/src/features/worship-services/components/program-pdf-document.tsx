@@ -6,10 +6,6 @@ import logoMark from '@/assets/images/logo.png'
 
 // ── Paleta de marca: Adventistas Central Osorno ──────────────
 const NAVY        = '#1B3A6B'
-const NAVY_LIGHT  = '#EEF2F9'   // navy al 8% sobre blanco
-const GOLD        = '#C9A84C'
-const GOLD_LIGHT  = '#FBF6EA'   // dorado al 8% sobre blanco
-const CREAM       = '#FAF6F0'
 const WHITE       = '#FFFFFF'
 const TEXT_DARK   = '#1A2A3A'
 const TEXT_MID    = '#4B5A72'
