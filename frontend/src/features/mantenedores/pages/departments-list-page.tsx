@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2, Building2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Building2, Search } from 'lucide-react'
 import { DepartmentsService } from '@/lib/api'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
 
@@ -22,11 +23,16 @@ function EmptyState() {
 export function DepartmentsListPage() {
   const queryClient = useQueryClient()
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
 
   const { data: departments = [], isLoading } = useQuery({
     queryKey: ['departments'],
     queryFn: () => DepartmentsService.departmentsControllerFindAll(),
   })
+
+  const filteredDepartments = search.trim()
+    ? departments.filter(d => d.name.toLowerCase().includes(search.toLowerCase()))
+    : departments
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => DepartmentsService.departmentsControllerRemove(id),
@@ -43,13 +49,24 @@ export function DepartmentsListPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-muted-foreground">Departamentos</h2>
-        <Link to="/mantenedores/departamentos/nuevo">
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-1" /> Nuevo departamento
-          </Button>
-        </Link>
+      <div className="flex items-center justify-between flex-wrap gap-3 px-1">
+        <h2 className="text-xl font-semibold text-muted-foreground">Departamentos</h2>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar departamento..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-8 text-sm w-48"
+            />
+          </div>
+          <Link to="/mantenedores/departamentos/nuevo">
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-1" /> Nuevo departamento
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {isLoading && (
@@ -60,9 +77,15 @@ export function DepartmentsListPage() {
 
       {!isLoading && departments.length === 0 && <EmptyState />}
 
-      {!isLoading && departments.length > 0 && (
+      {!isLoading && filteredDepartments.length === 0 && search && (
+        <div className="rounded-xl border border-border bg-card p-6 text-center">
+          <p className="text-sm text-muted-foreground">No se encontraron departamentos para "{search}"</p>
+        </div>
+      )}
+
+      {!isLoading && filteredDepartments.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {departments.map((dept) => (
+          {filteredDepartments.map((dept) => (
             <div
               key={dept.id}
               className="bg-card rounded-xl border border-border p-4 flex items-center justify-between hover:border-primary/40 transition-colors"

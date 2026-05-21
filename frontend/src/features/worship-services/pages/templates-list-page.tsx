@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
-import { Plus, Pencil, FileText } from 'lucide-react'
+import { Plus, Pencil, FileText, Search } from 'lucide-react'
+import { useState } from 'react'
 import { useTemplates } from '../hooks/use-worship-services'
 import type { ServiceTemplateResponseDto } from '@/lib/api'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useAuthUser } from '@/features/calendar/hooks/use-auth-user'
 
 const TEMPLATE_TYPE_LABELS: Record<string, string> = {
@@ -28,25 +30,37 @@ export function TemplatesListPage() {
   const user = useAuthUser()
   const canManage = user?.role === 'Admin' || user?.role === 'Pastor'
   const { data: templates, isLoading, isError } = useTemplates()
+  const [search, setSearch] = useState('')
+
+  const filteredTemplates = search.trim()
+    ? templates?.filter(t =>
+        t.name.toLowerCase().includes(search.toLowerCase()) ||
+        (t.description && t.description.toLowerCase().includes(search.toLowerCase()))
+      )
+    : templates
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-muted-foreground">
-            Plantillas de Cultos
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Gestiona las plantillas para los programas de culto
-          </p>
+      <div className="flex items-center justify-between flex-wrap gap-4 px-1">
+        <h2 className="text-xl font-semibold text-muted-foreground">Plantillas de Cultos</h2>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar plantilla..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-8 text-sm w-48"
+            />
+          </div>
+          {canManage && (
+            <Link to="/cultos/plantillas/nuevo">
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-1" /> Nueva plantilla
+              </Button>
+            </Link>
+          )}
         </div>
-        {canManage && (
-          <Link to="/cultos/plantillas/nuevo">
-            <Button>
-              <Plus className="h-4 w-4 mr-1" /> Nueva plantilla
-            </Button>
-          </Link>
-        )}
       </div>
 
       {isLoading && <TemplatesSkeleton />}
@@ -60,9 +74,15 @@ export function TemplatesListPage() {
         <EmptyState canCreate={canManage} />
       )}
 
-      {!isLoading && !isError && templates && templates.length > 0 && (
+      {!isLoading && !isError && templates && templates.length > 0 && filteredTemplates && filteredTemplates.length === 0 && search && (
+        <div className="rounded-xl border border-border bg-card p-6 text-center">
+          <p className="text-sm text-muted-foreground">No se encontraron plantillas para "{search}"</p>
+        </div>
+      )}
+
+      {!isLoading && !isError && filteredTemplates && filteredTemplates.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {templates.map((template) => (
+          {filteredTemplates.map((template) => (
             <TemplateCard key={template.id} template={template} canEdit={canManage} />
           ))}
         </div>

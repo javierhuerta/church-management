@@ -316,7 +316,7 @@ export function Sidebar() {
                     </div>
                     <DropdownMenuItem
                       onSelect={() => setIsCollapsedDropdownOpen(false)}
-                      className="flex items-center gap-2 text-foreground"
+                      className="flex items-center gap-2 px-2 py-1.5 text-foreground rounded-lg hover:bg-accent"
                     >
                       <User className="h-4 w-4" />
                       Ver Perfil
@@ -326,29 +326,30 @@ export function Sidebar() {
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                         Tamaño de texto
                       </p>
-                      <div className="flex gap-1">
-                        {(['small', 'medium', 'large'] as TextSize[]).map((size) => (
-                          <button
-                            key={size}
-                            onClick={() => setTextSize(size)}
-                            className={`
-                              flex-1 py-1.5 text-xs font-medium rounded-lg transition-all
-                              ${textSize === size
-                                ? 'bg-primary text-primary-foreground shadow-sm'
-                                : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                              }
-                            `}
-                          >
-                            {size === 'small' ? 'Pequeño' : size === 'medium' ? 'Mediano' : 'Grande'}
-                          </button>
-                        ))}
-                      </div>
+<div className="flex gap-1 px-2">
+                      {themeOptions.map(({ value, label, icon: Icon }) => (
+                        <button
+                          key={value}
+                          onClick={() => setTheme(value)}
+                          title={label}
+                          className={`
+                            flex-1 py-1.5 flex items-center justify-center rounded-lg transition-all
+                            ${theme === value
+                              ? 'bg-primary text-primary-foreground shadow-sm'
+                              : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                            }
+                          `}
+                        >
+                          <Icon className="h-3.5 w-3.5" />
+                        </button>
+                      ))}
+                    </div>
                     </div>
                     <div className="px-2 py-1 mt-1">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                         Tema
                       </p>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 px-2">
                         {themeOptions.map(({ value, label, icon: Icon }) => (
                           <button
                             key={value}
@@ -370,7 +371,7 @@ export function Sidebar() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onSelect={handleLogout}
-                      className="flex items-center gap-2 text-destructive hover:bg-destructive/10"
+                      className="flex items-center gap-2 px-2 py-1.5 text-destructive rounded-lg hover:bg-destructive/10"
                     >
                       <LogOut className="h-4 w-4" />
                       Cerrar Sesión

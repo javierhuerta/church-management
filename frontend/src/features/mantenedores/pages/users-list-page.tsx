@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2, UserX } from 'lucide-react'
+import { Plus, Pencil, Trash2, UserX, Search } from 'lucide-react'
 import { UsersService } from '@/lib/api'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
 
@@ -42,11 +43,19 @@ function EmptyState() {
 export function UsersListPage() {
   const queryClient = useQueryClient()
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: () => UsersService.usersControllerFindAll(),
   })
+
+  const filteredUsers = search.trim()
+    ? users.filter(u =>
+        u.name.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase())
+      )
+    : users
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => UsersService.usersControllerRemove(id),
@@ -63,13 +72,24 @@ export function UsersListPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-muted-foreground">Usuarios</h2>
-        <Link to="/mantenedores/usuarios/nuevo">
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-1" /> Nuevo usuario
-          </Button>
-        </Link>
+      <div className="flex items-center justify-between flex-wrap gap-3 px-1">
+        <h2 className="text-xl font-semibold text-muted-foreground">Usuarios</h2>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar usuario..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-8 text-sm w-48"
+            />
+          </div>
+          <Link to="/mantenedores/usuarios/nuevo">
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-1" /> Nuevo usuario
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {isLoading && (
@@ -80,7 +100,13 @@ export function UsersListPage() {
 
       {!isLoading && users.length === 0 && <EmptyState />}
 
-      {!isLoading && users.length > 0 && (
+      {!isLoading && filteredUsers.length === 0 && search && (
+        <div className="rounded-xl border border-border bg-card p-6 text-center">
+          <p className="text-sm text-muted-foreground">No se encontraron usuarios para "{search}"</p>
+        </div>
+      )}
+
+      {!isLoading && filteredUsers.length > 0 && (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-muted/40">
@@ -93,7 +119,7 @@ export function UsersListPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {users.map((user) => {
+              {filteredUsers.map((user) => {
                 const roleCfg = ROLE_BADGE_COLORS[user.role] ?? { bg: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }
                 return (
                   <tr key={user.id} className="hover:bg-accent/40 transition-colors">
