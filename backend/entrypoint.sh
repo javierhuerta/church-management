@@ -46,7 +46,7 @@ case "$1" in
     node dist/scripts/seeders/run-all.js
     ;;
   *)
-    echo "▶ Iniciando servidor..."
+    echo "Starting server..."
     exec node dist/src/main
     ;;
 esac
