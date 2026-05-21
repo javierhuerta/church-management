@@ -1,4 +1,10 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
@@ -6,6 +12,10 @@ import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { UserRole } from '../common/entities/user-role.enum';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { UserProfileDto } from './dto/user-profile.dto';
 
 interface TokenPayload {
   sub: string;
@@ -132,5 +142,33 @@ export class AuthService {
       take: 10,
     });
     return users;
+  }
+
+  async getProfile(userId: string): Promise<UserProfileDto> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    return { id: user.id, email: user.email, name: user.name, role: user.role, avatar: user.avatar };
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto): Promise<UserProfileDto> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    if (dto.name !== undefined) user.name = dto.name;
+    if (dto.avatar !== undefined) user.avatar = dto.avatar || null;
+    await this.userRepository.save(user);
+    return { id: user.id, email: user.email, name: user.name, role: user.role, avatar: user.avatar };
+  }
+
+  async changePassword(
+    userId: string,
+    dto: { currentPassword: string; newPassword: string },
+  ) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    const isValid = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!isValid) throw new BadRequestException('Current password is incorrect');
+    user.password = await bcrypt.hash(dto.newPassword, 10);
+    await this.userRepository.save(user);
+    return { message: 'Password changed successfully' };
   }
 }

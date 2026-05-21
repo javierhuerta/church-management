@@ -5,6 +5,7 @@ import { AppLayout } from './layouts/app-layout'
 import { AdaptiveLayout } from './layouts/adaptive-layout'
 import { DashboardPage } from './features/dashboard/pages/dashboard-page'
 import { MantenedoresLayout } from './features/mantenedores/layouts/mantenedores-layout'
+import { ProfilePage } from './features/profile/pages/profile-page'
 import { TextSizeProvider } from './lib/contexts/text-size-context'
 import { ThemePreviewPage } from './features/theme-preview/theme-preview-page'
 import { Toaster } from './components/ui/sonner'
@@ -110,6 +111,7 @@ function App() {
               }
             >
               <Route index element={<DashboardPage />} />
+              <Route path="perfil" element={<ProfilePage />} />
               <Route
                 path="calendario/nuevo"
                 element={<EventFormPage mode="create" />}

@@ -74,12 +74,10 @@ export class EventResponseDto {
 
   @ApiPropertyOptional({ type: String, nullable: true })
   @Expose()
-  @Transform(({ obj }) => (obj as Event).department?.name ?? null)
   departmentName: string | null;
 
   @ApiPropertyOptional({ type: String, nullable: true })
   @Expose()
-  @Transform(({ obj }) => (obj as Event).department?.color ?? null)
   departmentColor: string | null;
 
   @ApiPropertyOptional({ type: String, nullable: true })

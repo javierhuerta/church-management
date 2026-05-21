@@ -415,7 +415,10 @@ export function Sidebar() {
                     </p>
                   </div>
                   <button
-                    onClick={() => setIsDropdownOpen(false)}
+                    onClick={() => {
+                      setIsDropdownOpen(false)
+                      navigate('/perfil')
+                    }}
                     className="w-full flex items-center gap-2 px-2 py-2 text-sm text-foreground hover:bg-accent rounded-lg transition-colors"
                   >
                     <User className="h-4 w-4" />

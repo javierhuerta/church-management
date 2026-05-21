@@ -8,6 +8,7 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AttachmentResponseDto } from './models/AttachmentResponseDto';
+export type { ChangePasswordDto } from './models/ChangePasswordDto';
 export type { CreateDepartmentDto } from './models/CreateDepartmentDto';
 export { CreateEventDto } from './models/CreateEventDto';
 export type { CreateGroupInProgramDto } from './models/CreateGroupInProgramDto';
@@ -39,6 +40,7 @@ export { TemplateSectionResponseDto } from './models/TemplateSectionResponseDto'
 export type { UpdateDepartmentDto } from './models/UpdateDepartmentDto';
 export { UpdateEventDto } from './models/UpdateEventDto';
 export type { UpdateGroupDto } from './models/UpdateGroupDto';
+export type { UpdateProfileDto } from './models/UpdateProfileDto';
 export type { UpdateProgramDateDto } from './models/UpdateProgramDateDto';
 export type { UpdateSectionDto } from './models/UpdateSectionDto';
 export { UpdateTemplateDto } from './models/UpdateTemplateDto';

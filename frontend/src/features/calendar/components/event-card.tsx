@@ -100,7 +100,7 @@ export function EventCard({ event, compact = false }: EventCardProps) {
           <div className="flex items-start gap-2">
             <span
               className="mt-1 h-2 w-2 rounded-full flex-shrink-0"
-              style={{ backgroundColor: typeStyle.dotColor }}
+              style={{ backgroundColor: deptStyle ? deptStyle.dotColor : typeStyle.dotColor }}
             />
             <p className="text-sm font-semibold leading-snug line-clamp-2 flex-1 text-foreground">
               {event.title}
