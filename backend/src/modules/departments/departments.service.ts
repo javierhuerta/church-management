@@ -5,9 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { plainToInstance } from 'class-transformer';
 import { Department } from './entities/department.entity';
 import { User } from '../auth/entities/user.entity';
+import { toDto } from '../common';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
 import {
@@ -30,12 +30,11 @@ export class DepartmentsService {
     const departments = await this.departmentRepo.find({
       order: { name: 'ASC' },
     });
-    return departments.map((d) => this.toResponse(d));
+    return toDto(DepartmentWithDirectorsDto, departments);
   }
 
   async findOne(id: string): Promise<DepartmentResponseDto> {
-    const dept = await this.loadOne(id);
-    return this.toResponse(dept);
+    return toDto(DepartmentWithDirectorsDto, await this.loadOne(id));
   }
 
   async getDirectors(id: string): Promise<DirectorSummaryDto[]> {
@@ -64,7 +63,7 @@ export class DepartmentsService {
 
     const dept = this.departmentRepo.create({ name: dto.name });
     const saved = await this.departmentRepo.save(dept);
-    return this.toResponse(saved);
+    return toDto(DepartmentWithDirectorsDto, saved);
   }
 
   async update(
@@ -84,7 +83,7 @@ export class DepartmentsService {
     }
 
     await this.departmentRepo.save(dept);
-    return this.toResponse(dept);
+    return toDto(DepartmentWithDirectorsDto, dept);
   }
 
   async remove(id: string): Promise<void> {
@@ -100,11 +99,5 @@ export class DepartmentsService {
       throw new NotFoundException('Department not found');
     }
     return dept;
-  }
-
-  private toResponse(dept: Department): DepartmentWithDirectorsDto {
-    return plainToInstance(DepartmentWithDirectorsDto, dept, {
-      excludeExtraneousValues: true,
-    });
   }
 }

@@ -14,20 +14,11 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { RequestWithUser } from '../common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-
-interface AuthUser {
-  userId: string;
-  email: string;
-  role: string;
-}
-
-interface RequestWithUser {
-  user: AuthUser;
-}
 
 @ApiTags('auth')
 @Controller('auth')
@@ -60,7 +51,7 @@ export class AuthController {
   @ApiOperation({ summary: 'User logout' })
   @ApiResponse({ status: 200, description: 'Logged out successfully' })
   logout(@Request() req: RequestWithUser) {
-    return this.authService.logout(req.user.userId);
+    return this.authService.logout(req.user!.userId);
   }
 
   @Get('me')
@@ -69,7 +60,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current user' })
   @ApiResponse({ status: 200, description: 'Current user info' })
   getProfile(@Request() req: RequestWithUser) {
-    return req.user;
+    return req.user!;
   }
 
   @Get('autocomplete')
@@ -77,10 +68,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Search users for autocomplete' })
   @ApiResponse({ status: 200, description: 'User suggestions' })
-  async autocomplete(
-    @Request() req: RequestWithUser,
-    @Query('q') query: string,
-  ) {
+  async autocomplete(@Query('q') query: string) {
     return this.authService.searchUsers(query || '');
   }
 }

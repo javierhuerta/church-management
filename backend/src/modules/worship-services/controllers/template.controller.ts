@@ -17,25 +17,14 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
-import { plainToInstance } from 'class-transformer';
 import { TemplateCrudService } from '../services/template-crud.service';
 import { CreateTemplateDto, UpdateTemplateDto } from '../dto/template.dto';
 import { ServiceTemplateResponseDto } from '../dto/template-response.dto';
 import { ServiceTemplateType } from '../entities/service-template-type.enum';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
-import { UserRole } from '../../common/entities/user-role.enum';
+import { UserRole, RequestWithUser, toDto } from '../../common';
 import { Roles } from '../../auth/decorators/roles.decorator';
-
-interface AuthUser {
-  userId: string;
-  email: string;
-  role: string;
-}
-
-interface RequestWithUser {
-  user: AuthUser;
-}
 
 @ApiTags('worship-services/templates')
 @ApiBearerAuth()
@@ -56,9 +45,7 @@ export class TemplateController {
     const templates = type
       ? await this.templateService.findByType(type)
       : await this.templateService.findAll();
-    return plainToInstance(ServiceTemplateResponseDto, templates, {
-      excludeExtraneousValues: true,
-    });
+    return toDto(ServiceTemplateResponseDto, templates);
   }
 
   @Get(':id')
@@ -70,10 +57,9 @@ export class TemplateController {
   })
   @ApiResponse({ status: 404, description: 'Template not found' })
   async findOne(@Param('id') id: string) {
-    return plainToInstance(
+    return toDto(
       ServiceTemplateResponseDto,
       await this.templateService.findOne(id),
-      { excludeExtraneousValues: true },
     );
   }
 
@@ -86,10 +72,9 @@ export class TemplateController {
     @Body() dto: CreateTemplateDto,
     @Request() req: RequestWithUser,
   ) {
-    return plainToInstance(
+    return toDto(
       ServiceTemplateResponseDto,
-      await this.templateService.create(dto, req.user.role as UserRole),
-      { excludeExtraneousValues: true },
+      await this.templateService.create(dto, req.user!.role),
     );
   }
 
@@ -104,10 +89,9 @@ export class TemplateController {
     @Body() dto: UpdateTemplateDto,
     @Request() req: RequestWithUser,
   ) {
-    return plainToInstance(
+    return toDto(
       ServiceTemplateResponseDto,
-      await this.templateService.update(id, dto, req.user.role as UserRole),
-      { excludeExtraneousValues: true },
+      await this.templateService.update(id, dto, req.user!.role),
     );
   }
 
@@ -118,7 +102,7 @@ export class TemplateController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Template not found' })
   async delete(@Param('id') id: string, @Request() req: RequestWithUser) {
-    await this.templateService.delete(id, req.user.role as UserRole);
+    await this.templateService.delete(id, req.user!.role);
     return { message: 'Template deleted' };
   }
 }

@@ -14,7 +14,7 @@ import {
   DataSource,
   EntityManager,
 } from 'typeorm';
-import { plainToInstance } from 'class-transformer';
+import { toDto } from '../common';
 import { unlink, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { randomBytes } from 'crypto';
@@ -116,7 +116,7 @@ export class CalendarService {
       return persisted;
     });
 
-    return this.toResponse(await this.loadOne(saved.id));
+    return toDto(EventResponseDto, await this.loadOne(saved.id));
   }
 
   async findAll(
@@ -160,7 +160,7 @@ export class CalendarService {
     });
 
     return new PaginatedResponseDto(
-      events.map((e) => this.toResponse(e)),
+      toDto(EventResponseDto, events),
       total,
       page,
       limit,
@@ -170,7 +170,7 @@ export class CalendarService {
   async findOne(id: string, viewer: ViewerContext): Promise<EventResponseDto> {
     const event = await this.loadOne(id);
     this.ensureVisibility(event, viewer);
-    return this.toResponse(event);
+    return toDto(EventResponseDto, event);
   }
 
   async findBySlug(
@@ -185,7 +185,7 @@ export class CalendarService {
       throw new NotFoundException('Event not found');
     }
     this.ensureVisibility(event, viewer);
-    return this.toResponse(event);
+    return toDto(EventResponseDto, event);
   }
 
   async update(
@@ -233,7 +233,7 @@ export class CalendarService {
       }
     });
 
-    return this.toResponse(await this.loadOne(event.id));
+    return toDto(EventResponseDto, await this.loadOne(event.id));
   }
 
   async publish(id: string, viewer: ViewerContext): Promise<EventResponseDto> {
@@ -241,7 +241,7 @@ export class CalendarService {
     const event = await this.loadOne(id);
     event.status = EventStatus.Published;
     await this.eventRepository.save(event);
-    return this.toResponse(await this.loadOne(event.id));
+    return toDto(EventResponseDto, await this.loadOne(event.id));
   }
 
   async archive(id: string, viewer: ViewerContext): Promise<EventResponseDto> {
@@ -249,7 +249,7 @@ export class CalendarService {
     const event = await this.loadOne(id);
     event.status = EventStatus.Archived;
     await this.eventRepository.save(event);
-    return this.toResponse(await this.loadOne(event.id));
+    return toDto(EventResponseDto, await this.loadOne(event.id));
   }
 
   async remove(id: string, viewer: ViewerContext): Promise<void> {
@@ -298,7 +298,7 @@ export class CalendarService {
     });
 
     const saved = await this.attachmentRepository.save(attachment);
-    return this.toAttachmentResponse(saved);
+    return toDto(AttachmentResponseDto, saved);
   }
 
   async replaceCover(
@@ -345,7 +345,7 @@ export class CalendarService {
       sourceUrl: metadata.sourceUrl ?? null,
     });
     const saved = await this.attachmentRepository.save(attachment);
-    return this.toAttachmentResponse(saved);
+    return toDto(AttachmentResponseDto, saved);
   }
 
   async setCover(
@@ -367,7 +367,7 @@ export class CalendarService {
     );
     attachment.isCover = true;
     await this.attachmentRepository.save(attachment);
-    return this.toAttachmentResponse(attachment);
+    return toDto(AttachmentResponseDto, attachment);
   }
 
   async removeAttachment(
@@ -518,17 +518,5 @@ export class CalendarService {
     } catch {
       // ignore missing files
     }
-  }
-
-  private toResponse(event: Event): EventResponseDto {
-    return plainToInstance(EventResponseDto, event, {
-      excludeExtraneousValues: true,
-    });
-  }
-
-  private toAttachmentResponse(a: EventAttachment): AttachmentResponseDto {
-    return plainToInstance(AttachmentResponseDto, a, {
-      excludeExtraneousValues: true,
-    });
   }
 }

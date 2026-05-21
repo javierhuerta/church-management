@@ -13,15 +13,13 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
-import { plainToInstance } from 'class-transformer';
 import { HymnService } from '../services/hymn.service';
 import {
   HymnResponseDto,
   HymnAutocompleteResponseDto,
 } from '../dto/hymn-response.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-
-const TO_DTO = { excludeExtraneousValues: true } as const;
+import { toDto } from '../../common';
 
 @ApiTags('hymns')
 @ApiBearerAuth()
@@ -43,11 +41,7 @@ export class HymnController {
     type: [HymnResponseDto],
   })
   async findAll(@Query('q') query?: string) {
-    return plainToInstance(
-      HymnResponseDto,
-      await this.hymnService.search(query || ''),
-      TO_DTO,
-    );
+    return toDto(HymnResponseDto, await this.hymnService.search(query || ''));
   }
 
   @Get('autocomplete')
@@ -63,10 +57,9 @@ export class HymnController {
     type: [HymnAutocompleteResponseDto],
   })
   async autocomplete(@Query('q') query: string) {
-    return plainToInstance(
+    return toDto(
       HymnAutocompleteResponseDto,
       await this.hymnService.autocomplete(query),
-      TO_DTO,
     );
   }
 
@@ -83,6 +76,6 @@ export class HymnController {
     if (!hymn) {
       throw new NotFoundException(`Hymn ${id} not found`);
     }
-    return plainToInstance(HymnResponseDto, hymn, TO_DTO);
+    return toDto(HymnResponseDto, hymn);
   }
 }

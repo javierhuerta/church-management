@@ -6,10 +6,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { plainToInstance } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
 import { User } from '../auth/entities/user.entity';
 import { Department } from '../departments/entities/department.entity';
+import { assignDefined, toDto } from '../common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
@@ -28,12 +28,11 @@ export class UsersService {
       relations: ['departments'],
       order: { name: 'ASC' },
     });
-    return users.map((u) => this.toResponse(u));
+    return toDto(UserResponseDto, users);
   }
 
   async findOne(id: string): Promise<UserResponseDto> {
-    const user = await this.loadOne(id);
-    return this.toResponse(user);
+    return toDto(UserResponseDto, await this.loadOne(id));
   }
 
   async create(dto: CreateUserDto): Promise<UserResponseDto> {
@@ -58,7 +57,7 @@ export class UsersService {
     });
 
     const saved = await this.userRepo.save(user);
-    return this.toResponse(await this.loadOne(saved.id));
+    return toDto(UserResponseDto, await this.loadOne(saved.id));
   }
 
   async update(id: string, dto: UpdateUserDto): Promise<UserResponseDto> {
@@ -74,8 +73,8 @@ export class UsersService {
       user.email = dto.email;
     }
 
-    if (dto.name !== undefined) user.name = dto.name;
-    if (dto.role !== undefined) user.role = dto.role;
+    assignDefined(user, { name: dto.name, role: dto.role });
+
     if (dto.password) {
       user.password = await bcrypt.hash(dto.password, 10);
     }
@@ -89,7 +88,7 @@ export class UsersService {
     }
 
     await this.userRepo.save(user);
-    return this.toResponse(await this.loadOne(id));
+    return toDto(UserResponseDto, await this.loadOne(id));
   }
 
   async remove(id: string): Promise<void> {
@@ -118,11 +117,5 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
     return user;
-  }
-
-  private toResponse(user: User): UserResponseDto {
-    return plainToInstance(UserResponseDto, user, {
-      excludeExtraneousValues: true,
-    });
   }
 }

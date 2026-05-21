@@ -42,22 +42,13 @@ import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../common/entities/user-role.enum';
+import { RequestWithUser } from '../common';
 import { coverMulterConfig, multerConfig } from './config/upload.config';
 import {
   COVER_IMAGE_PROVIDER,
   CoverImageProvider,
   CoverSuggestionsResult,
 } from './providers/cover-image-provider.interface';
-
-interface AuthUser {
-  userId: string;
-  email: string;
-  role: UserRole;
-}
-
-interface RequestWithUser extends Request {
-  user?: AuthUser;
-}
 
 const EDITOR_ROLES = [UserRole.Admin, UserRole.Pastor, UserRole.Secretaria];
 
