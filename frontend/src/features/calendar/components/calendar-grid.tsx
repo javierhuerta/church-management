@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Calendar, MapPin, Video, Users, Building2 } from 'lucide-react'
+import { Archive, Calendar, Clock, MapPin, Video, Users, Building2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import type { EventResponseDto } from '@/lib/api'
@@ -16,10 +16,16 @@ import {
   getDepartmentStyle,
 } from '../utils/labels'
 
-const BAND_BG_COLORS: Record<string, string> = {
-  local: 'bg-primary/20 text-primary hover:bg-primary/30',
-  asach: 'bg-purple-200 text-purple-900 hover:bg-purple-300',
-  distrital: 'bg-emerald-200 text-emerald-900 hover:bg-emerald-300',
+// Status config — mirrors event-card.tsx
+const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; icon?: React.ReactNode }> = {
+  published: { label: 'Publicado', bg: '#0F766E', color: '#fff', icon: <Clock style={{ width: 8, height: 8, display: 'inline', marginRight: 2 }} /> },
+  archived:  { label: 'Archivado', bg: '#475569', color: '#fff', icon: <Archive style={{ width: 8, height: 8, display: 'inline', marginRight: 2 }} /> },
+  draft:     { label: 'Borrador',  bg: '#C9A84C', color: '#102240' },
+}
+
+/** Returns uppercase initials: "Jóvenes y Adolescentes" → "JA" */
+function toInitials(name: string): string {
+  return name.split(/\s+/).filter(Boolean).map((w) => w[0]).join('').toUpperCase().slice(0, 4)
 }
 
 function formatBandDateRange(start: string, end: string): string {
@@ -124,10 +130,27 @@ function buildBandsForWeek(multiDayEvents: EventResponseDto[], weekDays: Date[])
 
 function MultiDayBand({ band }: { band: MultiDayBand }) {
   const event = band.event
-  const typeStyle = EVENT_TYPE_STYLE[event.eventType]
-  const bandColors = BAND_BG_COLORS[event.eventType] ?? BAND_BG_COLORS.local
+  const typeStyle = EVENT_TYPE_STYLE[event.eventType] ?? EVENT_TYPE_STYLE.local
   const deptStyle = event.departmentName ? getDepartmentStyle(event.departmentName, event.departmentColor) : null
-  const deptLabel = event.departmentName ?? null
+  const deptInitials = event.departmentName ? toInitials(event.departmentName) : null
+  const status = event.status as string
+  const statusCfg = STATUS_CONFIG[status]
+  const isDraft = status === 'draft'
+  const isArchived = status === 'archived'
+  const coverUrl = (event as EventResponseDto & { coverImageUrl?: string }).coverImageUrl
+
+  // Band pill color based on status
+  const bandBg = isDraft
+    ? 'rgba(201,168,76,0.18)'
+    : isArchived
+    ? 'rgba(71,85,105,0.15)'
+    : `${typeStyle.dotColor}28`
+  const bandText = isDraft ? '#92600A' : isArchived ? '#475569' : typeStyle.color
+  const bandBorder = isDraft
+    ? '1px dashed rgba(201,168,76,0.6)'
+    : isArchived
+    ? '1px solid rgba(71,85,105,0.3)'
+    : 'none'
 
   const [open, setOpen] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -146,10 +169,7 @@ function MultiDayBand({ band }: { band: MultiDayBand }) {
         gridColumnStart: band.startCol + 1,
         gridColumnEnd: band.endCol + 2,
       }}
-      className={`
-        ${band.isStart ? 'ml-1' : ''}
-        ${band.isEnd ? 'mr-1' : ''}
-      `}
+      className={`${band.isStart ? 'ml-1' : ''} ${band.isEnd ? 'mr-1' : ''}`}
     >
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -158,90 +178,123 @@ function MultiDayBand({ band }: { band: MultiDayBand }) {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             className={`
-              block text-[11px] font-semibold px-2 py-0.5 truncate leading-5 transition-colors
-              ${bandColors}
+              block text-[11px] font-semibold px-2 py-0.5 truncate leading-5 transition-opacity
+              ${isArchived ? 'opacity-60' : ''}
               ${band.isStart ? 'rounded-l-full' : ''}
               ${band.isEnd ? 'rounded-r-full' : ''}
             `}
+            style={{ backgroundColor: bandBg, color: bandText, border: bandBorder }}
           >
             {band.isStart ? event.title : <span className="opacity-0">·</span>}
           </Link>
         </PopoverTrigger>
+
         <PopoverContent
           side="bottom"
           align="start"
-          className="w-72 p-0 shadow-lg bg-card border border-border"
+          className="w-72 p-0 shadow-lg border border-border overflow-hidden rounded-xl bg-card"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="p-4 space-y-3">
+          {/* Cover image header */}
+          {coverUrl && (
+            <div className="relative h-24 bg-muted overflow-hidden">
+              <img
+                src={coverUrl}
+                alt=""
+                aria-hidden
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ opacity: 0.22 }}
+              />
+            </div>
+          )}
+
+          <div className="p-3 space-y-2.5">
+            {/* Title + status badge */}
             <div className="flex items-start gap-2">
-              <span className="mt-1 h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: typeStyle.dotColor }} />
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-muted-foreground leading-tight">
+              <span
+                className="mt-1 h-2 w-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: typeStyle.dotColor }}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground leading-tight">
                   {event.title}
                 </p>
-                {event.status === 'draft' && (
-                  <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded mt-1 inline-block">
-                    Borrador
-                  </span>
-                )}
               </div>
-            </div>
-
-            <div className="space-y-1.5 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                <span>{formatBandDateRange(event.startDate, event.endDate)}</span>
-              </div>
-              {event.location && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                  <span className="truncate">{event.location}</span>
-                </div>
-              )}
-              {event.meetingUrl && (
-                <div className="flex items-center gap-2">
-                  <Video className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                  <a
-                    href={event.meetingUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline truncate"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Unirse a la reunión
-                  </a>
-                </div>
-              )}
-              {event.organizers && event.organizers.length > 0 && (
-                <div className="flex items-start gap-2">
-                  <Users className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                  <span className="truncate">
-                    {event.organizers.map((o) => o.name).join(', ')}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-wrap gap-1.5 pt-1 border-t border-border">
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: typeStyle.backgroundColor, color: typeStyle.color }}>
-                {EVENT_TYPE_LABELS[event.eventType]}
-              </span>
-              {deptLabel && deptStyle && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-medium flex items-center gap-1" style={{ backgroundColor: deptStyle.backgroundColor, color: deptStyle.color }}>
-                  <Building2 className="h-2.5 w-2.5" />
-                  {deptLabel}
+              {statusCfg && status !== 'published' && (
+                <span
+                  className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
+                  style={{ backgroundColor: statusCfg.bg, color: statusCfg.color }}
+                >
+                  {statusCfg.icon}
+                  {statusCfg.label}
                 </span>
               )}
             </div>
 
-            <Link
-              to={`/calendario/${event.shareSlug}`}
-              className="block text-center text-[11px] text-blue-600 hover:text-blue-700 font-medium pt-1"
-            >
-              Ver detalles →
-            </Link>
+            {/* Date range */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground pl-4">
+              <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
+              <span>{formatBandDateRange(event.startDate, event.endDate)}</span>
+            </div>
+
+            {/* Location */}
+            {event.location && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pl-4">
+                <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="truncate">{event.location}</span>
+              </div>
+            )}
+
+            {/* Meeting link */}
+            {event.meetingUrl && (
+              <div className="flex items-center gap-2 text-xs pl-4">
+                <Video className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                <a
+                  href={event.meetingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline truncate"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Unirse a la reunión
+                </a>
+              </div>
+            )}
+
+            {/* Organizers */}
+            {event.organizers && event.organizers.length > 0 && (
+              <div className="flex items-start gap-2 text-xs text-muted-foreground pl-4">
+                <Users className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                <span className="truncate">{event.organizers.map((o) => o.name).join(', ')}</span>
+              </div>
+            )}
+
+            {/* Badges row */}
+            <div className="flex flex-wrap items-center gap-1 pt-1 border-t border-border">
+              <span
+                className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                style={{ backgroundColor: typeStyle.backgroundColor, color: typeStyle.color }}
+              >
+                {EVENT_TYPE_LABELS[event.eventType]}
+              </span>
+              {deptInitials && deptStyle && (
+                <span
+                  className="text-[10px] px-2 py-0.5 rounded-full font-medium flex items-center gap-1"
+                  title={event.departmentName ?? undefined}
+                  style={{ backgroundColor: deptStyle.backgroundColor, color: deptStyle.color }}
+                >
+                  <Building2 className="h-2.5 w-2.5" />
+                  {deptInitials}
+                </span>
+              )}
+              <Link
+                to={`/calendario/${event.shareSlug}`}
+                className="ml-auto text-[11px] text-primary hover:underline font-medium"
+              >
+                Ver detalles →
+              </Link>
+            </div>
           </div>
         </PopoverContent>
       </Popover>

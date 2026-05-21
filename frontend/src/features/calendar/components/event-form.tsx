@@ -235,7 +235,9 @@ export function EventForm({ event, onSaved }: EventFormProps) {
         }
       }
 
+      // Invalidate and wait for refetch so the detail page sees the updated coverImageUrl
       await queryClient.invalidateQueries({ queryKey: ['calendar'] })
+      await queryClient.refetchQueries({ queryKey: ['calendar', 'slug', saved.shareSlug] })
       onSaved(saved)
     } catch (err) {
       const message =
