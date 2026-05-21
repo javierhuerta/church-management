@@ -156,17 +156,22 @@ export function UserFormPage() {
   }
 
   if (isEdit && isLoadingUser) {
-    return <div className="text-sm text-muted-foreground">Cargando usuario...</div>
+    return (
+      <div className="max-w-2xl space-y-6">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/mantenedores/usuarios')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-lg font-semibold text-foreground">Cargando usuario...</h2>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate('/mantenedores/usuarios')}
-        >
+        <Button variant="ghost" size="icon" onClick={() => navigate('/mantenedores/usuarios')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h2 className="text-lg font-semibold text-foreground">
@@ -176,20 +181,20 @@ export function UserFormPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 bg-card rounded-xl border border-border p-6">
         {serverError && (
-          <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {serverError}
           </div>
         )}
 
         <div className="space-y-2">
           <Label htmlFor="name">Nombre *</Label>
-          <Input id="name" {...register('name')} />
+          <Input id="name" {...register('name')} placeholder="Nombre completo" />
           {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="email">Email *</Label>
-          <Input id="email" type="email" {...register('email')} />
+          <Input id="email" type="email" {...register('email')} placeholder="correo@ejemplo.com" />
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
 

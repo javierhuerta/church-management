@@ -38,7 +38,7 @@ export function MantenedoresLayout() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-muted-foreground">Mantenedores</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-muted-foreground">Mantenedores</h1>
         <p className="text-sm text-muted-foreground mt-1">Gestión de usuarios, departamentos y plantillas</p>
       </div>
 
@@ -50,8 +50,8 @@ export function MantenedoresLayout() {
             className={({ isActive }) =>
               `flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
                 isActive
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-muted-foreground hover:border-border'
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`
             }
           >

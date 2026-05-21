@@ -185,7 +185,7 @@ function ProgramCard({
   const status = program.status as string
 
   return (
-    <div className="rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
+    <div className="rounded-xl border border-border bg-card shadow-sm hover:bg-[#C9A84C]/5 transition-colors">
       <div className="flex items-start gap-4 p-5">
         <Link to={`/cultos/programas/${program.id}`} className="flex-1 flex items-start gap-3 min-w-0">
           <div className="mt-1 rounded-lg bg-primary/10 p-2 shrink-0">
