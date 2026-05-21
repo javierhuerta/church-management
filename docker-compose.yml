@@ -1,18 +1,21 @@
 version: '3.8'
 
+# Entorno de desarrollo: solo levanta Postgres.
+# Backend y frontend corren localmente con npm run start:dev / npm run dev.
+
 services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: church_management
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${DB_DATABASE:-church_management}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
-      - '5432:5432'
+      - '${DB_PORT:-5432}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME:-postgres}']
       interval: 5s
       timeout: 5s
       retries: 5

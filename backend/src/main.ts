@@ -10,8 +10,8 @@ const logger = new Logger('Bootstrap');
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: false });
   const config = app.get(ConfigService);
+  const appCfg = config.get<{ port: number; corsOrigin: string; logLevel: string }>('app')!;
 
-  const logLevel = config.get<string>('LOG_LEVEL', 'log');
   const levels: ('log' | 'error' | 'warn' | 'debug' | 'verbose')[] = [
     'error',
     'warn',
@@ -21,8 +21,7 @@ async function bootstrap() {
   ];
   const enabledLevels = levels.slice(
     0,
-    levels.indexOf(logLevel as 'log' | 'error' | 'warn' | 'debug' | 'verbose') +
-      1,
+    levels.indexOf(appCfg.logLevel as 'log' | 'error' | 'warn' | 'debug' | 'verbose') + 1,
   );
   app.useLogger(enabledLevels);
 
@@ -31,7 +30,7 @@ async function bootstrap() {
   app.use(helmet());
 
   app.enableCors({
-    origin: config.get<string>('CORS_ORIGIN', 'http://localhost:5173'),
+    origin: appCfg.corsOrigin,
     credentials: true,
   });
 
@@ -57,8 +56,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, document);
 
-  const port = config.get<number>('PORT', 3000);
-  await app.listen(port);
-  logger.log(`Application is running on: http://localhost:${port}`);
+  await app.listen(appCfg.port);
+  logger.log(`Application is running on: http://localhost:${appCfg.port}`);
 }
 void bootstrap();

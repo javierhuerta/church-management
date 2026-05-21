@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { UploadConfig } from '../../../config';
 import {
   CoverImageProvider,
   CoverSuggestion,
@@ -38,8 +39,8 @@ export class UnsplashProvider implements CoverImageProvider {
   >();
 
   constructor(config: ConfigService) {
-    this.accessKey =
-      config.get<string>('UNSPLASH_ACCESS_KEY')?.trim() || undefined;
+    const upload = config.get<UploadConfig>('upload')!;
+    this.accessKey = upload.unsplashAccessKey?.trim() || undefined;
     if (!this.accessKey) {
       this.logger.warn(
         'UNSPLASH_ACCESS_KEY is not set; cover suggestions will be unavailable.',

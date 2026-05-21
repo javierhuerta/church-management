@@ -4,7 +4,7 @@ import { UnsplashProvider } from './unsplash.provider';
 function makeProvider(accessKey: string | undefined): UnsplashProvider {
   const config = {
     get: (key: string) =>
-      key === 'UNSPLASH_ACCESS_KEY' ? accessKey : undefined,
+      key === 'upload' ? { unsplashAccessKey: accessKey } : undefined,
   } as unknown as ConfigService;
   return new UnsplashProvider(config);
 }

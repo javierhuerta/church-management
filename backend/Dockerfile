@@ -18,6 +18,9 @@ RUN npm ci --production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 
+# Directorio para archivos subidos — montado como volumen en produccion
+RUN mkdir -p /app/uploads
+
 ENV NODE_ENV=production
 
 EXPOSE 3000

@@ -1,0 +1,10 @@
+import { registerAs } from '@nestjs/config';
+
+export const appConfig = registerAs('app', () => ({
+  nodeEnv: process.env.NODE_ENV ?? 'development',
+  port: parseInt(process.env.PORT ?? '3000', 10),
+  corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+  logLevel: process.env.LOG_LEVEL ?? 'log',
+}));
+
+export type AppConfig = ReturnType<typeof appConfig>;
