@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Calendar, FileText, Heart, LogOut, User, ChevronDown, ChevronLeft, Settings, Sun, Moon, Monitor } from 'lucide-react'
+import { Calendar, FileText, Church, LogOut, User, ChevronDown, ChevronLeft, Settings, Sun, Moon, Monitor } from 'lucide-react'
 import logoFull from '@/assets/images/logo.png'
 import logoMark from '@/assets/images/logo-mark.png'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -30,7 +30,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: 'calendario', label: 'Calendario', icon: Calendar, path: '/calendario' },
   { id: 'cultos', label: 'Cultos', icon: FileText, path: '/cultos/programas', matchPrefix: '/cultos' },
-  { id: 'mision', label: 'Misión', icon: Heart, path: '/mision', disabled: true },
+  { id: 'mision', label: 'Misión', icon: Church, path: '/mision', disabled: true },
 ]
 
 const adminNavItems: NavItem[] = [

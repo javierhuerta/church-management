@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Calendar, FileText, Heart, ArrowRight, Loader2 } from 'lucide-react'
+import { Calendar, FileText, Church, ArrowRight, Loader2 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import logoFull from '@/assets/images/logo.png'
@@ -29,7 +29,7 @@ const quickActions = [
     id: 'mision',
     title: 'Misión',
     description: 'Actividades evangelísticas y misioneras',
-    icon: Heart,
+    icon: Church,
     path: '/mision',
     disabled: true,
   },
