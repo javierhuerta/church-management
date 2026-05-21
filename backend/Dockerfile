@@ -2,39 +2,33 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Herramientas de compilacion para modulos nativos (sharp, better-sqlite3)
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache vips-dev
 
 COPY package*.json ./
-RUN npm ci
+
+RUN npm ci --ignore-scripts
 
 COPY . .
+
 RUN npm run build
+
+RUN npm prune --omit=dev
 
 # ---- Imagen final ----
 FROM node:20-alpine
 
-# Usuario no-root para produccion
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
-# sharp necesita libvips en runtime
 RUN apk add --no-cache vips
 
-COPY package*.json ./
-
-# Instalar dependencias de produccion (compilacion nativa requerida para sharp)
-RUN apk add --no-cache python3 make g++ \
-    && npm ci --omit=dev \
-    && apk del python3 make g++
-
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 COPY entrypoint.sh ./entrypoint.sh
-RUN chmod +x entrypoint.sh
 
-# Directorio de uploads con permisos correctos
-RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app
+RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app && chmod +x /app/entrypoint.sh
 
 USER appuser
 

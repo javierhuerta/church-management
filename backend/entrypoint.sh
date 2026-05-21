@@ -9,22 +9,31 @@ set -e
 #   sh entrypoint.sh migrate-and-seed → ambos
 # -------------------------------------------------------
 
+run_migrations() {
+  node -e "
+    const { AppDataSource } = require('./dist/data-source');
+    AppDataSource.initialize()
+      .then(ds => ds.runMigrations({ transaction: 'each' }))
+      .then(migrations => {
+        if (migrations.length === 0) {
+          console.log('✔ Sin migraciones pendientes');
+        } else {
+          migrations.forEach(m => console.log('  ✔', m.name));
+          console.log('✔ Total ejecutadas:', migrations.length);
+        }
+        process.exit(0);
+      })
+      .catch(e => {
+        console.error('✘ Error en migraciones:', e.message);
+        process.exit(1);
+      });
+  "
+}
+
 case "$1" in
   migrate)
     echo "▶ Corriendo migraciones..."
-    node -e "
-      const { AppDataSource } = require('./dist/data-source');
-      AppDataSource.initialize()
-        .then(ds => ds.runMigrations())
-        .then(migrations => {
-          console.log('✔ Migraciones ejecutadas:', migrations.length);
-          process.exit(0);
-        })
-        .catch(e => {
-          console.error('✘ Error en migraciones:', e.message);
-          process.exit(1);
-        });
-    "
+    run_migrations
     ;;
   seed)
     echo "▶ Corriendo seeders..."
@@ -32,19 +41,7 @@ case "$1" in
     ;;
   migrate-and-seed)
     echo "▶ Corriendo migraciones..."
-    node -e "
-      const { AppDataSource } = require('./dist/data-source');
-      AppDataSource.initialize()
-        .then(ds => ds.runMigrations())
-        .then(migrations => {
-          console.log('✔ Migraciones ejecutadas:', migrations.length);
-          process.exit(0);
-        })
-        .catch(e => {
-          console.error('✘ Error en migraciones:', e.message);
-          process.exit(1);
-        });
-    "
+    run_migrations
     echo "▶ Corriendo seeders..."
     node dist/scripts/seeders/run-all.js
     ;;
