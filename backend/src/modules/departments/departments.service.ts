@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
@@ -18,6 +19,8 @@ import {
 
 @Injectable()
 export class DepartmentsService {
+  private readonly logger = new Logger(DepartmentsService.name);
+
   constructor(
     @InjectRepository(Department)
     private readonly departmentRepo: Repository<Department>,
@@ -63,6 +66,7 @@ export class DepartmentsService {
 
     const dept = this.departmentRepo.create({ name: dto.name });
     const saved = await this.departmentRepo.save(dept);
+    this.logger.log(`Department created [id=${saved.id}] name="${saved.name}"`);
     return toDto(DepartmentWithDirectorsDto, saved);
   }
 
@@ -91,6 +95,7 @@ export class DepartmentsService {
     // user_departments cascade delete via FK constraint
     // events.department_id set to NULL via FK ON DELETE SET NULL
     await this.departmentRepo.remove(dept);
+    this.logger.log(`Department removed [id=${id}]`);
   }
 
   private async loadOne(id: string): Promise<Department> {

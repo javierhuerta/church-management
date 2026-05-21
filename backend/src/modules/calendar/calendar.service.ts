@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
   ForbiddenException,
@@ -58,6 +59,8 @@ function detectMeetingType(url: string | null | undefined): MeetingType | null {
 
 @Injectable()
 export class CalendarService {
+  private readonly logger = new Logger(CalendarService.name);
+
   constructor(
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
@@ -241,6 +244,7 @@ export class CalendarService {
     const event = await this.loadOne(id);
     event.status = EventStatus.Published;
     await this.eventRepository.save(event);
+    this.logger.log(`Event published [id=${id}] by user [${viewer.userId}]`);
     return toDto(EventResponseDto, await this.loadOne(event.id));
   }
 

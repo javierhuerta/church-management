@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
@@ -16,6 +16,8 @@ interface TokenPayload {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -28,6 +30,7 @@ export class AuthService {
     });
 
     if (!user) {
+      this.logger.warn(`Login failed: user not found [${loginDto.email}]`);
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -37,6 +40,7 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
+      this.logger.warn(`Login failed: invalid password [${loginDto.email}]`);
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -49,6 +53,7 @@ export class AuthService {
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 
+    this.logger.log(`Login successful [${user.email}]`);
     return {
       accessToken,
       refreshToken,

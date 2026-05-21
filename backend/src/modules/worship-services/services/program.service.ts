@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
@@ -29,6 +30,8 @@ import {
 
 @Injectable()
 export class ProgramService {
+  private readonly logger = new Logger(ProgramService.name);
+
   constructor(
     @InjectRepository(ServiceProgram)
     private readonly programRepo: Repository<ServiceProgram>,
@@ -213,7 +216,11 @@ export class ProgramService {
       return persistedProgram;
     });
 
-    return this.findOne(savedProgram.id);
+    const result = await this.findOne(savedProgram.id);
+    this.logger.log(
+      `Program created [id=${result.id}] from template [${dto.templateId}] by user [${userId}]`,
+    );
+    return result;
   }
 
   async addGroup(
@@ -532,6 +539,7 @@ export class ProgramService {
       null,
     );
 
+    this.logger.log(`Program published [id=${programId}] by user [${userId}]`);
     return program;
   }
 

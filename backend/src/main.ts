@@ -1,13 +1,30 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 
+const logger = new Logger('Bootstrap');
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { logger: false });
   const config = app.get(ConfigService);
+
+  const logLevel = config.get<string>('LOG_LEVEL', 'log');
+  const levels: ('log' | 'error' | 'warn' | 'debug' | 'verbose')[] = [
+    'error',
+    'warn',
+    'log',
+    'debug',
+    'verbose',
+  ];
+  const enabledLevels = levels.slice(
+    0,
+    levels.indexOf(logLevel as 'log' | 'error' | 'warn' | 'debug' | 'verbose') +
+      1,
+  );
+  app.useLogger(enabledLevels);
 
   app.setGlobalPrefix('api');
 
@@ -42,6 +59,6 @@ async function bootstrap() {
 
   const port = config.get<number>('PORT', 3000);
   await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
+  logger.log(`Application is running on: http://localhost:${port}`);
 }
 void bootstrap();

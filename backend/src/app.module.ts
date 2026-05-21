@@ -14,6 +14,7 @@ import { UsersModule } from './modules/users/users.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
 import { HealthModule } from './modules/health/health.module';
 import { AllExceptionsFilter } from './modules/common/filters/all-exceptions.filter';
+import { LoggingInterceptor } from './modules/common/interceptors/logging.interceptor';
 import { User } from './modules/auth/entities/user.entity';
 import { Department } from './modules/departments/entities/department.entity';
 import { Event } from './modules/calendar/entities/event.entity';
@@ -66,6 +67,9 @@ const ENTITIES = [
         CORS_ORIGIN: Joi.string().default('http://localhost:5173'),
         THROTTLE_TTL: Joi.number().default(60000),
         THROTTLE_LIMIT: Joi.number().default(100),
+        LOG_LEVEL: Joi.string()
+          .valid('log', 'error', 'warn', 'debug', 'verbose')
+          .default('log'),
         UNSPLASH_ACCESS_KEY: Joi.string().allow('').optional(),
         UPLOAD_MAX_BYTES: Joi.number().optional(),
         COVER_MAX_BYTES: Joi.number().optional(),
@@ -111,6 +115,7 @@ const ENTITIES = [
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
   ],
 })
