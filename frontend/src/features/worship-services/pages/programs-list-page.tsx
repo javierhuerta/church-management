@@ -57,7 +57,7 @@ export function ProgramsListPage() {
 
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">
+          <h2 className="text-3xl font-bold tracking-tight text-muted-foreground">
             Programas de Culto
           </h2>
           <p className="text-muted-foreground mt-1">

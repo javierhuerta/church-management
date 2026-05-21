@@ -214,7 +214,7 @@ export function ProgramDetailPage() {
             </div>
           ) : (
             <div className="flex items-center gap-2 mt-2">
-              <h2 className="text-3xl font-bold tracking-tight text-foreground">
+              <h2 className="text-3xl font-bold tracking-tight text-muted-foreground">
                 {formattedDate}
               </h2>
               {canEdit && (
@@ -501,93 +501,88 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, onDelete, o
 
   if (isEditing) {
     return (
-      <div className="p-4 space-y-4">
-        <div className="space-y-1">
-          <Label className="text-xs">Nombre de la sección</Label>
-          <Input
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="Nombre de la sección"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <Label className="text-xs">Hora inicio</Label>
+      <div className="p-3 bg-muted/50 border-t border-border">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+          <div className="sm:col-span-2">
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Nombre de la sección"
+              className="h-8 text-sm"
+            />
+          </div>
+          <div className="flex items-center gap-2">
             <Input
               type="time"
               value={formData.startTime}
               onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+              className="h-8 text-sm flex-1"
             />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Duración (min)</Label>
             <Input
               type="number"
               value={formData.duration}
               onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+              placeholder="Min"
+              className="h-8 text-sm w-16"
+            />
+          </div>
+          <div className="relative">
+            <Input
+              value={formData.responsible}
+              onChange={(e) => setFormData({ ...formData, responsible: e.target.value })}
+              placeholder="Responsable"
+              className="h-8 text-sm"
+            />
+            {userSuggestions && userSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 z-10 border rounded bg-card shadow-sm max-h-24 overflow-y-auto mt-1">
+                {userSuggestions.map((u) => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent"
+                    onClick={() => setFormData({ ...formData, responsible: u.name })}
+                  >
+                    {u.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="relative sm:col-span-2">
+            <Input
+              value={formData.hymnText}
+              onChange={(e) => setFormData({ ...formData, hymnText: e.target.value })}
+              placeholder="Himno (número o nombre)"
+              className="h-8 text-sm"
+            />
+            {hymnSuggestions && hymnSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 z-10 border rounded bg-card shadow-sm max-h-24 overflow-y-auto mt-1">
+                {hymnSuggestions.map((h) => (
+                  <button
+                    key={h.number}
+                    type="button"
+                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent"
+                    onClick={() => setFormData({ ...formData, hymnText: `Himno ${h.number} - ${h.name}` })}
+                  >
+                    {h.number} - {h.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="sm:col-span-2">
+            <Input
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              placeholder="Notas"
+              className="h-8 text-sm"
             />
           </div>
         </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs">Responsable</Label>
-          <Input
-            value={formData.responsible}
-            onChange={(e) => setFormData({ ...formData, responsible: e.target.value })}
-            placeholder="Nombre del responsable"
-          />
-          {userSuggestions && userSuggestions.length > 0 && (
-            <div className="border rounded bg-card shadow-sm mt-1 max-h-24 overflow-y-auto">
-              {userSuggestions.map((u) => (
-                <button
-                  key={u.id}
-                  type="button"
-                  className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent"
-                  onClick={() => setFormData({ ...formData, responsible: u.name })}
-                >
-                  {u.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs">Himno</Label>
-          <Input
-            value={formData.hymnText}
-            onChange={(e) => setFormData({ ...formData, hymnText: e.target.value })}
-            placeholder="Número o nombre del himno"
-          />
-          {hymnSuggestions && hymnSuggestions.length > 0 && (
-            <div className="border rounded bg-card shadow-sm mt-1 max-h-24 overflow-y-auto">
-              {hymnSuggestions.map((h) => (
-                <button
-                  key={h.number}
-                  type="button"
-                  className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent"
-                  onClick={() => setFormData({ ...formData, hymnText: `Himno ${h.number} - ${h.name}` })}
-                >
-                  {h.number} - {h.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs">Notas</Label>
-          <Input
-            value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            placeholder="Notas adicionales"
-          />
-        </div>
-
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 mt-3">
           <Button variant="ghost" size="sm" onClick={onCancel}>Cancelar</Button>
           <Button size="sm" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? 'Guardando...' : 'Guardar'}
+            {isSaving ? '...' : 'Guardar'}
           </Button>
         </div>
       </div>
