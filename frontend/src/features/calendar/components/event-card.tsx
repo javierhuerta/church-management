@@ -12,7 +12,6 @@ import {
 import {
   EVENT_TYPE_COLORS,
   EVENT_TYPE_LABELS,
-  DEPARTMENT_COLORS,
   DEPARTMENT_LABELS,
   getDepartmentColors,
 } from '../utils/labels'

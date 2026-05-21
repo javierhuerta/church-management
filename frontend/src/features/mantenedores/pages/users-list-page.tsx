@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
-import { UsersMantenedoresService } from '@/lib/api'
+import { UsersService } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
@@ -23,11 +23,11 @@ export function UsersListPage() {
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
-    queryFn: () => UsersMantenedoresService.usersControllerFindAll(),
+    queryFn: () => UsersService.usersControllerFindAll(),
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => UsersMantenedoresService.usersControllerRemove(id),
+    mutationFn: (id: string) => UsersService.usersControllerRemove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       toast.success('Usuario eliminado')

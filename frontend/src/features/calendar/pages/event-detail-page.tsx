@@ -24,8 +24,10 @@ import { MeetingButton } from '../components/meeting-button'
 import { OrganizerChip, type OrganizerEntry } from '../components/organizer-chip'
 import { formatEventDateRange } from '../utils/event-date'
 
-const API_BASE =
-  (import.meta as ImportMeta).env.VITE_API_URL || 'http://localhost:3000'
+// For og:image meta tags (require absolute URL for crawlers), use the window origin.
+// For img src, use paths as-is — the Vite proxy handles /uploads and /api.
+const resolveAbsoluteUrl = (path: string) =>
+  path.startsWith('http') ? path : `${window.location.origin}${path}`
 
 
 export function EventDetailPage() {
@@ -43,11 +45,7 @@ export function EventDetailPage() {
     setMetaTag('og:description', stripHtml(event.description ?? ''))
     setMetaTag(
       'og:image',
-      event.coverImageUrl
-        ? event.coverImageUrl.startsWith('http')
-          ? event.coverImageUrl
-          : `${API_BASE}${event.coverImageUrl}`
-        : '',
+      event.coverImageUrl ? resolveAbsoluteUrl(event.coverImageUrl) : '',
     )
     setMetaTag('og:url', window.location.href)
     setMetaTag('og:type', 'event')
@@ -78,9 +76,7 @@ export function EventDetailPage() {
   const colors = EVENT_TYPE_COLORS[event.eventType]
   const cover =
     !coverErrored && event.coverImageUrl
-      ? event.coverImageUrl.startsWith('http')
-        ? event.coverImageUrl
-        : `${API_BASE}${event.coverImageUrl}`
+      ? event.coverImageUrl
       : null
   const coverAttachment = event.attachments.find((a) => a.isCover) ?? null
   const dateRange = formatEventDateRange(event.startDate, event.endDate)
@@ -272,7 +268,6 @@ export function EventDetailPage() {
         <section className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           <AttachmentGallery
             attachments={event.attachments}
-            baseUrl={API_BASE}
           />
         </section>
       )}

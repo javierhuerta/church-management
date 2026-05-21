@@ -3,7 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export type UploadCoverDto = {
-    file: ;
+    /**
+     * Binary file upload (multipart/form-data)
+     */
+    file: string;
     /**
      * Original author when sourced from a stock photo provider
      */

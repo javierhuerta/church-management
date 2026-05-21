@@ -45,27 +45,28 @@ export class UpdateSectionDto {
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ example: '09:00', nullable: true })
+  @ApiPropertyOptional({ type: String, example: '09:00', nullable: true })
   @IsOptional()
   @IsString()
   startTime?: string | null;
 
-  @ApiPropertyOptional({ example: 30, nullable: true })
+  @ApiPropertyOptional({ type: Number, example: 30, nullable: true })
   @IsOptional()
   @IsNumber()
   duration?: number | null;
 
-  @ApiPropertyOptional({ example: 'Pr. Juan Pérez', nullable: true })
+  @ApiPropertyOptional({ type: String, example: 'Pr. Juan Pérez', nullable: true })
   @IsOptional()
   @IsString()
   responsible?: string | null;
 
-  @ApiPropertyOptional({ example: 'Himno 125 - Gran Dios', nullable: true })
+  @ApiPropertyOptional({ type: String, example: 'Himno 125 - Gran Dios', nullable: true })
   @IsOptional()
   @IsString()
   hymnText?: string | null;
 
   @ApiPropertyOptional({
+    type: String,
     example: 'Especial: ofrenda de cosecha',
     nullable: true,
   })

@@ -24,6 +24,7 @@ export class AuthService {
             mediaType: 'application/json',
             errors: {
                 401: `Invalid credentials`,
+                429: `Too many requests`,
             },
         });
     }
@@ -43,6 +44,7 @@ export class AuthService {
             mediaType: 'application/json',
             errors: {
                 401: `Invalid refresh token`,
+                429: `Too many requests`,
             },
         });
     }

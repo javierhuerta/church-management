@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import type { CreateUserDto, UpdateUserDto } from '@/lib/api'
 import { ArrowLeft } from 'lucide-react'
-import { UsersMantenedoresService, DepartmentsService } from '@/lib/api'
+import { UsersService, DepartmentsService } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -62,7 +63,7 @@ export function UserFormPage() {
 
   const { data: existingUser, isLoading: isLoadingUser } = useQuery({
     queryKey: ['users', id],
-    queryFn: () => UsersMantenedoresService.usersControllerFindOne(id!),
+    queryFn: () => UsersService.usersControllerFindOne(id!),
     enabled: isEdit,
   })
 
@@ -73,7 +74,8 @@ export function UserFormPage() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<CreateFormValues | EditFormValues>({
-    resolver: zodResolver(isEdit ? editSchema : createSchema) as ReturnType<typeof zodResolver>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(isEdit ? editSchema : createSchema) as Resolver<any>,
     defaultValues: {
       name: '',
       email: '',
@@ -99,11 +101,11 @@ export function UserFormPage() {
 
   const createMutation = useMutation({
     mutationFn: (data: CreateFormValues) =>
-      UsersMantenedoresService.usersControllerCreate({
+      UsersService.usersControllerCreate({
         name: data.name,
         email: data.email,
         password: data.password,
-        role: data.role,
+        role: data.role as CreateUserDto['role'],
         departmentIds: selectedDeptIds,
       }),
     onSuccess: () => {
@@ -118,11 +120,11 @@ export function UserFormPage() {
 
   const updateMutation = useMutation({
     mutationFn: (data: EditFormValues) =>
-      UsersMantenedoresService.usersControllerUpdate(id!, {
+      UsersService.usersControllerUpdate(id!, {
         name: data.name,
         email: data.email,
         password: data.password || undefined,
-        role: data.role,
+        role: data.role as UpdateUserDto['role'],
         departmentIds: selectedDeptIds,
       }),
     onSuccess: () => {

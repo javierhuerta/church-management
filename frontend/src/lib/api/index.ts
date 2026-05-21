@@ -50,6 +50,7 @@ export { UserResponseDto } from './models/UserResponseDto';
 export { AuthService } from './services/AuthService';
 export { CalendarService } from './services/CalendarService';
 export { DepartmentsService } from './services/DepartmentsService';
+export { HealthService } from './services/HealthService';
 export { HymnsService } from './services/HymnsService';
 export { UsersService } from './services/UsersService';
 export { WorshipServicesProgramsService } from './services/WorshipServicesProgramsService';

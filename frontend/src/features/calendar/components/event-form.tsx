@@ -12,7 +12,7 @@ import {
   type EventResponseDto,
   type OrganizerInputDto,
 } from '@/lib/api'
-import { API_URL } from '@/lib/api-client'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DateTimePicker } from '@/components/ui/date-time-picker'
@@ -97,8 +97,7 @@ function organizersToInput(entries: OrganizerEntry[]): OrganizerInputDto[] {
 }
 
 function resolveCoverUrl(url: string | null | undefined): string | null {
-  if (!url) return null
-  return url.startsWith('http') ? url : `${API_URL}${url}`
+  return url ?? null
 }
 
 export function EventForm({ event, onSaved }: EventFormProps) {

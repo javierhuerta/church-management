@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
 import { Upload, Star, Trash2, Loader2 } from 'lucide-react'
 import type { AttachmentResponseDto } from '@/lib/api'
+import { CalendarService } from '@/lib/api'
 import { Button } from '@/components/ui/button'
-import { API_URL } from '@/lib/api-client'
+
 
 interface AttachmentUploaderProps {
   eventId: string
@@ -35,20 +36,14 @@ export function AttachmentUploader({
     const uploaded: AttachmentResponseDto[] = []
     for (const file of Array.from(files)) {
       try {
-        const formData = new FormData()
-        formData.append('file', file)
-        const res = await fetch(`${API_URL}/api/calendar/${eventId}/attachments`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-          body: formData,
-        })
-        if (!res.ok) {
-          const data = await res.json()
-          throw new Error(data.message || 'Error subiendo archivo')
-        }
-        uploaded.push(await res.json())
+        const result = await CalendarService.calendarControllerUploadAttachment(
+          eventId,
+          { file: file as unknown as string },
+        )
+        uploaded.push(result as AttachmentResponseDto)
       } catch (err) {
-        setError((err as Error).message)
+        const apiErr = err as { body?: { message?: string }; message?: string }
+        setError(apiErr.body?.message ?? apiErr.message ?? 'Error subiendo archivo')
       }
     }
     onChange([...attachments, ...uploaded])
@@ -59,10 +54,7 @@ export function AttachmentUploader({
   async function handleDelete(attachmentId: string) {
     if (!confirm('¿Eliminar este adjunto?')) return
     try {
-      await fetch(`${API_URL}/api/calendar/${eventId}/attachments/${attachmentId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      })
+      await CalendarService.calendarControllerRemoveAttachment(eventId, attachmentId)
       onChange(attachments.filter((a) => a.id !== attachmentId))
     } catch {
       setError('No se pudo eliminar el adjunto')
@@ -71,20 +63,13 @@ export function AttachmentUploader({
 
   async function handleSetCover(attachmentId: string) {
     try {
-      await fetch(`${API_URL}/api/calendar/${eventId}/attachments/${attachmentId}/cover`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      })
+      await CalendarService.calendarControllerSetCover(eventId, attachmentId)
       onChange(
         attachments.map((a) => ({ ...a, isCover: a.id === attachmentId })),
       )
     } catch {
       setError('No se pudo marcar como portada')
     }
-  }
-
-  function resolveUrl(url: string): string {
-    return url.startsWith('http') ? url : `${API_URL}${url}`
   }
 
   return (
@@ -135,7 +120,7 @@ export function AttachmentUploader({
               >
                 {isImage ? (
                   <img
-                    src={resolveUrl(a.url)}
+                    src={a.url}
                     alt={a.originalName}
                     className="h-24 w-full rounded object-cover"
                   />

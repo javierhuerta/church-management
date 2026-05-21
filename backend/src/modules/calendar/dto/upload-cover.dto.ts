@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 
 export class UploadCoverDto {
-  @ApiProperty({ type: 'string', format: 'binary' })
+  @ApiProperty({ type: 'string', description: 'Binary file upload (multipart/form-data)' })
   file: Express.Multer.File;
 
   @ApiPropertyOptional({
