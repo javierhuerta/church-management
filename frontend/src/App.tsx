@@ -6,6 +6,7 @@ import { AdaptiveLayout } from './layouts/adaptive-layout'
 import { DashboardPage } from './features/dashboard/pages/dashboard-page'
 import { MantenedoresLayout } from './features/mantenedores/layouts/mantenedores-layout'
 import { TextSizeProvider } from './lib/contexts/text-size-context'
+import { ThemePreviewPage } from './features/theme-preview/theme-preview-page'
 import { Toaster } from './components/ui/sonner'
 import './index.css'
 
@@ -93,6 +94,7 @@ function App() {
         <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/theme-preview" element={<ThemePreviewPage />} />
 
             <Route element={<AdaptiveLayout />}>
               <Route path="/calendario/:slug" element={<EventDetailPage />} />
