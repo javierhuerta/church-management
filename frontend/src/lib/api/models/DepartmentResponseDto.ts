@@ -7,6 +7,7 @@ export type DepartmentResponseDto = {
     id: string;
     name: string;
     color: string;
+    sigla?: string | null;
     createdAt: string;
     updatedAt?: string | null;
     directors?: Array<DirectorSummaryDto>;

@@ -2,12 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type CreateDepartmentDto = {
+export type UserBriefResponseDto = {
+    id: string;
     name: string;
-    color?: string;
-    /**
-     * Sigla corta del departamento (máx. 10 caracteres)
-     */
-    sigla?: string;
+    email: string;
 };
 

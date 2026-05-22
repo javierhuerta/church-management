@@ -24,6 +24,7 @@ import { OrganizerInputDto } from './dto/organizer-input.dto';
 import {
   AttachmentResponseDto,
   EventResponseDto,
+  EventDepartmentDto,
   OrganizerResponseDto,
 } from './dto/event-response.dto';
 import { PaginatedResponseDto } from '../common/dto/pagination.dto';
@@ -112,7 +113,7 @@ export class CalendarService {
       return persisted;
     });
 
-    return toDto(EventResponseDto, await this.loadOne(saved.id));
+    return toDto(EventResponseDto, this.toEventPlain(await this.loadOne(saved.id)));
   }
 
   async findAll(
@@ -121,7 +122,7 @@ export class CalendarService {
   ): Promise<PaginatedResponseDto<EventResponseDto>> {
     const paginated = await this.eventRepo.findWithFilters(filter, viewer);
     return new PaginatedResponseDto(
-      toDto(EventResponseDto, paginated.data),
+      toDto(EventResponseDto, paginated.data.map((e) => this.toEventPlain(e))),
       paginated.total,
       paginated.page,
       paginated.limit,
@@ -131,7 +132,7 @@ export class CalendarService {
   async findOne(id: string, viewer: ViewerContext): Promise<EventResponseDto> {
     const event = await this.loadOne(id);
     this.ensureVisibility(event, viewer);
-    return toDto(EventResponseDto, event);
+    return toDto(EventResponseDto, this.toEventPlain(event));
   }
 
   async findBySlug(
@@ -143,7 +144,7 @@ export class CalendarService {
       throw new NotFoundException('Event not found');
     }
     this.ensureVisibility(event, viewer);
-    return toDto(EventResponseDto, event);
+    return toDto(EventResponseDto, this.toEventPlain(event));
   }
 
   async update(
@@ -191,7 +192,7 @@ export class CalendarService {
       }
     });
 
-    return toDto(EventResponseDto, await this.loadOne(event.id));
+    return toDto(EventResponseDto, this.toEventPlain(await this.loadOne(event.id)));
   }
 
   async publish(id: string, viewer: ViewerContext): Promise<EventResponseDto> {
@@ -200,7 +201,7 @@ export class CalendarService {
     event.status = EventStatus.Published;
     await this.eventRepository.save(event);
     this.logger.log(`Event published [id=${id}] by user [${viewer.userId}]`);
-    return toDto(EventResponseDto, await this.loadOne(event.id));
+    return toDto(EventResponseDto, this.toEventPlain(await this.loadOne(event.id)));
   }
 
   async archive(id: string, viewer: ViewerContext): Promise<EventResponseDto> {
@@ -208,7 +209,7 @@ export class CalendarService {
     const event = await this.loadOne(id);
     event.status = EventStatus.Archived;
     await this.eventRepository.save(event);
-    return toDto(EventResponseDto, await this.loadOne(event.id));
+    return toDto(EventResponseDto, this.toEventPlain(await this.loadOne(event.id)));
   }
 
   async remove(id: string, viewer: ViewerContext): Promise<void> {
@@ -370,6 +371,46 @@ export class CalendarService {
       throw new NotFoundException('Event not found');
     }
     return event;
+  }
+
+  /**
+   * Maps a raw Event entity to a plain object whose shape matches
+   * EventResponseDto fields — organizers and department are pre-mapped
+   * so class-transformer can serialize them without @Transform decorators.
+   */
+  private toEventPlain(event: Event): object {
+    const organizers: OrganizerResponseDto[] = (event.organizers ?? [])
+      .filter((o) => o.user || o.displayName)
+      .map((o) =>
+        o.user
+          ? {
+              id: o.id,
+              kind: 'user' as const,
+              userId: o.user.id,
+              name: o.user.name,
+              email: o.user.email,
+              role: o.user.role,
+            }
+          : {
+              id: o.id,
+              kind: 'text' as const,
+              userId: null,
+              name: o.displayName as string,
+              email: null,
+              role: null,
+            },
+      );
+
+    const department: EventDepartmentDto | null = event.department
+      ? {
+          id: event.department.id,
+          name: event.department.name,
+          color: event.department.color,
+          sigla: event.department.sigla ?? null,
+        }
+      : null;
+
+    return { ...event, organizers, department };
   }
 
   private async setOrganizers(

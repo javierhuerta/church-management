@@ -1,4 +1,4 @@
-import { IsString, MinLength, IsHexColor, IsOptional } from 'class-validator';
+import { IsString, MinLength, IsHexColor, IsOptional, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateDepartmentDto {
@@ -11,4 +11,10 @@ export class CreateDepartmentDto {
   @IsOptional()
   @IsHexColor()
   color?: string;
+
+  @ApiPropertyOptional({ type: String, example: 'JOV', description: 'Sigla corta del departamento (máx. 10 caracteres)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(10)
+  sigla?: string;
 }

@@ -33,6 +33,7 @@ const DEPT_COLOR_PALETTE = [
 const formSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Color inválido'),
+  sigla: z.string().max(10, 'Máximo 10 caracteres').optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -65,15 +66,15 @@ export function DepartmentFormPage() {
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     values: existingDept
-      ? { name: existingDept.name, color: existingDept.color ?? '#1B3A6B' }
-      : { name: '', color: '#1B3A6B' },
+      ? { name: existingDept.name, color: existingDept.color ?? '#1B3A6B', sigla: existingDept.sigla ?? '' }
+      : { name: '', color: '#1B3A6B', sigla: '' },
   })
 
   const selectedColor = watch('color')
 
   const createMutation = useMutation({
     mutationFn: (data: FormValues) =>
-      DepartmentsService.departmentsControllerCreate({ name: data.name, color: data.color }),
+      DepartmentsService.departmentsControllerCreate({ name: data.name, color: data.color, sigla: data.sigla || undefined }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] })
       toast.success('Departamento creado')
@@ -86,7 +87,7 @@ export function DepartmentFormPage() {
 
   const updateMutation = useMutation({
     mutationFn: (data: FormValues) =>
-      DepartmentsService.departmentsControllerUpdate(id!, { name: data.name, color: data.color }),
+      DepartmentsService.departmentsControllerUpdate(id!, { name: data.name, color: data.color, sigla: data.sigla || null }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] })
       queryClient.invalidateQueries({ queryKey: ['departments', id] })
@@ -137,6 +138,23 @@ export function DepartmentFormPage() {
           <Label htmlFor="name">Nombre *</Label>
           <Input id="name" {...register('name')} placeholder="Ej: Jóvenes" />
           {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="sigla">Sigla</Label>
+          <Input
+            id="sigla"
+            {...register('sigla')}
+            placeholder="Ej: JOV"
+            maxLength={10}
+            className="w-32 uppercase"
+            onChange={(e) => {
+              e.target.value = e.target.value.toUpperCase()
+              register('sigla').onChange(e)
+            }}
+          />
+          <p className="text-xs text-muted-foreground">Abreviatura corta que aparece en las tarjetas del calendario (máx. 10 caracteres).</p>
+          {errors.sigla && <p className="text-xs text-red-500">{errors.sigla.message}</p>}
         </div>
 
         <div className="space-y-2">

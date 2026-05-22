@@ -23,10 +23,6 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
   draft:     { label: 'Borrador',  bg: '#C9A84C', color: '#102240' },
 }
 
-/** Returns uppercase initials: "Jóvenes y Adolescentes" → "JA" */
-function toInitials(name: string): string {
-  return name.split(/\s+/).filter(Boolean).map((w) => w[0]).join('').toUpperCase().slice(0, 4)
-}
 
 function formatBandDateRange(start: string, end: string): string {
   const s = new Date(start)
@@ -131,13 +127,13 @@ function buildBandsForWeek(multiDayEvents: EventResponseDto[], weekDays: Date[])
 function MultiDayBand({ band }: { band: MultiDayBand }) {
   const event = band.event
   const typeStyle = EVENT_TYPE_STYLE[event.eventType] ?? EVENT_TYPE_STYLE.local
-  const deptStyle = event.departmentName ? getDepartmentStyle(event.departmentName, event.departmentColor) : null
-  const deptInitials = event.departmentName ? toInitials(event.departmentName) : null
+  const deptStyle = event.department ? getDepartmentStyle(event.department.name, event.department.color) : null
+  const sigla = event.department?.sigla ?? null
   const status = event.status as string
   const statusCfg = STATUS_CONFIG[status]
   const isDraft = status === 'draft'
   const isArchived = status === 'archived'
-  const coverUrl = (event as EventResponseDto & { coverImageUrl?: string }).coverImageUrl
+  const coverUrl = event.coverImageUrl
 
   // Band pill color based on status
   const bandBg = isDraft
@@ -198,13 +194,12 @@ function MultiDayBand({ band }: { band: MultiDayBand }) {
         >
           {/* Cover image header */}
           {coverUrl && (
-            <div className="relative h-24 bg-muted overflow-hidden">
+            <div className="relative w-full aspect-video bg-muted overflow-hidden">
               <img
                 src={coverUrl}
                 alt=""
                 aria-hidden
                 className="absolute inset-0 w-full h-full object-cover"
-                style={{ opacity: 0.22 }}
               />
             </div>
           )}
@@ -278,14 +273,14 @@ function MultiDayBand({ band }: { band: MultiDayBand }) {
               >
                 {EVENT_TYPE_LABELS[event.eventType]}
               </span>
-              {deptInitials && deptStyle && (
+              {sigla && deptStyle && (
                 <span
                   className="text-[10px] px-2 py-0.5 rounded-full font-medium flex items-center gap-1"
-                  title={event.departmentName ?? undefined}
+                  title={event.department?.name ?? undefined}
                   style={{ backgroundColor: deptStyle.backgroundColor, color: deptStyle.color }}
                 >
                   <Building2 className="h-2.5 w-2.5" />
-                  {deptInitials}
+                  {sigla}
                 </span>
               )}
               <Link

@@ -96,7 +96,14 @@ export function DepartmentsListPage() {
                   style={{ backgroundColor: dept.color, borderColor: `${dept.color}44` }}
                 />
                 <div className="min-w-0">
-                  <p className="font-medium text-foreground truncate">{dept.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-foreground truncate">{dept.name}</p>
+                    {dept.sigla && (
+                      <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded border border-border text-muted-foreground bg-muted">
+                        {dept.sigla}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {dept.directors && dept.directors.length > 0
                       ? `${dept.directors.length} director${dept.directors.length > 1 ? 'es' : ''}`

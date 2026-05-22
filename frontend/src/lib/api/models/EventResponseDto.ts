@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AttachmentResponseDto } from './AttachmentResponseDto';
+import type { EventDepartmentDto } from './EventDepartmentDto';
 import type { OrganizerResponseDto } from './OrganizerResponseDto';
 export type EventResponseDto = {
     id: string;
@@ -13,8 +14,7 @@ export type EventResponseDto = {
     status: EventResponseDto.status;
     eventType: EventResponseDto.eventType;
     departmentId?: string | null;
-    departmentName?: string | null;
-    departmentColor?: string | null;
+    department?: EventDepartmentDto | null;
     meetingUrl?: string | null;
     meetingType?: EventResponseDto.meetingType | null;
     location?: string | null;
