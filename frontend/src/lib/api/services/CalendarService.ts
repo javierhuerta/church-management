@@ -107,6 +107,41 @@ export class CalendarService {
         });
     }
     /**
+     * List events with first/last date range for infinite scroll (public, role-aware)
+     * @param page Page number
+     * @param limit Items per page
+     * @param startDate Start date filter (ISO)
+     * @param endDate End date filter (ISO)
+     * @param eventType
+     * @param departmentId Department ID (UUID)
+     * @param status
+     * @returns any Events retrieved successfully
+     * @throws ApiError
+     */
+    public static calendarControllerFindAllWithRange(
+        page: number = 1,
+        limit: number = 20,
+        startDate?: string,
+        endDate?: string,
+        eventType?: 'local' | 'asach' | 'distrital',
+        departmentId?: string,
+        status?: 'draft' | 'published' | 'archived',
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/calendar/range',
+            query: {
+                'page': page,
+                'limit': limit,
+                'startDate': startDate,
+                'endDate': endDate,
+                'eventType': eventType,
+                'departmentId': departmentId,
+                'status': status,
+            },
+        });
+    }
+    /**
      * Search users for organizer multi-select
      * @param q
      * @returns any

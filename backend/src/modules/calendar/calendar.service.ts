@@ -27,7 +27,7 @@ import {
   EventDepartmentDto,
   OrganizerResponseDto,
 } from './dto/event-response.dto';
-import { PaginatedResponseDto } from '../common/dto/pagination.dto';
+import { PaginatedResponseDto, PaginatedResponseWithRangeDto } from '../common/dto/pagination.dto';
 import { UserRole } from '../common/entities/user-role.enum';
 import { EventStatus } from './entities/event-status.enum';
 import { MeetingType } from './entities/meeting-type.enum';
@@ -126,6 +126,21 @@ export class CalendarService {
       paginated.total,
       paginated.page,
       paginated.limit,
+    );
+  }
+
+  async findAllWithRange(
+    filter: FilterEventDto,
+    viewer: ViewerContext,
+  ): Promise<PaginatedResponseWithRangeDto<EventResponseDto>> {
+    const paginated = await this.eventRepo.findWithFiltersAndRange(filter, viewer);
+    return new PaginatedResponseWithRangeDto(
+      toDto(EventResponseDto, paginated.data.map((e) => this.toEventPlain(e))),
+      paginated.total,
+      paginated.page,
+      paginated.limit,
+      paginated.firstEventDate,
+      paginated.lastEventDate,
     );
   }
 

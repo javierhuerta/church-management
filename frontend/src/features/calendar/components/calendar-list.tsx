@@ -59,14 +59,12 @@ export function CalendarList({
   }, [onLoadMore, hasMore, isLoadingMore])
 
   // IntersectionObserver — show FAB when top sentinel leaves viewport
-  // Works with any scroll container (not tied to window.scrollY)
   useEffect(() => {
     const sentinel = topSentinelRef.current
     if (!sentinel) return
 
     const observer = new IntersectionObserver(
       (entries) => {
-        // FAB visible when the top of the list is out of view
         setShowScrollTop(!entries[0].isIntersecting)
       },
       { threshold: 0 },
@@ -77,7 +75,6 @@ export function CalendarList({
   }, [])
 
   function scrollToTop() {
-    // Scroll the actual container (layout uses overflow-y-auto div, not window)
     const container = topSentinelRef.current?.closest<HTMLElement>('.overflow-y-auto')
     if (container) {
       container.scrollTo({ top: 0, behavior: 'smooth' })
@@ -90,7 +87,6 @@ export function CalendarList({
     (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
   )
 
-  // Group by day, tracking month boundaries for separators
   const groups: { label: string; events: EventResponseDto[]; monthLabel?: string }[] = []
   let lastMonthKey = ''
 
@@ -142,6 +138,16 @@ export function CalendarList({
 
       {/* Bottom sentinel — triggers load more via IntersectionObserver */}
       <div ref={bottomSentinelRef} data-testid="load-more-sentinel" className="h-1" />
+
+      {/* End of list */}
+      {!hasMore && !isLoadingMore && events.length > 0 && (
+        <div className="flex flex-col items-center gap-1.5 py-8 text-center">
+          <span className="text-2xl">📭</span>
+          <p className="text-sm text-muted-foreground">
+            No hay más eventos para mostrar
+          </p>
+        </div>
+      )}
 
       {/* Loading indicator */}
       {isLoadingMore && (

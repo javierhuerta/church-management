@@ -39,3 +39,24 @@ export class PaginatedResponseDto<T> {
     this.totalPages = Math.ceil(total / limit);
   }
 }
+
+export class PaginatedResponseWithRangeDto<T> extends PaginatedResponseDto<T> {
+  @ApiPropertyOptional({ type: String, nullable: true })
+  firstEventDate: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  lastEventDate: string | null;
+
+  constructor(
+    data: T[],
+    total: number,
+    page: number,
+    limit: number,
+    firstEventDate: string | null,
+    lastEventDate: string | null,
+  ) {
+    super(data, total, page, limit);
+    this.firstEventDate = firstEventDate;
+    this.lastEventDate = lastEventDate;
+  }
+}

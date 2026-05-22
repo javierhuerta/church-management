@@ -34,7 +34,7 @@ import {
   EventResponseDto,
   OrganizerResponseDto,
 } from './dto/event-response.dto';
-import { PaginatedResponseDto } from '../common/dto/pagination.dto';
+import { PaginatedResponseDto, PaginatedResponseWithRangeDto } from '../common/dto/pagination.dto';
 import { UploadAttachmentDto } from './dto/upload-attachment.dto';
 import { UploadCoverDto } from './dto/upload-cover.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -114,6 +114,17 @@ export class CalendarController {
     @Request() req: RequestWithUser,
   ): Promise<PaginatedResponseDto<EventResponseDto>> {
     return this.calendarService.findAll(filterEventDto, viewerFromReq(req));
+  }
+
+  @Get('range')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'List events with first/last date range for infinite scroll (public, role-aware)' })
+  @ApiResponse({ status: 200, description: 'Events retrieved successfully' })
+  findAllWithRange(
+    @Query() filterEventDto: FilterEventDto,
+    @Request() req: RequestWithUser,
+  ): Promise<PaginatedResponseWithRangeDto<EventResponseDto>> {
+    return this.calendarService.findAllWithRange(filterEventDto, viewerFromReq(req));
   }
 
   @Get('organizers/search')

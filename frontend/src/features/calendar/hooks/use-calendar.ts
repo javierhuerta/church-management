@@ -21,6 +21,8 @@ interface PaginatedResponse<T> {
   page: number
   limit: number
   totalPages: number
+  firstEventDate?: string | null
+  lastEventDate?: string | null
 }
 
 export function useCalendar(filters: CalendarFilters) {
@@ -88,7 +90,7 @@ export function useCalendarInfinite(filters: CalendarInfiniteFilters) {
     refetchOnWindowFocus: false,
     queryFn: ({ pageParam }) => {
       const { year, month } = pageParam as MonthPage
-      return CalendarService.calendarControllerFindAll(
+      return CalendarService.calendarControllerFindAllWithRange(
         1,
         100,
         startOfMonth(year, month).toISOString(),
@@ -99,10 +101,9 @@ export function useCalendarInfinite(filters: CalendarInfiniteFilters) {
       ) as Promise<PaginatedResponse<EventResponseDto>>
     },
     getNextPageParam: (lastPage, _allPages, lastPageParam) => {
+      if (!lastPage) return undefined
       const { year, month } = lastPageParam as MonthPage
-      if (!lastPage || (lastPage as PaginatedResponse<EventResponseDto>).page >= (lastPage as PaginatedResponse<EventResponseDto>).totalPages) {
-        return undefined
-      }
+      if (lastPage.data.length === 0) return undefined
       const next = new Date(year, month + 1, 1)
       return { year: next.getFullYear(), month: next.getMonth() }
     },

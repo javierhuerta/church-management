@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useIsMobile } from '@/lib/hooks/use-is-mobile'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Calendar, Clock, Archive, Filter, Trash2, X, Layers, LayoutList } from 'lucide-react'
@@ -22,6 +23,7 @@ const STATUS_LABELS: Record<string, string> = {
 export function ProgramsListPage() {
   const user = useAuthUser()
   const isAdmin = user?.role === 'Admin'
+  const isMobile = useIsMobile()
   const canCreate = ['Admin', 'Pastor', 'Anciano', 'DirectorDepartamento'].includes(user?.role || '')
 
   const [filters, setFilters] = useState<ProgramFilters>({})
@@ -158,14 +160,23 @@ export function ProgramsListPage() {
 
       {!isLoading && !isError && programs && programs.length > 0 && (
         <div className="grid gap-4">
-          {programs.map((program) => (
-            <ProgramCard
-              key={program.id}
-              program={program}
-              isAdmin={isAdmin}
-              onDelete={() => setDeleteTargetId(program.id)}
-            />
-          ))}
+          {programs.map((program) =>
+            isMobile ? (
+              <ProgramCardMobile
+                key={program.id}
+                program={program}
+                isAdmin={isAdmin}
+                onDelete={() => setDeleteTargetId(program.id)}
+              />
+            ) : (
+              <ProgramCard
+                key={program.id}
+                program={program}
+                isAdmin={isAdmin}
+                onDelete={() => setDeleteTargetId(program.id)}
+              />
+            ),
+          )}
         </div>
       )}
     </div>
@@ -185,7 +196,7 @@ function ProgramCard({
   const status = program.status as string
 
   return (
-    <div className="rounded-xl border border-border bg-card shadow-sm hover:bg-[#C9A84C]/5 transition-colors">
+    <div className="rounded-xl border border-border bg-card shadow-sm hover:bg-[#C9A84C]/5 transition-colors overflow-hidden">
       <div className="flex items-start gap-4 p-5">
         <Link to={`/cultos/programas/${program.id}`} className="flex-1 flex items-start gap-3 min-w-0">
           <div className="mt-1 rounded-lg bg-primary/10 p-2 shrink-0">
@@ -194,6 +205,20 @@ function ProgramCard({
           <div className="min-w-0">
             <h3 className="font-semibold text-foreground truncate">{formattedDate}</h3>
             <p className="text-sm text-muted-foreground mt-0.5">{program.template?.name}</p>
+            <div className="flex flex-wrap items-center gap-3 mt-3">
+              {program.groups && program.groups.length > 0 && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-primary/80">
+                  <Layers className="h-3.5 w-3.5" />
+                  {program.groups.length} {program.groups.length === 1 ? 'grupo' : 'grupos'}
+                </span>
+              )}
+              {program.sections && program.sections.length > 0 && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                  <LayoutList className="h-3.5 w-3.5" />
+                  {program.sections.length} {program.sections.length === 1 ? 'sección' : 'secciones'}
+                </span>
+              )}
+            </div>
           </div>
         </Link>
 
@@ -214,23 +239,66 @@ function ProgramCard({
           )}
         </div>
       </div>
+    </div>
+  )
+}
 
-      <Link to={`/cultos/programas/${program.id}`}>
-        <div className="px-5 pb-4 flex flex-wrap items-center gap-3">
-          {program.groups && program.groups.length > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-primary/80">
-              <Layers className="h-3.5 w-3.5" />
-              {program.groups.length} {program.groups.length === 1 ? 'grupo' : 'grupos'}
-            </span>
-          )}
-          {program.sections && program.sections.length > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-              <LayoutList className="h-3.5 w-3.5" />
-              {program.sections.length} {program.sections.length === 1 ? 'sección' : 'secciones'}
-            </span>
-          )}
-        </div>
-      </Link>
+function ProgramCardMobile({
+  program,
+  isAdmin,
+  onDelete,
+}: {
+  program: ServiceProgramResponseDto
+  isAdmin: boolean
+  onDelete: () => void
+}) {
+  const formattedDate = format(parseDateString(program.date) ?? new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })
+  const status = program.status as string
+
+  return (
+    <div className="rounded-xl border border-border bg-card shadow-sm hover:bg-[#C9A84C]/5 transition-colors overflow-hidden">
+      <div className="p-5">
+        <Link to={`/cultos/programas/${program.id}`} className="flex items-start gap-3">
+          <div className="mt-1 rounded-lg bg-primary/10 p-2 shrink-0">
+            <Calendar className="h-5 w-5 text-primary" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-foreground">{formattedDate}</h3>
+            <p className="text-sm text-muted-foreground mt-0.5">{program.template?.name}</p>
+            <div className="flex flex-wrap items-center gap-3 mt-3">
+              {program.groups && program.groups.length > 0 && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-primary/80">
+                  <Layers className="h-3.5 w-3.5" />
+                  {program.groups.length} {program.groups.length === 1 ? 'grupo' : 'grupos'}
+                </span>
+              )}
+              {program.sections && program.sections.length > 0 && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                  <LayoutList className="h-3.5 w-3.5" />
+                  {program.sections.length} {program.sections.length === 1 ? 'sección' : 'secciones'}
+                </span>
+              )}
+            </div>
+          </div>
+        </Link>
+      </div>
+
+      <div className="flex items-center justify-between gap-2 px-5 pb-4 border-t border-border/50 pt-3">
+        <StatusBadge status={status} />
+        {isAdmin && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={(e) => {
+              e.preventDefault()
+              onDelete()
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
     </div>
   )
 }

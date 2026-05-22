@@ -151,6 +151,22 @@ function MobileCalendarList({ filters }: { filters: CalendarInfiniteFilters }) {
 
   if (isLoading) return <CalendarSkeleton />
 
+  if (events.length === 0 && !hasNextPage) {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-12 text-center shadow-sm">
+        <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
+          <span className="text-2xl">📅</span>
+        </div>
+        <h3 className="text-base font-semibold text-muted-foreground">
+          Sin eventos
+        </h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          No hay eventos para los filtros seleccionados.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <CalendarList
       events={events}
