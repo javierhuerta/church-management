@@ -4,8 +4,14 @@ import { EventType } from '../entities/event-type.enum';
 import { EventStatus } from '../entities/event-status.enum';
 import { MeetingType } from '../entities/meeting-type.enum';
 import { Event } from '../entities/event.entity';
-import { EventOrganizer } from '../entities/event-organizer.entity';
 import { defaultCoverForType } from '../utils/default-cover';
+
+export class EventDepartmentDto {
+  @ApiProperty() @Expose() id: string;
+  @ApiProperty() @Expose() name: string;
+  @ApiProperty() @Expose() color: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) @Expose() sigla: string | null;
+}
 
 export class OrganizerResponseDto {
   @ApiProperty({ description: 'Row id of the event_organizers entry' })
@@ -72,35 +78,15 @@ export class EventResponseDto {
   @Expose()
   departmentId: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiPropertyOptional({ type: () => EventDepartmentDto, nullable: true })
   @Expose()
-  @Transform(
-    ({ obj }) => {
-      const event = obj as Event
-      return event.department?.name ?? null
-    },
-    { toClassOnly: true },
-  )
-  @Transform(
-    ({ value }) => value as string | null,
-    { toPlainOnly: true },
-  )
-  departmentName: string | null;
-
-  @ApiPropertyOptional({ type: String, nullable: true })
-  @Expose()
-  @Transform(
-    ({ obj }) => {
-      const event = obj as Event
-      return event.department?.color ?? null
-    },
-    { toClassOnly: true },
-  )
-  @Transform(
-    ({ value }) => value as string | null,
-    { toPlainOnly: true },
-  )
-  departmentColor: string | null;
+  @Transform(({ obj }) => {
+    const dept = (obj as Event).department;
+    if (!dept) return null;
+    return { id: dept.id, name: dept.name, color: dept.color, sigla: dept.sigla ?? null };
+  })
+  @Type(() => EventDepartmentDto)
+  department: EventDepartmentDto | null;
 
   @ApiPropertyOptional({ type: String, nullable: true })
   @Expose()
@@ -124,29 +110,7 @@ export class EventResponseDto {
 
   @ApiProperty({ type: [OrganizerResponseDto] })
   @Expose()
-  @Transform(({ obj }) =>
-    ((obj as Event).organizers ?? [])
-      .filter((o: EventOrganizer) => o.user || o.displayName)
-      .map((o: EventOrganizer) =>
-        o.user
-          ? {
-              id: o.id,
-              kind: 'user' as const,
-              userId: o.user.id,
-              name: o.user.name,
-              email: o.user.email,
-              role: o.user.role,
-            }
-          : {
-              id: o.id,
-              kind: 'text' as const,
-              userId: null,
-              name: o.displayName as string,
-              email: null,
-              role: null,
-            },
-      ),
-  )
+  @Type(() => OrganizerResponseDto)
   organizers: OrganizerResponseDto[];
 
   @ApiPropertyOptional({ type: String, nullable: true })

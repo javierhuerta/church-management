@@ -64,7 +64,7 @@ export class DepartmentsService {
       throw new ConflictException('Department name already exists');
     }
 
-    const dept = this.departmentRepo.create({ name: dto.name, color: dto.color ?? '#1B3A6B' });
+    const dept = this.departmentRepo.create({ name: dto.name, color: dto.color ?? '#1B3A6B', sigla: dto.sigla ?? null });
     const saved = await this.departmentRepo.save(dept);
     this.logger.log(`Department created [id=${saved.id}] name="${saved.name}"`);
     return toDto(DepartmentWithDirectorsDto, saved);
@@ -88,6 +88,10 @@ export class DepartmentsService {
 
     if (dto.color !== undefined) {
       dept.color = dto.color;
+    }
+
+    if (dto.sigla !== undefined) {
+      dept.sigla = dto.sigla ?? null;
     }
 
     await this.departmentRepo.save(dept);

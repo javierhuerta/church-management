@@ -10,6 +10,9 @@ export class Department extends BaseEntity {
   @Column({ default: '#1B3A6B' })
   color: string;
 
+  @Column({ type: 'varchar', length: 10, nullable: true, default: null })
+  sigla: string | null;
+
   @ManyToMany(() => User, (user) => user.departments)
   users: User[];
 }

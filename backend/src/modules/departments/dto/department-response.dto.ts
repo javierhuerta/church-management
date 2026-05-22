@@ -11,6 +11,7 @@ export class DepartmentResponseDto {
   @ApiProperty() @Expose() id: string;
   @ApiProperty() @Expose() name: string;
   @ApiProperty({ type: String }) @Expose() color: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) @Expose() sigla: string | null;
   @ApiProperty() @Expose() createdAt: Date;
   @ApiPropertyOptional({ type: String, nullable: true }) @Expose() updatedAt: Date | null;
   @ApiPropertyOptional({ type: [DirectorSummaryDto] })
