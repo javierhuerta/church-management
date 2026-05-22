@@ -1,0 +1,59 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "skills": {
+    "paths": [
+      "backend/.agents/skills",
+      "frontend/.agents/skills"
+    ]
+  },
+  "mcp": {
+    "excel": {
+      "type": "local",
+      "command": ["npx", "--yes", "@negokaz/excel-mcp-server"],
+      "env": {
+        "EXCEL_MCP_PAGING_CELLS_LIMIT": "4000"
+      },
+      "enabled": true
+    },
+    "playwright": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@playwright/mcp",
+        "--executable-path",
+        "/home/javierhuerta/.cache/ms-playwright/chromium-1169/chrome-linux/chrome"
+      ],
+      "enabled": true
+    },
+    "postgres": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "mcp-postgres",
+        "postgresql://postgres:postgres@localhost:5432/church_management"
+      ],
+      "enabled": true
+    },
+    "filesystem": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/home/javierhuerta/projects/church-management"
+      ],
+      "enabled": true
+    },
+    "fetch": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@kazuph/mcp-fetch"
+      ],
+      "enabled": true
+    }
+  }
+}

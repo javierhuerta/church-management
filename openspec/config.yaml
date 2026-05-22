@@ -7,65 +7,73 @@ context: |
   El sistema está diseñado para crecer modularmente; cada módulo es una capacidad independiente.
 
   ## Stack tecnológico
-  ### Backend
-  - Runtime: Node.js con NestJS (arquitectura modular)
-  - ORM: TypeORM con PostgreSQL
-  - API: REST con OpenAPI (Swagger) — los schemas OpenAPI se usan para generar servicios y DTOs en el frontend automáticamente
-  - Autenticación: JWT con roles
-  - Lenguaje: TypeScript
+  - Backend: NestJS + TypeORM + PostgreSQL, API REST con OpenAPI/Swagger, autenticación JWT con roles
+  - Frontend: React + Vite + shadcn/ui + Tailwind CSS, servicios generados automáticamente desde el schema OpenAPI del backend
+  - Lenguaje: TypeScript en ambos lados
 
-  ### Frontend
-  - Framework: React con Vite
-  - UI: shadcn/ui + Tailwind CSS
-  - Generación de servicios/DTOs: desde OpenAPI spec del backend
-  - Lenguaje: TypeScript
-
-  ## Arquitectura general
-  - Monorepo o repos separados (por definir), pero backend y frontend son proyectos independientes
-  - El backend expone una API REST documentada con OpenAPI
-  - El frontend consume la API usando clientes generados automáticamente desde el schema OpenAPI
-  - Cada módulo de negocio en el backend es un NestJS Module independiente
+  Las convenciones técnicas detalladas de implementación (patrones NestJS, TypeORM, React, shadcn, etc.)
+  están definidas en las skills del agente. Al implementar, cargar las skills correspondientes según el
+  área del change: skills de backend para cambios en NestJS/TypeORM, skills de frontend para cambios en
+  React/shadcn/Tailwind.
 
   ## Dominio
   La iglesia adventista tiene una estructura organizacional con roles específicos y departamentos.
 
   ### Roles de usuario
-  - **Pastor**: líder principal de la iglesia
-  - **Anciano**: líder laico, apoya al pastor
-  - **Coordinador Misionero**: responsable de actividades de evangelismo y misión
-  - **Director de Departamento**: responsable de un departamento específico (ej. jóvenes, familia)
-  - **Secretaria de Iglesia**: gestión administrativa, registros de membresía
-  - **Maestro de Clase (Escuela Sabática)**: responsable de una clase de Escuela Sabática
+  - Pastor: líder principal de la iglesia
+  - Anciano: líder laico, apoya al pastor
+  - Coordinador Misionero: responsable de actividades de evangelismo y misión
+  - Director de Departamento: responsable de un departamento específico (ej. jóvenes, familia)
+  - Secretaria de Iglesia: gestión administrativa, registros de membresía
+  - Maestro de Clase (Escuela Sabática): responsable de una clase de Escuela Sabática
 
   ### Glosario del dominio
-  - **Escuela Sabática**: estudio bíblico que ocupa la primera parte del culto del sábado
-  - **Culto**: servicio religioso (puede ser sabático, vespertino, semana de oración, etc.)
-  - **Parte del culto**: segmento asignado dentro de un culto (oración, lectura, sermón, etc.)
-  - **Programa de iglesia**: calendario de actividades planificadas
-  - **Miembro**: persona registrada como miembro de la iglesia
-  - **Departamento**: área de ministerio dentro de la iglesia (Jóvenes, Familia, Misionero, etc.)
+  - Escuela Sabática: estudio bíblico que ocupa la primera parte del culto del sábado
+  - Culto: servicio religioso (puede ser sabático, vespertino, semana de oración, etc.)
+  - Parte del culto: segmento asignado dentro de un culto (oración, lectura, sermón, etc.)
+  - Programa de iglesia: calendario de actividades planificadas
+  - Miembro: persona registrada como miembro de la iglesia
+  - Departamento: área de ministerio dentro de la iglesia (Jóvenes, Familia, Misionero, etc.)
 
   ### Módulos planificados
-  - **Calendario**: programación de actividades y eventos de la iglesia (módulo inicial, ya existente en sistema legacy)
-  - **Cultos**: gestión de cultos, definición de partes y asignación de responsables
-  - **Misión**: gestión misionera, seguimiento de actividades evangelísticas
+  - Calendario: programación de actividades y eventos de la iglesia (módulo inicial, ya existente en sistema legacy)
+  - Cultos: gestión de cultos, definición de partes y asignación de responsables
+  - Misión: gestión misionera, seguimiento de actividades evangelísticas
   - (más módulos se agregarán a futuro)
-
-  ## Convenciones de desarrollo
-  - Conventional Commits: feat, fix, chore, docs, refactor, test
-  - Cada módulo NestJS tiene su propia carpeta con controllers, services, entities, DTOs
-  - Los DTOs del backend son la fuente de verdad; el frontend los consume desde el schema generado
-  - Las specs se escriben orientadas a capacidades, no a módulos técnicos
 
 rules:
   proposal:
     - Incluir siempre una sección "Fuera del alcance" para delimitar el scope
-    - Mencionar qué módulo NestJS se ve afectado o creado
-    - Considerar impacto en roles y permisos
+    - Identificar si el change toca backend, frontend o ambos — esto determina qué skills cargar al implementar
+    - Considerar impacto en roles y permisos del dominio
+
   tasks:
     - Las tareas deben ser accionables y completables en una sesión de trabajo
-    - Incluir siempre tareas para: entidad/schema, DTOs, service, controller, tests básicos, frontend (si aplica)
-    - Ordenar tareas de backend a frontend
+    - Ordenar de menor a mayor dependencia (infraestructura antes que UI)
+    - No detallar patrones técnicos de implementación en las tareas — eso lo resuelven las skills al aplicar
+
   spec:
     - Escribir specs desde la perspectiva del usuario con su rol
     - Incluir reglas de negocio del dominio adventista cuando sean relevantes
+
+  design: |
+    Si el change incluye UI (páginas, formularios, modales, flujos de navegación), incluir siempre
+    una sección "## UI Scenarios" al final del design.md. Esta sección es usada por el comando
+    /qa-change para validar la UI con Playwright antes de archivar.
+
+    Si el change es backend-only (sin pantallas nuevas), omitir la sección y agregar al final del
+    archivo el comentario: <!-- No UI Scenarios: backend-only change -->
+
+    Flujo de QA: /opsx-propose → /opsx-apply → /opsx-verify → /qa-change → /opsx-archive
+    El comando /qa-change verifica el stack (frontend localhost:5173, backend localhost:3000),
+    ejecuta los steps documentados con Playwright y genera un reporte con screenshots y veredicto PASS/FAIL.
+
+    Formato de cada escenario en la sección UI Scenarios (ver openspec/ui-scenarios-format.md para el
+    template completo con ejemplos):
+    - Un encabezado ### Scenario: <nombre descriptivo>
+    - Campo URL con la ruta relativa de inicio
+    - Campo Description con una oración explicando qué flujo valida
+    - Lista Steps con el DSL de navegación/interacción
+    - Bloque ASCII Wireframe con el estado final esperado
+    - Usar selectores data-testid cuando sea posible
+    - Un escenario por flujo distinto (login, crear registro, ver listado, etc.)

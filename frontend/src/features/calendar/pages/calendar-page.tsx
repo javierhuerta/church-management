@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, Download, Loader2 } from 'lucide-react'
-import { useCalendar, type EventType } from '../hooks/use-calendar'
+import { useCalendar, useCalendarInfinite, type EventType, type CalendarInfiniteFilters } from '../hooks/use-calendar'
 import { useAuthUser } from '../hooks/use-auth-user'
 import { isEditorRole } from '../utils/labels'
 import { CalendarGrid } from '../components/calendar-grid'
@@ -124,21 +124,40 @@ export function CalendarPage() {
         </div>
       )}
 
-      {!isLoading && !isError && events.length === 0 && (
-        <EmptyState />
+      {/* Desktop: month grid — guarded by its own empty/loading state */}
+      {!isLoading && !isError && (
+        <div className="hidden md:block">
+          {events.length > 0 ? (
+            <CalendarGrid currentMonth={currentMonth} events={events} />
+          ) : (
+            <EmptyState />
+          )}
+        </div>
       )}
 
-      {!isLoading && !isError && events.length > 0 && (
-        <>
-          <div className="hidden md:block">
-            <CalendarGrid currentMonth={currentMonth} events={events} />
-          </div>
-          <div className="block md:hidden">
-            <CalendarList events={events} />
-          </div>
-        </>
-      )}
+      {/* Mobile: infinite scroll list — renders independently of desktop query */}
+      <div className="block md:hidden">
+        <MobileCalendarList filters={{ eventType, departmentId, startMonth: currentMonth }} />
+      </div>
     </div>
+  )
+}
+
+function MobileCalendarList({ filters }: { filters: CalendarInfiniteFilters }) {
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useCalendarInfinite(filters)
+
+  const events = data?.pages.flatMap((p) => p.data ?? []) ?? []
+
+  if (isLoading) return <CalendarSkeleton />
+
+  return (
+    <CalendarList
+      events={events}
+      onLoadMore={fetchNextPage}
+      hasMore={hasNextPage ?? true}
+      isLoadingMore={isFetchingNextPage}
+    />
   )
 }
 
