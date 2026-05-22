@@ -19,6 +19,7 @@ export { CreateUserDto } from './models/CreateUserDto';
 export type { DepartmentResponseDto } from './models/DepartmentResponseDto';
 export type { DepartmentSummaryDto } from './models/DepartmentSummaryDto';
 export type { DirectorSummaryDto } from './models/DirectorSummaryDto';
+export type { EventDepartmentDto } from './models/EventDepartmentDto';
 export { EventResponseDto } from './models/EventResponseDto';
 export type { GroupWithSectionsDto } from './models/GroupWithSectionsDto';
 export type { HymnAutocompleteResponseDto } from './models/HymnAutocompleteResponseDto';
@@ -47,6 +48,7 @@ export { UpdateTemplateDto } from './models/UpdateTemplateDto';
 export { UpdateUserDto } from './models/UpdateUserDto';
 export type { UploadAttachmentDto } from './models/UploadAttachmentDto';
 export type { UploadCoverDto } from './models/UploadCoverDto';
+export type { UserBriefResponseDto } from './models/UserBriefResponseDto';
 export { UserResponseDto } from './models/UserResponseDto';
 
 export { AuthService } from './services/AuthService';

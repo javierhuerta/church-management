@@ -246,7 +246,7 @@ export function DashboardPage() {
                   key={`event-${event.id}`}
                   icon={Calendar}
                   title={event.title}
-                  subtitle={event.departmentName ? `${timeStr} — ${event.departmentName}` : timeStr}
+                  subtitle={event.department?.name ? `${timeStr} — ${event.department.name}` : timeStr}
                   badge={event.status === 'published' ? 'Publicado' : event.status === 'draft' ? 'Borrador' : 'Archivado'}
                   badgeStyle={style}
                   href={`/calendario/${event.id}`}

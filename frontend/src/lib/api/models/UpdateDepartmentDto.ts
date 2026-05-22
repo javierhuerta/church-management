@@ -5,5 +5,9 @@
 export type UpdateDepartmentDto = {
     name?: string;
     color?: string;
+    /**
+     * Sigla corta del departamento (máx. 10 caracteres)
+     */
+    sigla?: string | null;
 };
 

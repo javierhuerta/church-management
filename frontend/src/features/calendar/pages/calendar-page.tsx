@@ -56,7 +56,7 @@ export function CalendarPage() {
     try {
       const dept = departmentId ? departments.find((d) => d.id === departmentId) : undefined
       await downloadCalendarPdf(currentMonth, events, {
-        departmentName: dept?.name ?? null,
+        departmentName: dept?.name ?? null, // kept for PDF filter label only
         eventType,
       })
     } finally {

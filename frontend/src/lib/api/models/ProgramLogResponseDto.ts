@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ProgramSectionResponseDto } from './ProgramSectionResponseDto';
-import type { UserResponseDto } from './UserResponseDto';
+import type { UserBriefResponseDto } from './UserBriefResponseDto';
 export type ProgramLogResponseDto = {
     id: string;
     programId: string;
@@ -13,7 +13,7 @@ export type ProgramLogResponseDto = {
     previousValue?: string | null;
     newValue?: string | null;
     createdAt: string;
-    user: UserResponseDto;
+    user: UserBriefResponseDto;
     section?: ProgramSectionResponseDto | null;
 };
 

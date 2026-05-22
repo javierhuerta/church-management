@@ -278,9 +278,6 @@ function buildBandsForWeek(multiDayEvents: EventResponseDto[], weekDays: Date[])
   return bands
 }
 
-function toInitials(name: string): string {
-  return name.split(/\s+/).filter(Boolean).map((w) => w[0]).join('').toUpperCase().slice(0, 4)
-}
 
 function formatDateRange(start: Date, end: Date): string {
   const sameDay = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth() && start.getDate() === end.getDate()
@@ -364,8 +361,8 @@ export function CalendarPdfDocument({ currentMonth, events, filters }: Props) {
                 <View>
                   {bands.map((band, i) => {
                     const typeStyle = EVENT_TYPE_STYLE[band.event.eventType] ?? EVENT_TYPE_STYLE.local
-                    const deptStyle = band.event.departmentName
-                      ? { dotColor: band.event.departmentColor ?? typeStyle.dotColor }
+                    const deptStyle = band.event.department
+                      ? { dotColor: band.event.department.color ?? typeStyle.dotColor }
                       : null
                     const dotColor = deptStyle ? deptStyle.dotColor : typeStyle.dotColor
                     return (
@@ -506,10 +503,10 @@ export function CalendarPdfDocument({ currentMonth, events, filters }: Props) {
                   )}
                 </View>
                 <View style={styles.listingDept}>
-                  {event.departmentName && (
-                    <View style={[styles.badge, { backgroundColor: `${event.departmentColor ?? typeStyle.dotColor}22`, color: event.departmentColor ?? typeStyle.color }]}>
-                      <Text style={{ color: event.departmentColor ?? typeStyle.color }}>
-                        {toInitials(event.departmentName)}
+                  {event.department?.sigla && (
+                    <View style={[styles.badge, { backgroundColor: `${event.department.color ?? typeStyle.dotColor}22`, color: event.department.color ?? typeStyle.color }]}>
+                      <Text style={{ color: event.department.color ?? typeStyle.color }}>
+                        {event.department.sigla}
                       </Text>
                     </View>
                   )}

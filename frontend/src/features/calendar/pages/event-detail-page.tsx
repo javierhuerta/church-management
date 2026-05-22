@@ -195,9 +195,9 @@ export function EventDetailPage() {
           >
             {EVENT_TYPE_LABELS[event.eventType]}
           </span>
-          {event.departmentName && (
+          {event.department?.name && (
             <span className="text-xs font-medium px-2 py-1 rounded-full bg-muted text-muted-foreground">
-              {event.departmentName}
+              {event.department.name}
             </span>
           )}
           {event.status === 'draft' && (
