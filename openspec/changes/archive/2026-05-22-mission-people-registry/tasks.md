@@ -45,8 +45,8 @@
 
 ## 7. Verificación
 
-- [ ] 7.1 Probar CRUD de Personas vía API (control total)
-- [ ] 7.2 Verificar que un rol de solo lectura puede listar/ver pero no modificar
-- [ ] 7.3 Probar el flujo de creación de Persona en el frontend
-- [ ] 7.4 Verificar búsqueda por nombre en el listado
-- [ ] 7.5 Verificar que la migración corre limpio sobre una base existente
+- [x] 7.1 Probar CRUD de Personas vía API (control total)
+- [x] 7.2 Verificar que un rol de solo lectura puede listar/ver pero no modificar
+- [x] 7.3 Probar el flujo de creación de Persona en el frontend
+- [x] 7.4 Verificar búsqueda por nombre en el listado
+- [x] 7.5 Verificar que la migración corre limpio sobre una base existente
