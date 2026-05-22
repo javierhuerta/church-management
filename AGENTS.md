@@ -9,8 +9,17 @@
 
 ## OpenSpec Workflow
 
-- Usar los comandos: `/opsx-propose`, `/opsx-apply`, `/opsx-archive`
-- Las skills manejan el flujo automáticamente
+Flujo completo para una nueva feature:
+
+1. `/start-feature <name>` — crear rama Git desde development antes de cualquier trabajo
+2. `/opsx-propose <name>` — generar propuesta, design y tasks
+3. `/opsx-apply <name>` — implementar las tasks
+4. `/opsx-verify <name>` — verificar completeness/correctness/coherence
+5. `/qa-change <name>` — validar UI con Playwright (si el change tiene pantallas)
+6. `/opsx-archive <name>` — archivar el change
+
+`start-feature` debe ejecutarse siempre antes de proponer. Si el usuario describe una feature nueva
+sin haber creado rama, sugerir `/start-feature` primero antes de continuar con `/opsx-propose`.
 
 ## Stack Tecnologico — Reglas estrictas
 
@@ -201,6 +210,34 @@ church-management/
 - Module = modulo NestJS
 - Feature = feature de negocio (no necesariamente igual a modulo)
 
+## Skills disponibles por contexto
+
+Los skills estan organizados por subdirectorio y se cargan automaticamente segun el contexto del trabajo.
+
+### OpenCode
+Registrados via `.opencode/opencode.json` → `skills.paths`. OpenCode los escanea y los expone al agente cuando son relevantes al prompt.
+
+### Claude Code
+Cada subdirectorio tiene su propio `AGENTS.md` que lista los skills disponibles. Claude Code los carga de forma lazy al trabajar en archivos de ese directorio.
+
+### Backend (`backend/.agents/skills/`)
+- `nestjs-best-practices` — arquitectura NestJS, DI, seguridad, performance
+- `nodejs-backend-patterns` — patrones Express/Fastify, middleware, auth, DB
+- `nodejs-best-practices` — principios de decision, async patterns, seguridad
+- `typescript-advanced-types` — generics, conditional types, mapped types
+
+### Frontend (`frontend/.agents/skills/`)
+- `vercel-react-best-practices` — performance React/Vite, data fetching, bundle
+- `react-hook-form` — formularios con useForm, useWatch, useFieldArray
+- `shadcn` — componentes shadcn/ui, CLI, presets, components.json
+- `tailwind-css-patterns` — utilidades Tailwind, responsive, layouts
+- `tailwind-v4-shadcn` — setup Tailwind v4 + shadcn + Vite, dark mode, temas
+- `zod` — validacion de schemas, safeParse, z.infer
+- `vite` — configuracion vite.config.ts, plugins, SSR
+- `vercel-composition-patterns` — compound components, context providers, APIs reutilizables
+- `accessibility` — WCAG 2.2, a11y, keyboard navigation, ARIA
+- `frontend-design` — UI production-grade, tipografia, motion, estetica
+
 ---
 
-**Version**: 1.1 — 2026-05-14
+**Version**: 1.2 — 2026-05-22
