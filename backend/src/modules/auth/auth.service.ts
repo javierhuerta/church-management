@@ -74,8 +74,12 @@ export class AuthService {
       role: user.role,
       name: user.name,
     };
-    const accessToken = this.jwtService.sign(payload, { expiresIn: this.jwtExpiresIn });
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: this.jwtRefreshExpiresIn });
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: this.jwtExpiresIn,
+    });
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: this.jwtRefreshExpiresIn,
+    });
 
     this.logger.log(`Login successful [${user.email}]`);
     return {
@@ -161,16 +165,31 @@ export class AuthService {
   async getProfile(userId: string): Promise<UserProfileDto> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
-    return { id: user.id, email: user.email, name: user.name, role: user.role, avatar: user.avatar };
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      avatar: user.avatar,
+    };
   }
 
-  async updateProfile(userId: string, dto: UpdateProfileDto): Promise<UserProfileDto> {
+  async updateProfile(
+    userId: string,
+    dto: UpdateProfileDto,
+  ): Promise<UserProfileDto> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
     if (dto.name !== undefined) user.name = dto.name;
     if (dto.avatar !== undefined) user.avatar = dto.avatar || null;
     await this.userRepository.save(user);
-    return { id: user.id, email: user.email, name: user.name, role: user.role, avatar: user.avatar };
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      avatar: user.avatar,
+    };
   }
 
   async changePassword(
@@ -180,7 +199,8 @@ export class AuthService {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
     const isValid = await bcrypt.compare(dto.currentPassword, user.password);
-    if (!isValid) throw new BadRequestException('Current password is incorrect');
+    if (!isValid)
+      throw new BadRequestException('Current password is incorrect');
     user.password = await bcrypt.hash(dto.newPassword, 10);
     await this.userRepository.save(user);
     return { message: 'Password changed successfully' };
