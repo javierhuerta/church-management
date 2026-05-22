@@ -1,10 +1,13 @@
 import { useNavigate } from 'react-router-dom'
+import { useTheme } from '@/components/theme-provider'
 import { LoginForm } from '../components/login-form'
 import { LoginControls } from '@/components/login-controls'
 import logoFull from '@/assets/images/logo.png'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
 
   const handleSuccess = () => {
     navigate('/')
@@ -49,7 +52,8 @@ export function LoginPage() {
               <img
                 src={logoFull}
                 alt="Adventistas Central Osorno"
-                className="h-20 w-auto"
+                className="h-24 w-auto"
+                style={{ filter: isDark ? 'brightness(0) invert(1)' : 'none' }}
               />
             </div>
 
