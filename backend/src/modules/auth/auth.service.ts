@@ -13,9 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { UserRole } from '../common/entities/user-role.enum';
 import { LoginDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserProfileDto } from './dto/user-profile.dto';
 
 interface TokenPayload {
@@ -29,8 +27,8 @@ interface TokenPayload {
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
-  private readonly jwtExpiresIn: string;
-  private readonly jwtRefreshExpiresIn: string;
+  private readonly jwtExpiresIn: `${number}${'s' | 'm' | 'h' | 'd'}`;
+  private readonly jwtRefreshExpiresIn: `${number}${'s' | 'm' | 'h' | 'd'}`;
 
   constructor(
     @InjectRepository(User)
@@ -41,11 +39,11 @@ export class AuthService {
     this.jwtExpiresIn = this.configService.get<string>(
       'auth.jwtExpiresIn',
       '15m',
-    );
+    ) as `${number}${'s' | 'm' | 'h' | 'd'}`;
     this.jwtRefreshExpiresIn = this.configService.get<string>(
       'auth.jwtRefreshExpiresIn',
       '7d',
-    );
+    ) as `${number}${'s' | 'm' | 'h' | 'd'}`;
   }
 
   async login(loginDto: LoginDto) {

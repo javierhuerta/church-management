@@ -4,10 +4,10 @@ import { IsString, MinLength } from 'class-validator'
 export class ChangePasswordDto {
   @ApiProperty({ description: 'Current password' })
   @IsString()
-  currentPassword: string
+  currentPassword: string;
 
   @ApiProperty({ description: 'New password (min 8 characters)' })
   @IsString()
   @MinLength(8)
-  newPassword: string
+  newPassword: string;
 }
