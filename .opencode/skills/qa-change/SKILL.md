@@ -154,6 +154,9 @@ b. **Execute steps** using Playwright MCP tools. For each step:
      - Continue to next steps if possible (non-blocking), or stop scenario if navigation failed
 
 c. **Take a final screenshot** of the page state after all steps complete (even on partial failure).
+   - Save screenshots to `qa-reports/<change-name>/` (create directory if needed)
+   - Name files descriptively: `<scenario-slug>-final.png`, `<scenario-slug>-fail-step-N.png`
+   - This directory is ignored by git (listed in `.gitignore`)
 
 d. **Capture accessibility snapshot** (`playwright_browser_snapshot`) after the final screenshot — use it to assess text visibility and element presence.
 

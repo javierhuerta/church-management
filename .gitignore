@@ -53,5 +53,9 @@ Thumbs.db
 .openspec/
 .claude/
 
+# QA reports (screenshots, playwright state — generados localmente)
+qa-reports/
+.playwright-mcp/
+
 # Uploads generados en runtime
 backend/uploads/
