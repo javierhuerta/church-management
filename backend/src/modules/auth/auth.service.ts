@@ -5,6 +5,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
@@ -28,11 +29,24 @@ interface TokenPayload {
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
+  private readonly jwtExpiresIn: string;
+  private readonly jwtRefreshExpiresIn: string;
+
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
-  ) {}
+    private configService: ConfigService,
+  ) {
+    this.jwtExpiresIn = this.configService.get<string>(
+      'auth.jwtExpiresIn',
+      '15m',
+    );
+    this.jwtRefreshExpiresIn = this.configService.get<string>(
+      'auth.jwtRefreshExpiresIn',
+      '7d',
+    );
+  }
 
   async login(loginDto: LoginDto) {
     const user = await this.userRepository.findOne({
@@ -60,8 +74,8 @@ export class AuthService {
       role: user.role,
       name: user.name,
     };
-    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+    const accessToken = this.jwtService.sign(payload, { expiresIn: this.jwtExpiresIn });
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: this.jwtRefreshExpiresIn });
 
     this.logger.log(`Login successful [${user.email}]`);
     return {
@@ -97,10 +111,10 @@ export class AuthService {
         name: user.name,
       };
       const accessToken = this.jwtService.sign(newPayload, {
-        expiresIn: '15m',
+        expiresIn: this.jwtExpiresIn,
       });
       const newRefreshToken = this.jwtService.sign(newPayload, {
-        expiresIn: '7d',
+        expiresIn: this.jwtRefreshExpiresIn,
       });
 
       return { accessToken, refreshToken: newRefreshToken };
