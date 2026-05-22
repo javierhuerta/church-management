@@ -84,6 +84,8 @@ export function useCalendarInfinite(filters: CalendarInfiniteFilters) {
   return useInfiniteQuery({
     queryKey: ['calendar', 'infinite', filters.eventType, filters.departmentId, startMonthKey],
     initialPageParam: initialPage,
+    staleTime: 1000 * 60 * 2,
+    refetchOnWindowFocus: false,
     queryFn: ({ pageParam }) => {
       const { year, month } = pageParam as MonthPage
       return CalendarService.calendarControllerFindAll(
@@ -96,9 +98,11 @@ export function useCalendarInfinite(filters: CalendarInfiniteFilters) {
         undefined,
       ) as Promise<PaginatedResponse<EventResponseDto>>
     },
-    getNextPageParam: (_lastPage, _allPages, lastPageParam) => {
+    getNextPageParam: (lastPage, _allPages, lastPageParam) => {
       const { year, month } = lastPageParam as MonthPage
-      // advance one month, wrapping December → January
+      if (!lastPage || (lastPage as PaginatedResponse<EventResponseDto>).page >= (lastPage as PaginatedResponse<EventResponseDto>).totalPages) {
+        return undefined
+      }
       const next = new Date(year, month + 1, 1)
       return { year: next.getFullYear(), month: next.getMonth() }
     },
