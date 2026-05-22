@@ -130,6 +130,19 @@ Arrancar siempre con `nest start --watch` desde `backend/`. Si el problema persi
 pkill -f "nest start"
 ```
 
+### IMPORTANTE — No levantar backend ni frontend
+
+**El usuario corre el backend (puerto 3000) y frontend (puerto 5173) en su propia terminal.**
+Antes de intentar arrancar cualquiera de los dos, verificar si el puerto ya está ocupado:
+
+```bash
+lsof -ti:3000   # si devuelve un PID, el backend ya está corriendo
+lsof -ti:5173   # si devuelve un PID, el frontend ya está corriendo
+```
+
+Si el puerto está ocupado → **NO hacer nada**, el proceso del usuario ya está sirviendo.
+Solo matar un proceso si el usuario lo pide explícitamente o si es claramente un proceso zombie (servidor muerto que no responde).
+
 ### Migraciones: verificar columna antes de hacer DROP
 
 Antes de hacer `DROP COLUMN` en una migración que limpia duplicados, confirmar qué columna contiene los datos reales:

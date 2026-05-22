@@ -8,11 +8,15 @@ Administrative CRUD interface for departments, accessible only to Admins. Depart
 
 ### Requirement: Admin can create department
 
-The system SHALL allow administrators to create departments by providing a name.
+The system SHALL allow administrators to create departments by providing a name and an optional sigla.
 
-#### Scenario: Create department with valid name
-- **WHEN** admin provides a department name
-- **THEN** system creates the department and returns created data
+#### Scenario: Create department with valid name and sigla
+- **WHEN** admin provides a department name "Jóvenes" and sigla "JOV"
+- **THEN** system creates the department with those fields and returns created data
+
+#### Scenario: Create department with name only (no sigla)
+- **WHEN** admin provides only a department name
+- **THEN** system creates the department with empty sigla and returns created data
 
 #### Scenario: Create department with duplicate name
 - **WHEN** admin tries to create a department with a name that already exists
@@ -20,11 +24,15 @@ The system SHALL allow administrators to create departments by providing a name.
 
 ### Requirement: Admin can edit department
 
-The system SHALL allow administrators to edit a department's name.
+The system SHALL allow administrators to edit a department's name and sigla.
 
 #### Scenario: Update department name
 - **WHEN** admin changes department name from "Jóvenes" to "Juventud"
 - **THEN** system updates the name and returns updated data
+
+#### Scenario: Update department sigla
+- **WHEN** admin changes department sigla from "JOV" to "JUV"
+- **THEN** system updates the sigla and returns updated data
 
 ### Requirement: Admin can delete department
 
@@ -44,11 +52,15 @@ The system SHALL allow administrators to delete departments.
 
 ### Requirement: Admin can list all departments
 
-The system SHALL allow administrators to list all departments with their director information.
+The system SHALL allow administrators to list all departments with their director information and sigla.
 
 #### Scenario: List departments with directors
 - **WHEN** admin requests list of all departments
 - **THEN** system returns departments with names and count of directors
+
+#### Scenario: List departments shows sigla
+- **WHEN** admin requests list of all departments
+- **THEN** each department card shows the sigla badge when set
 
 ### Requirement: Admin can view single department
 
