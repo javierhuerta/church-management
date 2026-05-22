@@ -13,6 +13,7 @@ import { CalendarModule } from './modules/calendar/calendar.module';
 import { WorshipServicesModule } from './modules/worship-services/worship-services.module';
 import { UsersModule } from './modules/users/users.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
+import { MissionModule } from './modules/mission/mission.module';
 import { HealthModule } from './modules/health/health.module';
 import { AllExceptionsFilter } from './modules/common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './modules/common/interceptors/logging.interceptor';
@@ -32,6 +33,7 @@ import { cacheFactory } from './config/factories/cache.factory';
 
 import { User } from './modules/auth/entities/user.entity';
 import { Department } from './modules/departments/entities/department.entity';
+import { Person } from './modules/mission/entities/person.entity';
 import { Event } from './modules/calendar/entities/event.entity';
 import { EventAttachment } from './modules/calendar/entities/event-attachment.entity';
 import { EventOrganizer } from './modules/calendar/entities/event-organizer.entity';
@@ -49,6 +51,7 @@ import {
 const ENTITIES = [
   User,
   Department,
+  Person,
   Event,
   EventAttachment,
   EventOrganizer,
@@ -93,6 +96,7 @@ const ENTITIES = [
     WorshipServicesModule,
     UsersModule,
     DepartmentsModule,
+    MissionModule,
     HealthModule,
   ],
   providers: [

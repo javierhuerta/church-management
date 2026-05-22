@@ -1,8 +1,16 @@
-import { Entity, Column, ManyToMany, JoinTable } from 'typeorm';
+import {
+  Entity,
+  Column,
+  ManyToMany,
+  JoinTable,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { UserRole } from '../../common/entities/user-role.enum';
 import { Department } from '../../departments/entities/department.entity';
+import { Person } from '../../mission/entities/person.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -29,4 +37,11 @@ export class User extends BaseEntity {
     inverseJoinColumn: { name: 'department_id', referencedColumnName: 'id' },
   })
   departments: Department[];
+
+  @ManyToOne(() => Person, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'person_id' })
+  person: Person | null;
+
+  @Column({ name: 'person_id', type: 'uuid', nullable: true })
+  personId: string | null;
 }

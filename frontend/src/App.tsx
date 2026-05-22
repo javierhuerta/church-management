@@ -5,6 +5,7 @@ import { AppLayout } from './layouts/app-layout'
 import { AdaptiveLayout } from './layouts/adaptive-layout'
 import { DashboardPage } from './features/dashboard/pages/dashboard-page'
 import { MantenedoresLayout } from './features/mantenedores/layouts/mantenedores-layout'
+import { MissionLayout } from './features/mission/layouts/mission-layout'
 import { ProfilePage } from './features/profile/pages/profile-page'
 import { TextSizeProvider } from './lib/contexts/text-size-context'
 import { ThemePreviewPage } from './features/theme-preview/theme-preview-page'
@@ -71,6 +72,16 @@ const DepartmentFormPage = lazy(() =>
     default: m.DepartmentFormPage,
   })),
 )
+const PeopleListPage = lazy(() =>
+  import('./features/mission/pages/people-list-page').then((m) => ({
+    default: m.PeopleListPage,
+  })),
+)
+const PersonFormPage = lazy(() =>
+  import('./features/mission/pages/person-form-page').then((m) => ({
+    default: m.PersonFormPage,
+  })),
+)
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token')
@@ -126,6 +137,13 @@ function App() {
               <Route path="cultos/programas" element={<ProgramsListPage />} />
               <Route path="cultos/programas/nuevo" element={<ProgramCreatePage />} />
               <Route path="cultos/programas/:id" element={<ProgramDetailPage />} />
+
+              <Route path="misionero" element={<MissionLayout />}>
+                <Route index element={<Navigate to="personas" replace />} />
+                <Route path="personas" element={<PeopleListPage />} />
+                <Route path="personas/nuevo" element={<PersonFormPage />} />
+                <Route path="personas/:id" element={<PersonFormPage />} />
+              </Route>
 
               <Route path="mantenedores" element={<MantenedoresLayout />}>
                 <Route index element={<Navigate to="usuarios" replace />} />

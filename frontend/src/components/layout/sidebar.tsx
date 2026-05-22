@@ -31,7 +31,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: 'calendario', label: 'Calendario', icon: Calendar, path: '/calendario' },
   { id: 'cultos', label: 'Cultos', icon: FileText, path: '/cultos/programas', matchPrefix: '/cultos' },
-  { id: 'mision', label: 'Misión', icon: Church, path: '/mision', disabled: true },
+  { id: 'misionero', label: 'Misionero', icon: Church, path: '/misionero/personas', matchPrefix: '/misionero' },
 ]
 
 const adminNavItems: NavItem[] = [
@@ -154,6 +154,7 @@ export function Sidebar() {
               return (
                 <button
                   key={item.id}
+                  data-testid={`nav-${item.id}`}
                   disabled={item.disabled}
                   onClick={() => handleNavClick(item)}
                   title={item.label}
@@ -208,6 +209,7 @@ export function Sidebar() {
                     return (
                       <button
                         key={item.id}
+                        data-testid={`nav-${item.id}`}
                         disabled={item.disabled}
                         onClick={() => handleNavClick(item)}
                         className={`

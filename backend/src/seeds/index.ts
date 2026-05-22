@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { User } from '../modules/auth/entities/user.entity';
 import { Department } from '../modules/departments/entities/department.entity';
+import { Person } from '../modules/mission/entities/person.entity';
 import { Event } from '../modules/calendar/entities/event.entity';
 import { EventAttachment } from '../modules/calendar/entities/event-attachment.entity';
 import { EventOrganizer } from '../modules/calendar/entities/event-organizer.entity';
@@ -10,6 +11,7 @@ import { ServiceTemplateSection } from '../modules/worship-services/entities/ser
 import { Hymn } from '../modules/worship-services/entities/hymn.entity';
 import { UserSeeder } from './auth/user.seeder';
 import { DepartmentSeeder } from './departments/department.seeder';
+import { PersonSeeder } from './mission/person.seeder';
 import { EventSeeder } from './calendar/event.seeder';
 import { TemplateSeeder } from './worship-services/template.seeder';
 import { HymnSeeder } from './worship-services/hymn.seeder';
@@ -29,6 +31,7 @@ export async function runAllSeeders(): Promise<void> {
     entities: [
       User,
       Department,
+      Person,
       Event,
       EventAttachment,
       EventOrganizer,
@@ -43,6 +46,7 @@ export async function runAllSeeders(): Promise<void> {
 
   const seeders: Seeder[] = [
     new DepartmentSeeder(),
+    new PersonSeeder(),
     new UserSeeder(),
     new EventSeeder(),
     new TemplateSeeder(),
