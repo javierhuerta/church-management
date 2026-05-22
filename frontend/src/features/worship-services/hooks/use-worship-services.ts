@@ -166,3 +166,18 @@ export function useUserSearch(query: string) {
     enabled: query.length >= 1,
   });
 }
+
+export function usePublishWithEvent(programId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (createCalendarEvent: boolean) =>
+      WorshipServicesProgramsService.programControllerPublishWithEvent(programId, {
+        createCalendarEvent,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['worship-services', 'programs', programId] });
+      queryClient.invalidateQueries({ queryKey: ['worship-services', 'programs'] });
+    },
+    onError: () => toast.error('No se pudo publicar el programa'),
+  });
+}

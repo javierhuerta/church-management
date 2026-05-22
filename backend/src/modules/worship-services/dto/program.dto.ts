@@ -166,3 +166,14 @@ export class CreateProgramDto {
   @IsString()
   date: string;
 }
+
+export class PublishWithEventDto {
+  @ApiPropertyOptional({
+    type: Boolean,
+    description:
+      'If true, creates a calendar event (DRAFT) when publishing the program',
+    default: false,
+  })
+  @IsOptional()
+  createCalendarEvent?: boolean;
+}

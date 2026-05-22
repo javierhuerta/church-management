@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/ui/date-picker'
 import { parseDateString } from '@/lib/date'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useTheme } from '@/components/theme-provider'
 import {
   useProgram,
   useProgramLogs,
@@ -36,22 +37,34 @@ import {
   useDeleteSection,
   useReorderGroups,
   useReorderSections,
+  usePublishWithEvent,
 } from '../hooks/use-worship-services'
 import { downloadProgramPdf } from '../hooks/use-program-pdf'
 import { ProgramChangeHistory } from '../components/program-change-history'
+import { PublishWithEventDialog } from '../components/publish-with-event-dialog'
 import { WorshipServicesProgramsService } from '@/lib/api'
 import { toast } from 'sonner'
+
+const STATUS_COLORS = {
+  published: { light: '#0F766E', dark: '#0D9488' },
+  draft:     { light: '#C9A84C', dark: '#D4B566' },
+  archived:  { light: '#475569', dark: '#64748B' },
+}
+
+const NAVY = '#1B3A6B'
 
 export function ProgramDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const user = useAuthUser()
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
 
   const [editingSection, setEditingSection] = useState<string | null>(null)
   const [editingGroup, setEditingGroup] = useState<string | null>(null)
   const [editingDate, setEditingDate] = useState(false)
-  const [isPublishing, setIsPublishing] = useState(false)
+  const [isPublishing] = useState(false)
   const [addingGroup, setAddingGroup] = useState(false)
   const [addingSectionToGroup, setAddingSectionToGroup] = useState<string | null>(null)
 
@@ -61,6 +74,7 @@ export function ProgramDetailPage() {
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false)
   const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null)
   const [deleteSectionId, setDeleteSectionId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'program' | 'history'>('program')
 
   const { data: program, isLoading } = useProgram(id || '')
   const { data: logs } = useProgramLogs(id || '')
@@ -85,6 +99,7 @@ export function ProgramDetailPage() {
   const deleteSection = useDeleteSection(id || '')
   const reorderGroups = useReorderGroups(id || '')
   const reorderSections = useReorderSections(id || '')
+  const publishWithEventMutation = usePublishWithEvent(id || '')
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   const invalidateProgram = () =>
@@ -108,31 +123,23 @@ export function ProgramDetailPage() {
   const canPublish = (user?.role === 'Admin' || user?.role === 'Pastor') && !isPublished && !isArchived
   const isAdmin = user?.role === 'Admin'
 
-  async function handlePublish() {
-    setIsPublishing(true)
-    try {
-      await WorshipServicesProgramsService.programControllerPublish(id || '')
-      await invalidateProgram()
-      toast.success('Programa publicado')
-    } catch {
-      toast.error('No se pudo publicar el programa')
-    } finally {
-      setIsPublishing(false)
-      setPublishDialogOpen(false)
-    }
+  async function handlePublish(createCalendarEvent: boolean) {
+    const result = await publishWithEventMutation.mutateAsync(createCalendarEvent)
+    await queryClient.invalidateQueries({ queryKey: ['worship-services', 'programs', id] })
+    toast.success('Programa publicado')
+    return { eventSlug: result.eventSlug ?? null }
   }
 
   const formattedDate = format(parseDateString(program.date) ?? new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })
 
   return (
     <div className="space-y-6">
-      <ConfirmDialog
+      <PublishWithEventDialog
         open={publishDialogOpen}
         onOpenChange={setPublishDialogOpen}
-        title="¿Publicar este programa?"
-        description="Una vez publicado, solo el Admin y el creador original podrán editarlo."
-        confirmLabel="Publicar"
-        onConfirm={handlePublish}
+        program={program}
+        onPublish={handlePublish}
+        isPublishing={isPublishing}
       />
       <ConfirmDialog
         open={deleteDialogOpen}
@@ -213,9 +220,17 @@ export function ProgramDetailPage() {
             </div>
           ) : (
             <div className="flex items-center gap-2 mt-2">
-              <h2 className="text-3xl font-bold tracking-tight text-muted-foreground">
+              <p
+                style={{
+                  fontFamily: '"Playfair Display", Georgia, serif',
+                  fontSize: 28,
+                  fontWeight: 600,
+                  color: isDark ? '#A8C4F0' : NAVY,
+                  lineHeight: 1.2,
+                }}
+              >
                 {formattedDate}
-              </h2>
+              </p>
               {canEdit && (
                 <Button variant="ghost" size="sm" onClick={() => setEditingDate(true)}>
                   <Calendar className="h-4 w-4" />
@@ -225,17 +240,50 @@ export function ProgramDetailPage() {
           )}
           <p className="text-muted-foreground mt-1">{program.template?.name}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {isArchived ? (
-            <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium" style={{ backgroundColor: '#475569', color: '#fff' }}>
+            <span
+              style={{
+                background: isDark ? STATUS_COLORS.archived.dark : STATUS_COLORS.archived.light,
+                color: '#fff',
+                borderRadius: 9999,
+                padding: '4px 12px',
+                fontSize: 13,
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+              }}
+            >
               <Archive className="h-4 w-4 mr-1" /> Archivado
             </span>
           ) : isPublished ? (
-            <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium" style={{ backgroundColor: '#0F766E', color: '#fff' }}>
+            <span
+              style={{
+                background: isDark ? STATUS_COLORS.published.dark : STATUS_COLORS.published.light,
+                color: '#fff',
+                borderRadius: 9999,
+                padding: '4px 12px',
+                fontSize: 13,
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+              }}
+            >
               <CheckCircle className="h-4 w-4 mr-1" /> Publicado
             </span>
           ) : (
-            <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium" style={{ backgroundColor: '#C9A84C', color: '#102240' }}>
+            <span
+              style={{
+                background: isDark ? STATUS_COLORS.draft.dark : STATUS_COLORS.draft.light,
+                color: '#102240',
+                borderRadius: 9999,
+                padding: '4px 12px',
+                fontSize: 13,
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+              }}
+            >
               Borrador
             </span>
           )}
@@ -258,8 +306,14 @@ export function ProgramDetailPage() {
             {isDownloading ? 'Generando...' : 'Descargar PDF'}
           </Button>
           {canPublish && (
-            <Button onClick={() => setPublishDialogOpen(true)} disabled={isPublishing}>
-              <Send className="h-4 w-4 mr-1" /> {isPublishing ? 'Publicando...' : 'Publicar'}
+            <Button
+              onClick={() => setPublishDialogOpen(true)}
+              style={{
+                background: isDark ? 'hsl(219,70%,60%)' : NAVY,
+                color: isDark ? 'hsl(222,47%,8%)' : '#FAFAFA',
+              }}
+            >
+              <Send className="h-4 w-4 mr-1" /> Publicar
             </Button>
           )}
           {isAdmin && isPublished && (
@@ -284,93 +338,158 @@ export function ProgramDetailPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={(event: DragEndEvent) => {
-              const { active, over } = event
-              if (!over || active.id === over.id) return
-              const sorted = [...(program.groups || [])].sort((a, b) => a.order - b.order)
-              const oldIndex = sorted.findIndex(g => g.id === active.id)
-              const newIndex = sorted.findIndex(g => g.id === over.id)
-              reorderGroups.mutate(arrayMove(sorted, oldIndex, newIndex).map(g => g.id))
-            }}
+      <div className="lg:hidden mb-4">
+        <div className="flex gap-1 bg-muted rounded-lg p-1 w-fit">
+          <button
+            onClick={() => setActiveTab('program')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              activeTab === 'program'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
-            <SortableContext
-              items={[...(program.groups || [])].sort((a, b) => a.order - b.order).map(g => g.id)}
-              strategy={verticalListSortingStrategy}
+            Programa
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              activeTab === 'history'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Historial
+          </button>
+        </div>
+      </div>
+
+      <div className="hidden lg:block">
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-4">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={(event: DragEndEvent) => {
+                const { active, over } = event
+                if (!over || active.id === over.id) return
+                const sorted = [...(program.groups || [])].sort((a, b) => a.order - b.order)
+                const oldIndex = sorted.findIndex(g => g.id === active.id)
+                const newIndex = sorted.findIndex(g => g.id === over.id)
+                reorderGroups.mutate(arrayMove(sorted, oldIndex, newIndex).map(g => g.id))
+              }}
             >
-              {[...(program.groups || [])].sort((a, b) => a.order - b.order).map((group) => (
-                <SortableGroupCard
-                  key={group.id}
-                  group={group}
-                  canEdit={canEdit}
-                  isEditingGroup={editingGroup === group.id}
-                  onEditGroup={() => setEditingGroup(group.id)}
-                  onCancelEditGroup={() => setEditingGroup(null)}
-                  isAddingSection={addingSectionToGroup === group.id}
-                  onToggleAddSection={() => setAddingSectionToGroup(addingSectionToGroup === group.id ? null : group.id)}
-                  onCancelAddSection={() => setAddingSectionToGroup(null)}
-                  editingSection={editingSection}
-                  onEditSection={setEditingSection}
-                  onCancelEditSection={() => setEditingSection(null)}
-                  onDeleteSection={setDeleteSectionId}
-                  onDeleteGroup={() => setDeleteGroupId(group.id)}
-                  programId={id || ''}
-                  invalidateProgram={invalidateProgram}
-                  reorderSections={reorderSections}
-                  sensors={sensors}
-                />
-              ))}
-            </SortableContext>
-          </DndContext>
-
-          {canEdit && (
-            addingGroup ? (
-              <AddGroupForm
-                onSave={async (data) => {
-                  try {
-                    await WorshipServicesProgramsService.programControllerAddGroup(id || '', data)
-                    await invalidateProgram()
-                    setAddingGroup(false)
-                    toast.success('Grupo agregado')
-                  } catch {
-                    toast.error('No se pudo agregar el grupo')
-                  }
-                }}
-                onCancel={() => setAddingGroup(false)}
-              />
-            ) : (
-              <button
-                onClick={() => setAddingGroup(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed border-border text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+              <SortableContext
+                items={[...(program.groups || [])].sort((a, b) => a.order - b.order).map(g => g.id)}
+                strategy={verticalListSortingStrategy}
               >
-                <Plus className="h-4 w-4" /> Agregar grupo
-              </button>
-            )
-          )}
+                {program.groups?.map((group) => (
+                  <SortableGroupCard
+                    key={group.id}
+                    group={group}
+                    canEdit={canEdit}
+                    isEditingGroup={editingGroup === group.id}
+                    onEditGroup={() => setEditingGroup(group.id)}
+                    onCancelEditGroup={() => setEditingGroup(null)}
+                    isAddingSection={addingSectionToGroup === group.id}
+                    onToggleAddSection={() => setAddingSectionToGroup(addingSectionToGroup === group.id ? null : group.id)}
+                    onCancelAddSection={() => setAddingSectionToGroup(null)}
+                    editingSection={editingSection}
+                    onEditSection={setEditingSection}
+                    onCancelEditSection={() => setEditingSection(null)}
+                    onDeleteSection={setDeleteSectionId}
+                    onDeleteGroup={() => setDeleteGroupId(group.id)}
+                    programId={id || ''}
+                    invalidateProgram={invalidateProgram}
+                    reorderSections={reorderSections}
+                    sensors={sensors}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+            {canEdit && (
+              addingGroup ? (
+                <AddGroupForm
+                  onSave={async (data) => {
+                    try {
+                      await WorshipServicesProgramsService.programControllerAddGroup(id || '', data)
+                      await invalidateProgram()
+                      setAddingGroup(false)
+                      toast.success('Grupo agregado')
+                    } catch {
+                      toast.error('No se pudo agregar el grupo')
+                    }
+                  }}
+                  onCancel={() => setAddingGroup(false)}
+                />
+              ) : (
+                <button
+                  onClick={() => setAddingGroup(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-border text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                >
+                  <Plus className="h-4 w-4" /> Agregar grupo
+                </button>
+              )
+            )}
+          </div>
+          <div className="lg:col-span-1">
+            <ProgramChangeHistory logs={logs} />
+          </div>
+        </div>
+      </div>
 
-          {program.sections?.filter(s => !s.groupId).map((section) => (
-            <div key={section.id} className="rounded-2xl border border-border bg-card shadow-sm">
-              <SectionRow
-                section={section}
+      <div className="lg:hidden space-y-4">
+        {activeTab === 'program' ? (
+          <>
+            {program.groups?.map((group) => (
+              <SortableGroupCard
+                key={group.id}
+                group={group}
                 canEdit={canEdit}
-                isEditing={editingSection === section.id}
-                onEdit={() => setEditingSection(section.id)}
-                onCancel={() => setEditingSection(null)}
-                onDelete={() => setDeleteSectionId(section.id)}
-                sectionName={section.templateSection?.name ?? undefined}
-                onSaved={invalidateProgram}
+                isEditingGroup={editingGroup === group.id}
+                onEditGroup={() => setEditingGroup(group.id)}
+                onCancelEditGroup={() => setEditingGroup(null)}
+                isAddingSection={addingSectionToGroup === group.id}
+                onToggleAddSection={() => setAddingSectionToGroup(addingSectionToGroup === group.id ? null : group.id)}
+                onCancelAddSection={() => setAddingSectionToGroup(null)}
+                editingSection={editingSection}
+                onEditSection={setEditingSection}
+                onCancelEditSection={() => setEditingSection(null)}
+                onDeleteSection={setDeleteSectionId}
+                onDeleteGroup={() => setDeleteGroupId(group.id)}
+                programId={id || ''}
+                invalidateProgram={invalidateProgram}
+                reorderSections={reorderSections}
+                sensors={sensors}
               />
-            </div>
-          ))}
-        </div>
-
-        <div className="lg:col-span-1">
+            ))}
+            {canEdit && (
+              addingGroup ? (
+                <AddGroupForm
+                  onSave={async (data) => {
+                    try {
+                      await WorshipServicesProgramsService.programControllerAddGroup(id || '', data)
+                      await invalidateProgram()
+                      setAddingGroup(false)
+                      toast.success('Grupo agregado')
+                    } catch {
+                      toast.error('No se pudo agregar el grupo')
+                    }
+                  }}
+                  onCancel={() => setAddingGroup(false)}
+                />
+              ) : (
+                <button
+                  onClick={() => setAddingGroup(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-border text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                >
+                  <Plus className="h-4 w-4" /> Agregar grupo
+                </button>
+              )
+            )}
+          </>
+        ) : (
           <ProgramChangeHistory logs={logs} />
-        </div>
+        )}
       </div>
     </div>
   )
@@ -409,31 +528,35 @@ function GroupEditForm({ group, onSave, onCancel }: GroupEditFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex-1 flex items-center gap-2">
+    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
       <Input
         value={formData.name}
         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         className="flex-1"
         placeholder="Nombre del grupo"
       />
-      <Input
-        type="time"
-        value={formData.startTime}
-        onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-        className="w-24"
-      />
-      <Input
-        type="time"
-        value={formData.endTime}
-        onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-        className="w-24"
-      />
-      <Button type="submit" size="sm" disabled={isSaving}>
-        {isSaving ? '...' : 'Guardar'}
-      </Button>
-      <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-        Cancelar
-      </Button>
+      <div className="flex items-center gap-1 flex-1">
+        <Input
+          type="time"
+          value={formData.startTime}
+          onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+          className="flex-1"
+        />
+        <Input
+          type="time"
+          value={formData.endTime}
+          onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+          className="flex-1"
+        />
+      </div>
+      <div className="flex items-center gap-1">
+        <Button type="submit" size="sm" disabled={isSaving}>
+          {isSaving ? '...' : 'Guardar'}
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+          Cancelar
+        </Button>
+      </div>
     </form>
   )
 }
@@ -787,37 +910,37 @@ function SortableGroupCard({
   return (
     <div ref={setNodeRef} style={style} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <div className="bg-primary/5 px-4 py-3 border-b border-primary/10">
-        <div className="flex items-center justify-between">
-          {isEditingGroup ? (
-            <GroupEditForm
-              group={group}
-              onSave={async (data) => {
-                try {
-                  await WorshipServicesProgramsService.programControllerUpdateGroup(group.id, data)
-                  await invalidateProgram()
-                  onCancelEditGroup()
-                  toast.success('Grupo actualizado')
-                } catch {
-                  toast.error('No se pudo actualizar el grupo')
-                }
-              }}
-              onCancel={onCancelEditGroup}
-            />
-          ) : (
-            <>
-              <div className="flex items-center gap-2">
-                {canEdit && (
-                  <button
-                    className="cursor-grab touch-none text-primary/30 hover:text-primary/60"
-                    {...attributes}
-                    {...listeners}
-                  >
-                    <GripVertical className="h-4 w-4" />
-                  </button>
-                )}
-                <h3 className="font-semibold text-foreground">{group.name}</h3>
-              </div>
-              <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            {isEditingGroup ? (
+              <GroupEditForm
+                group={group}
+                onSave={async (data) => {
+                  try {
+                    await WorshipServicesProgramsService.programControllerUpdateGroup(group.id, data)
+                    await invalidateProgram()
+                    onCancelEditGroup()
+                    toast.success('Grupo actualizado')
+                  } catch {
+                    toast.error('No se pudo actualizar el grupo')
+                  }
+                }}
+                onCancel={onCancelEditGroup}
+              />
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  {canEdit && (
+                    <button
+                      className="cursor-grab touch-none text-primary/30 hover:text-primary/60"
+                      {...attributes}
+                      {...listeners}
+                    >
+                      <GripVertical className="h-4 w-4" />
+                    </button>
+                  )}
+                  <h3 className="font-semibold text-foreground">{group.name}</h3>
+                </div>
                 {(group.startTime || group.endTime) && (
                   <span className="text-xs text-primary/70 flex items-center">
                     <Clock className="h-3 w-3 mr-1" />
@@ -826,24 +949,26 @@ function SortableGroupCard({
                     {group.endTime}
                   </span>
                 )}
-                {canEdit && (
-                  <>
-                    <Button variant="ghost" size="sm" onClick={onEditGroup}>Editar</Button>
-                    <Button variant="ghost" size="sm" onClick={onToggleAddSection}>
-                      <Plus className="h-3.5 w-3.5 mr-1" /> Sección
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={onDeleteGroup}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </>
-                )}
+              </>
+            )}
+          </div>
+          {canEdit && !isEditingGroup && (
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="sm" onClick={onToggleAddSection}>
+                <Plus className="h-3.5 w-3.5 mr-1" /> Sección
+              </Button>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" onClick={onEditGroup}>Editar</Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={onDeleteGroup}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

@@ -17,6 +17,7 @@ import { ProgramRepository } from './repositories/program.repository';
 import { TemplateController } from './controllers/template.controller';
 import { ProgramController } from './controllers/program.controller';
 import { HymnController } from './controllers/hymn.controller';
+import { CalendarModule } from '../calendar/calendar.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { HymnController } from './controllers/hymn.controller';
       ServiceProgramLog,
       Hymn,
     ]),
+    CalendarModule,
   ],
   controllers: [TemplateController, ProgramController, HymnController],
   providers: [

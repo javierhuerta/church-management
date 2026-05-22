@@ -30,6 +30,7 @@ export { OrganizerResponseDto } from './models/OrganizerResponseDto';
 export type { ProgramGroupResponseDto } from './models/ProgramGroupResponseDto';
 export type { ProgramLogResponseDto } from './models/ProgramLogResponseDto';
 export { ProgramSectionResponseDto } from './models/ProgramSectionResponseDto';
+export type { PublishWithEventDto } from './models/PublishWithEventDto';
 export type { RefreshTokenDto } from './models/RefreshTokenDto';
 export type { ReorderDto } from './models/ReorderDto';
 export type { SectionDto } from './models/SectionDto';

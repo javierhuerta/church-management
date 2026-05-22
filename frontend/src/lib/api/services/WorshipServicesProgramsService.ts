@@ -6,6 +6,7 @@ import type { CreateGroupInProgramDto } from '../models/CreateGroupInProgramDto'
 import type { CreateProgramDto } from '../models/CreateProgramDto';
 import type { CreateSectionInGroupDto } from '../models/CreateSectionInGroupDto';
 import type { ProgramLogResponseDto } from '../models/ProgramLogResponseDto';
+import type { PublishWithEventDto } from '../models/PublishWithEventDto';
 import type { ReorderDto } from '../models/ReorderDto';
 import type { ServiceProgramResponseDto } from '../models/ServiceProgramResponseDto';
 import type { UpdateGroupDto } from '../models/UpdateGroupDto';
@@ -231,6 +232,32 @@ export class WorshipServicesProgramsService {
             errors: {
                 403: `Forbidden`,
                 404: `Program not found`,
+            },
+        });
+    }
+    /**
+     * Publish a program and optionally create a calendar event
+     * @param id
+     * @param requestBody
+     * @returns any Program published (with or without event)
+     * @throws ApiError
+     */
+    public static programControllerPublishWithEvent(
+        id: string,
+        requestBody: PublishWithEventDto,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/worship-services/programs/{id}/publish-with-event',
+            path: {
+                'id': id,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                403: `Forbidden`,
+                404: `Program not found`,
+                409: `Program already published or archived`,
             },
         });
     }

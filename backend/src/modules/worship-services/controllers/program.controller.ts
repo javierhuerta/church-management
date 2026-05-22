@@ -27,6 +27,7 @@ import {
   CreateSectionInGroupDto,
   GetProgramsFilterDto,
   ReorderDto,
+  PublishWithEventDto,
 } from '../dto/program.dto';
 import {
   ServiceProgramResponseDto,
@@ -198,6 +199,32 @@ export class ProgramController {
       ServiceProgramResponseDto,
       await this.programService.publish(id, req.user!.userId, req.user!.role),
     );
+  }
+
+  @Post(':id/publish-with-event')
+  @Roles(UserRole.Admin, UserRole.Pastor)
+  @ApiOperation({
+    summary: 'Publish a program and optionally create a calendar event',
+  })
+  @ApiResponse({ status: 200, description: 'Program published (with or without event)' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Program not found' })
+  @ApiResponse({ status: 409, description: 'Program already published or archived' })
+  async publishWithEvent(
+    @Param('id') id: string,
+    @Body() dto: PublishWithEventDto,
+    @Request() req: RequestWithUser,
+  ) {
+    const result = await this.programService.publishWithEvent(
+      id,
+      req.user!.userId,
+      req.user!.role,
+      dto,
+    );
+    return {
+      program: toDto(ServiceProgramResponseDto, result.program),
+      eventSlug: result.eventSlug,
+    };
   }
 
   @Patch(':id/archive')

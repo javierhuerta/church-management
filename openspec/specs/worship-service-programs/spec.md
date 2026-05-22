@@ -47,7 +47,7 @@ The responsible field autocomplete SHALL use the generated OpenAPI client (`Auth
 
 ### Requirement: Program status transitions
 
-A program can be in DRAFT or PUBLISHED status. When published, editing restrictions apply.
+A program can be in DRAFT or PUBLISHED status. When published, editing restrictions apply. Al publicar, el usuario puede opcionalmente crear un evento en el calendario (ver capability `program-publish-to-calendar`).
 
 #### Scenario: Publish program
 
@@ -55,6 +55,12 @@ A program can be in DRAFT or PUBLISHED status. When published, editing restricti
 - **THEN** program status changes to PUBLISHED
 - **AND** publishedAt is set to current timestamp
 - **AND** publishedById is set to current user
+
+#### Scenario: Publish program with calendar event option
+
+- **WHEN** user with permission publishes a program and opts to create a calendar event
+- **THEN** the endpoint `POST /worship-services/programs/:id/publish-with-event` is called with `{ createCalendarEvent: true }`
+- **AND** both publish and event creation complete atomically (see `program-publish-to-calendar` spec)
 
 #### Scenario: Edit DRAFT program
 

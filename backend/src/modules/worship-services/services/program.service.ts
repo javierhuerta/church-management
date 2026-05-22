@@ -6,7 +6,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull, DataSource } from 'typeorm';
+import { Repository, IsNull, DataSource, EntityManager } from 'typeorm';
 import { ProgramRepository } from '../repositories/program.repository';
 import {
   ServiceProgram,
@@ -27,7 +27,11 @@ import {
   CreateGroupInProgramDto,
   CreateSectionInGroupDto,
   ReorderDto,
+  PublishWithEventDto,
 } from '../dto/program.dto';
+import { CalendarService } from '../../calendar/calendar.service';
+import { CreateEventDto } from '../../calendar/dto/create-event.dto';
+import { EventType } from '../../calendar/entities/event-type.enum';
 
 @Injectable()
 export class ProgramService {
@@ -50,6 +54,7 @@ export class ProgramService {
     @InjectRepository(ServiceTemplate)
     private readonly templateRepo: Repository<ServiceTemplate>,
     private readonly dataSource: DataSource,
+    private readonly calendarService: CalendarService,
   ) {}
 
   async findAll(
@@ -489,6 +494,106 @@ export class ProgramService {
 
     this.logger.log(`Program published [id=${programId}] by user [${userId}]`);
     return program;
+  }
+
+  async publishWithEvent(
+    programId: string,
+    userId: string,
+    userRole: UserRole,
+    dto: PublishWithEventDto,
+  ): Promise<{ program: ServiceProgram; eventSlug: string | null }> {
+    if (!this.canCreateProgram(userRole)) {
+      throw new ForbiddenException('Not authorized to publish programs');
+    }
+
+    const program = await this.findOne(programId);
+    if (program.status === ProgramStatus.PUBLISHED) {
+      throw new BadRequestException('Program is already published');
+    }
+    if (program.status === ProgramStatus.ARCHIVED) {
+      throw new BadRequestException('Cannot publish an archived program');
+    }
+
+    const template = await this.templateRepo.findOne({
+      where: { id: program.templateId },
+    });
+
+    let eventSlug: string | null = null;
+
+    const savedProgram = await this.dataSource.transaction(
+      async (manager: EntityManager) => {
+        program.status = ProgramStatus.PUBLISHED;
+        program.publishedById = userId;
+        program.publishedAt = new Date();
+        const publishedProgram = await manager.save(program);
+
+        await manager.save(
+          manager.create(ServiceProgramLog, {
+            programId: publishedProgram.id,
+            userId,
+            sectionId: null,
+            action: 'publicó programa',
+            previousValue: null,
+            newValue: null,
+          }),
+        );
+
+        if (dto.createCalendarEvent && template) {
+          const firstGroup = await manager.findOne(ServiceProgramGroup, {
+            where: { programId },
+            order: { order: 'ASC' },
+          });
+
+          const startDate = new Date(program.date);
+          const endDate = new Date(program.date);
+          if (firstGroup?.startTime) {
+            const [hours, minutes] = firstGroup.startTime.split(':').map(Number);
+            startDate.setHours(hours, minutes, 0, 0);
+          } else {
+            startDate.setHours(10, 0, 0, 0);
+          }
+          if (firstGroup?.endTime) {
+            const [hours, minutes] = firstGroup.endTime.split(':').map(Number);
+            endDate.setHours(hours, minutes, 0, 0);
+          } else {
+            endDate.setTime(startDate.getTime() + 60 * 60 * 1000);
+          }
+
+          const createEventDto: CreateEventDto = {
+            title: template.name,
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+            eventType: EventType.Local,
+            organizers: [{ userId }],
+          };
+
+          const savedEvent = await this.calendarService.create(
+            createEventDto,
+            userId,
+          );
+
+          await manager.save(
+            manager.create(ServiceProgramLog, {
+              programId: publishedProgram.id,
+              userId,
+              sectionId: null,
+              action: 'creó evento de calendario',
+              previousValue: null,
+              newValue: savedEvent.shareSlug,
+            }),
+          );
+
+          eventSlug = savedEvent.shareSlug;
+        }
+
+        return publishedProgram;
+      },
+    );
+
+    this.logger.log(
+      `Program published with event [programId=${programId}] by user [${userId}]`,
+    );
+    return { program: savedProgram, eventSlug };
   }
 
   async archive(
