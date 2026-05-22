@@ -43,7 +43,9 @@ function getUserFromStorage() {
     const token = localStorage.getItem('token')
     if (!token) return null
     const payload = token.split('.')[1]
-    const decoded = JSON.parse(atob(payload))
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4)
+    const decoded = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(padded), (c) => c.charCodeAt(0))))
     return {
       name: decoded.name || 'Usuario',
       email: decoded.email || '',
