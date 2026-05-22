@@ -81,6 +81,7 @@ Esto aplica también al runner `scripts/seeders/run-all.ts`: cada entidad del á
 - No crear componentes fuera de `src/components/` o `src/features/`
 - Para consumir API: usar clientes generados desde OpenAPI (no fetch directo)
 - Estados: usar React Query (TanStack Query) para server state
+- **Al crear o modificar cualquier componente visual**: cargar la skill `church-ui-design` antes de escribir código. Define la paleta de colores, cómo aplicarlos (clases semánticas vs `style` inline), jerarquía tipográfica, patrón mobile/desktop obligatorio y todos los patrones de UI del sistema.
 
 ### OpenAPI
 - El backend es la fuente de verdad para los schemas
@@ -239,7 +240,10 @@ Cada subdirectorio tiene su propio `AGENTS.md` que lista los skills disponibles.
 - `nodejs-best-practices` — principios de decision, async patterns, seguridad
 - `typescript-advanced-types` — generics, conditional types, mapped types
 
-### Frontend (`frontend/.agents/skills/`)
+### Frontend — Design System (`.opencode/skills/` y `.claude/skills/`)
+- `church-ui-design` ⭐ — **skill principal de diseño del proyecto**. Paleta de marca, cómo aplicar colores (semántico vs inline), tipografía sin tags HTML semánticos, patrón mobile/desktop obligatorio, patrones de tarjetas de evento, badges, dark mode. **Cargar siempre que se construya o modifique cualquier componente o pantalla.**
+
+### Frontend — Skills técnicas (`frontend/.agents/skills/`)
 - `vercel-react-best-practices` — performance React/Vite, data fetching, bundle
 - `react-hook-form` — formularios con useForm, useWatch, useFieldArray
 - `shadcn` — componentes shadcn/ui, CLI, presets, components.json
@@ -253,4 +257,4 @@ Cada subdirectorio tiene su propio `AGENTS.md` que lista los skills disponibles.
 
 ---
 
-**Version**: 1.2 — 2026-05-22
+**Version**: 1.3 — 2026-05-22

@@ -16,6 +16,11 @@ context: |
   área del change: skills de backend para cambios en NestJS/TypeORM, skills de frontend para cambios en
   React/shadcn/Tailwind.
 
+  Para cualquier change que incluya componentes o pantallas en el frontend, la skill `church-ui-design`
+  es obligatoria. Define la paleta de colores del sistema, cómo aplicarlos (clases semánticas Tailwind
+  vs style inline), la jerarquía tipográfica sin tags HTML semánticos, y el patrón mobile/desktop
+  que debe seguir todo componente que muestre datos estructurados.
+
   ## Dominio
   La iglesia adventista tiene una estructura organizacional con roles específicos y departamentos.
 
@@ -51,6 +56,7 @@ rules:
     - Las tareas deben ser accionables y completables en una sesión de trabajo
     - Ordenar de menor a mayor dependencia (infraestructura antes que UI)
     - No detallar patrones técnicos de implementación en las tareas — eso lo resuelven las skills al aplicar
+    - Si el change incluye UI: agregar una tarea explícita "Cargar skill church-ui-design antes de implementar componentes" al inicio del bloque de tareas de frontend
 
   spec:
     - Escribir specs desde la perspectiva del usuario con su rol
@@ -60,6 +66,13 @@ rules:
     Si el change incluye UI (páginas, formularios, modales, flujos de navegación), incluir siempre
     una sección "## UI Scenarios" al final del design.md. Esta sección es usada por el comando
     /qa-change para validar la UI con Playwright antes de archivar.
+
+    Para changes con UI, el design.md debe también incluir una sección "## Diseño visual" que describa:
+    - Qué colores de la paleta de marca se usarán (STATUS_COLORS, EVENT_TYPE_STYLE, NAVY, GOLD, etc.)
+    - Si el componente requiere variante mobile y desktop separadas (obligatorio cuando el layout o la
+      información mostrada difiere entre breakpoints)
+    - Qué nivel de la jerarquía tipográfica aplica a cada texto del componente
+    La skill `church-ui-design` es la referencia para estos lineamientos.
 
     Si el change es backend-only (sin pantallas nuevas), omitir la sección y agregar al final del
     archivo el comentario: <!-- No UI Scenarios: backend-only change -->
