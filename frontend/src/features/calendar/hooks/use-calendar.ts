@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
 import { CalendarService, EventResponseDto } from '@/lib/api'
 
 export type EventType = EventResponseDto.eventType
@@ -52,5 +52,55 @@ export function useEvent(id: string | undefined) {
     queryKey: ['calendar', 'id', id],
     queryFn: () => CalendarService.calendarControllerFindOne(id!) as Promise<EventResponseDto>,
     enabled: !!id,
+  })
+}
+
+interface MonthPage {
+  year: number
+  month: number // 0-indexed (Date convention)
+}
+
+export interface CalendarInfiniteFilters {
+  eventType?: EventType
+  departmentId?: string
+  startMonth?: Date // mes desde el que inicia la carga infinita
+}
+
+function startOfMonth(year: number, month: number): Date {
+  return new Date(year, month, 1)
+}
+
+function endOfMonth(year: number, month: number): Date {
+  return new Date(year, month + 1, 0, 23, 59, 59, 999)
+}
+
+export function useCalendarInfinite(filters: CalendarInfiniteFilters) {
+  const now = filters.startMonth ?? new Date()
+  const initialPage: MonthPage = { year: now.getFullYear(), month: now.getMonth() }
+
+  // Normalize startMonth to YYYY-MM string for stable queryKey
+  const startMonthKey = `${initialPage.year}-${String(initialPage.month).padStart(2, '0')}`
+
+  return useInfiniteQuery({
+    queryKey: ['calendar', 'infinite', filters.eventType, filters.departmentId, startMonthKey],
+    initialPageParam: initialPage,
+    queryFn: ({ pageParam }) => {
+      const { year, month } = pageParam as MonthPage
+      return CalendarService.calendarControllerFindAll(
+        1,
+        100,
+        startOfMonth(year, month).toISOString(),
+        endOfMonth(year, month).toISOString(),
+        filters.eventType,
+        filters.departmentId,
+        undefined,
+      ) as Promise<PaginatedResponse<EventResponseDto>>
+    },
+    getNextPageParam: (_lastPage, _allPages, lastPageParam) => {
+      const { year, month } = lastPageParam as MonthPage
+      // advance one month, wrapping December → January
+      const next = new Date(year, month + 1, 1)
+      return { year: next.getFullYear(), month: next.getMonth() }
+    },
   })
 }
