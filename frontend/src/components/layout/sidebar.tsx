@@ -31,7 +31,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: 'calendario', label: 'Calendario', icon: Calendar, path: '/calendario' },
   { id: 'cultos', label: 'Cultos', icon: FileText, path: '/cultos/programas', matchPrefix: '/cultos' },
-  { id: 'misionero', label: 'Misionero', icon: Church, path: '/misionero/personas', matchPrefix: '/misionero' },
+  { id: 'misionero', label: 'Misión', icon: Church, path: '/misionero/personas', matchPrefix: '/misionero' },
 ]
 
 const adminNavItems: NavItem[] = [

@@ -30,8 +30,8 @@ const quickActions = [
     title: 'Misión',
     description: 'Actividades evangelísticas y misioneras',
     icon: Church,
-    path: '/mision',
-    disabled: true,
+    path: '/misionero/personas',
+    disabled: false,
   },
 ]
 
