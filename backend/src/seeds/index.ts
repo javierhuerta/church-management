@@ -4,6 +4,7 @@ import { Department } from '../modules/departments/entities/department.entity';
 import { Person } from '../modules/mission/entities/person.entity';
 import { RescueMember } from '../modules/mission/entities/rescue-member.entity';
 import { Visit } from '../modules/mission/entities/visit.entity';
+import { VisitAttempt } from '../modules/mission/entities/visit-attempt.entity';
 import { Event } from '../modules/calendar/entities/event.entity';
 import { EventAttachment } from '../modules/calendar/entities/event-attachment.entity';
 import { EventOrganizer } from '../modules/calendar/entities/event-organizer.entity';
@@ -42,6 +43,7 @@ export async function runAllSeeders(): Promise<void> {
       Person,
       RescueMember,
       Visit,
+      VisitAttempt,
       Event,
       EventAttachment,
       EventOrganizer,
