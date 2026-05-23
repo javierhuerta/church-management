@@ -11,6 +11,10 @@ export type UpdateUserDto = {
      * Department IDs where user is director
      */
     departmentIds?: Array<string>;
+    /**
+     * UUID de la Persona vinculada a este usuario (null para desvincular)
+     */
+    personId?: string | null;
 };
 export namespace UpdateUserDto {
     export enum role {

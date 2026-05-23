@@ -35,7 +35,7 @@ export class VisitRepository {
       .where('v.personId = :personId', { personId })
       .leftJoinAndSelect('v.person', 'person')
       .leftJoinAndSelect('v.visitStatus', 'visitStatus')
-      .orderBy('v.completedDate', 'DESC')
+      .orderBy('v.createdAt', 'DESC')
       .getMany();
   }
 

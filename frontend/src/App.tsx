@@ -112,6 +112,21 @@ const RescueFormPage = lazy(() =>
     default: m.RescueFormPage,
   })),
 )
+const SmallGroupsListPage = lazy(() =>
+  import('./features/mission/pages/small-groups-list-page').then((m) => ({
+    default: m.SmallGroupsListPage,
+  })),
+)
+const SmallGroupFormPage = lazy(() =>
+  import('./features/mission/pages/small-group-form-page').then((m) => ({
+    default: m.SmallGroupFormPage,
+  })),
+)
+const SmallGroupDetailPage = lazy(() =>
+  import('./features/mission/pages/small-group-detail-page').then((m) => ({
+    default: m.SmallGroupDetailPage,
+  })),
+)
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token')
@@ -179,6 +194,10 @@ function App() {
                 <Route path="rescate" element={<RescueListPage />} />
                 <Route path="rescate/nuevo" element={<RescueFormPage />} />
                 <Route path="rescate/:id" element={<RescueFormPage />} />
+                <Route path="grupos" element={<SmallGroupsListPage />} />
+                <Route path="grupos/nuevo" element={<SmallGroupFormPage />} />
+                <Route path="grupos/:id/editar" element={<SmallGroupFormPage />} />
+                <Route path="grupos/:id" element={<SmallGroupDetailPage />} />
               </Route>
 
               <Route path="mantenedores" element={<MantenedoresLayout />}>

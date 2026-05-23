@@ -40,4 +40,13 @@ export class UpdateUserDto {
   @IsArray()
   @IsUUID('4', { each: true })
   departmentIds?: string[];
+
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description: 'UUID de la Persona vinculada a este usuario (null para desvincular)',
+  })
+  @IsOptional()
+  @IsUUID()
+  personId?: string | null;
 }

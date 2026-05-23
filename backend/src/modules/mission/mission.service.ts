@@ -7,6 +7,7 @@ import {
 import { PersonRepository } from './repositories/person.repository';
 import { RescueMemberRepository } from './repositories/rescue-member.repository';
 import { VisitRepository } from './repositories/visit.repository';
+import { SmallGroupRepository } from './repositories/small-group.repository';
 import { Person } from './entities/person.entity';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
@@ -27,6 +28,7 @@ export class MissionService {
     private readonly personRepo: PersonRepository,
     private readonly rescueMemberRepo: RescueMemberRepository,
     private readonly visitRepo: VisitRepository,
+    private readonly smallGroupRepo: SmallGroupRepository,
   ) {}
 
   async findAll(filter: FindPeopleDto): Promise<PaginatedPersonResponseDto> {
@@ -82,14 +84,36 @@ export class MissionService {
   async remove(id: string): Promise<void> {
     const person = await this.loadOne(id);
 
-    const [hasRescue, visitCount] = await Promise.all([
-      this.rescueMemberRepo.existsByPersonId(id),
-      this.visitRepo.countByPersonId(id),
-    ]);
+    const [hasRescue, visitCount, isGroupMember, isGroupLeader, isGroupPromoter] =
+      await Promise.all([
+        this.rescueMemberRepo.existsByPersonId(id),
+        this.visitRepo.countByPersonId(id),
+        this.smallGroupRepo.existsByMemberPersonId(id),
+        this.smallGroupRepo.existsByLeaderPersonId(id),
+        this.smallGroupRepo.existsByPromoterPersonId(id),
+      ]);
 
     if (hasRescue || visitCount > 0) {
       throw new ConflictException(
         'No se puede eliminar la persona porque tiene historial de seguimiento',
+      );
+    }
+
+    if (isGroupMember) {
+      throw new ConflictException(
+        'No se puede eliminar la persona porque es integrante de un grupo pequeño',
+      );
+    }
+
+    if (isGroupLeader) {
+      throw new ConflictException(
+        'No se puede eliminar la persona porque es líder de un grupo pequeño',
+      );
+    }
+
+    if (isGroupPromoter) {
+      throw new ConflictException(
+        'No se puede eliminar la persona porque es promotora de un grupo pequeño',
       );
     }
 

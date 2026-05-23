@@ -5,6 +5,9 @@ import { Person } from '../modules/mission/entities/person.entity';
 import { RescueMember } from '../modules/mission/entities/rescue-member.entity';
 import { Visit } from '../modules/mission/entities/visit.entity';
 import { VisitAttempt } from '../modules/mission/entities/visit-attempt.entity';
+import { SmallGroup } from '../modules/mission/entities/small-group.entity';
+import { SmallGroupLeader } from '../modules/mission/entities/small-group-leader.entity';
+import { SmallGroupMember } from '../modules/mission/entities/small-group-member.entity';
 import { Event } from '../modules/calendar/entities/event.entity';
 import { EventAttachment } from '../modules/calendar/entities/event-attachment.entity';
 import { EventOrganizer } from '../modules/calendar/entities/event-organizer.entity';
@@ -14,11 +17,13 @@ import { ServiceTemplateSection } from '../modules/worship-services/entities/ser
 import { Hymn } from '../modules/worship-services/entities/hymn.entity';
 import { RescueStageEntity } from '../modules/catalogs/entities/rescue-stage.entity';
 import { VisitStatusEntity } from '../modules/catalogs/entities/visit-status.entity';
+import { SabbathClassEntity } from '../modules/catalogs/entities/sabbath-class.entity';
 import { UserSeeder } from './auth/user.seeder';
 import { DepartmentSeeder } from './departments/department.seeder';
 import { PersonSeeder } from './mission/person.seeder';
 import { RescueMemberSeeder } from './mission/rescue-member.seeder';
 import { VisitSeeder } from './mission/visit.seeder';
+import { SmallGroupSeeder } from './mission/small-group.seeder';
 import { EventSeeder } from './calendar/event.seeder';
 import { TemplateSeeder } from './worship-services/template.seeder';
 import { HymnSeeder } from './worship-services/hymn.seeder';
@@ -44,6 +49,9 @@ export async function runAllSeeders(): Promise<void> {
       RescueMember,
       Visit,
       VisitAttempt,
+      SmallGroup,
+      SmallGroupLeader,
+      SmallGroupMember,
       Event,
       EventAttachment,
       EventOrganizer,
@@ -53,6 +61,7 @@ export async function runAllSeeders(): Promise<void> {
       Hymn,
       RescueStageEntity,
       VisitStatusEntity,
+      SabbathClassEntity,
     ],
   });
 
@@ -66,6 +75,7 @@ export async function runAllSeeders(): Promise<void> {
     new RescueMemberSeeder(),
     new VisitSeeder(),
     new UserSeeder(),
+    new SmallGroupSeeder(),  // After PersonSeeder and UserSeeder
     new EventSeeder(),
     new TemplateSeeder(),
     new HymnSeeder(),

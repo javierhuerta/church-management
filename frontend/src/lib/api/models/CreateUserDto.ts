@@ -11,6 +11,10 @@ export type CreateUserDto = {
      * Department IDs where user is director
      */
     departmentIds?: Array<string>;
+    /**
+     * UUID de la Persona vinculada a este usuario
+     */
+    personId?: string | null;
 };
 export namespace CreateUserDto {
     export enum role {

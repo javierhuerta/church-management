@@ -36,4 +36,13 @@ export class CreateUserDto {
   @IsArray()
   @IsUUID('4', { each: true })
   departmentIds?: string[];
+
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description: 'UUID de la Persona vinculada a este usuario',
+  })
+  @IsOptional()
+  @IsUUID()
+  personId?: string | null;
 }

@@ -9,6 +9,8 @@ export type UserResponseDto = {
     email: string;
     role: UserResponseDto.role;
     departments: Array<DepartmentSummaryDto>;
+    personId?: string | null;
+    personName?: string | null;
     createdAt: string;
     updatedAt?: Record<string, any> | null;
 };

@@ -9,6 +9,7 @@ import { Repository, In } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from '../auth/entities/user.entity';
 import { Department } from '../departments/entities/department.entity';
+import { Person } from '../mission/entities/person.entity';
 import { assignDefined, toDto } from '../common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -21,18 +22,20 @@ export class UsersService {
     private readonly userRepo: Repository<User>,
     @InjectRepository(Department)
     private readonly departmentRepo: Repository<Department>,
+    @InjectRepository(Person)
+    private readonly personRepo: Repository<Person>,
   ) {}
 
   async findAll(): Promise<UserResponseDto[]> {
     const users = await this.userRepo.find({
-      relations: ['departments'],
+      relations: ['departments', 'person'],
       order: { name: 'ASC' },
     });
-    return toDto(UserResponseDto, users);
+    return users.map((u) => this.mapToDto(u));
   }
 
   async findOne(id: string): Promise<UserResponseDto> {
-    return toDto(UserResponseDto, await this.loadOne(id));
+    return this.mapToDto(await this.loadOne(id));
   }
 
   async create(dto: CreateUserDto): Promise<UserResponseDto> {
@@ -54,10 +57,11 @@ export class UsersService {
       name: dto.name,
       role: dto.role,
       departments,
+      personId: dto.personId ?? null,
     });
 
     const saved = await this.userRepo.save(user);
-    return toDto(UserResponseDto, await this.loadOne(saved.id));
+    return this.mapToDto(await this.loadOne(saved.id));
   }
 
   async update(id: string, dto: UpdateUserDto): Promise<UserResponseDto> {
@@ -87,14 +91,28 @@ export class UsersService {
         : [];
     }
 
+    // personId: null = desvincular, string = vincular, undefined = no tocar
+    if (dto.personId !== undefined) {
+      if (dto.personId === null) {
+        user.personId = null;
+      } else {
+        const person = await this.personRepo.findOne({
+          where: { id: dto.personId },
+        });
+        if (!person) {
+          throw new NotFoundException('Persona no encontrada');
+        }
+        user.personId = person.id;
+      }
+    }
+
     await this.userRepo.save(user);
-    return toDto(UserResponseDto, await this.loadOne(id));
+    return this.mapToDto(await this.loadOne(id));
   }
 
   async remove(id: string): Promise<void> {
     const user = await this.loadOne(id);
 
-    // Block deletion if user has created worship programs
     const programCount = await this.userRepo.manager
       .getRepository('service_programs')
       .count({ where: { createdById: id } });
@@ -108,10 +126,19 @@ export class UsersService {
     await this.userRepo.remove(user);
   }
 
+  private mapToDto(user: User): UserResponseDto {
+    const base = toDto(UserResponseDto, user) as UserResponseDto;
+    base.personId = user.personId ?? null;
+    base.personName = user.person
+      ? `${user.person.firstName} ${user.person.lastName ?? ''}`.trim()
+      : null;
+    return base;
+  }
+
   private async loadOne(id: string): Promise<User> {
     const user = await this.userRepo.findOne({
       where: { id },
-      relations: ['departments'],
+      relations: ['departments', 'person'],
     });
     if (!user) {
       throw new NotFoundException('User not found');

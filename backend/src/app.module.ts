@@ -53,6 +53,10 @@ import {
 } from './modules/worship-services/entities';
 import { RescueStageEntity } from './modules/catalogs/entities/rescue-stage.entity';
 import { VisitStatusEntity } from './modules/catalogs/entities/visit-status.entity';
+import { SmallGroup } from './modules/mission/entities/small-group.entity';
+import { SmallGroupLeader } from './modules/mission/entities/small-group-leader.entity';
+import { SmallGroupMember } from './modules/mission/entities/small-group-member.entity';
+import { SabbathClassEntity } from './modules/catalogs/entities/sabbath-class.entity';
 
 const ENTITIES = [
   User,
@@ -74,6 +78,10 @@ const ENTITIES = [
   Hymn,
   RescueStageEntity,
   VisitStatusEntity,
+  SmallGroup,
+  SmallGroupMember,
+  SmallGroupLeader,
+  SabbathClassEntity,
 ];
 
 @Module({

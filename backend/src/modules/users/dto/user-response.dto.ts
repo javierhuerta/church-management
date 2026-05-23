@@ -16,6 +16,14 @@ export class UserResponseDto {
   @Expose()
   @Type(() => DepartmentSummaryDto)
   departments: DepartmentSummaryDto[];
+  @ApiPropertyOptional({ type: String, nullable: true })
+  @Expose()
+  personId: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  @Expose()
+  personName: string | null;
+
   @ApiProperty() @Expose() createdAt: Date;
   @ApiPropertyOptional({ nullable: true }) @Expose() updatedAt: Date | null;
 }

@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { Users, CalendarCheck, HeartHandshake, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Users, CalendarCheck, HeartHandshake, ChevronLeft, ChevronRight, UsersRound } from 'lucide-react'
 
 const subNav = [
   {
@@ -20,6 +20,12 @@ const subNav = [
     label: 'Miembros a rescatar',
     icon: HeartHandshake,
     testId: 'nav-misionero-rescate',
+  },
+  {
+    path: '/misionero/grupos',
+    label: 'Grupos pequeños',
+    icon: UsersRound,
+    testId: 'nav-misionero-grupos',
   },
 ]
 

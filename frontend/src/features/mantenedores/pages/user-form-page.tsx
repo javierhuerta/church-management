@@ -18,35 +18,39 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { PersonCombobox } from '@/features/mission/components/person-combobox'
+import { usePeopleList } from '@/features/mission/hooks/use-people-list'
 
 const USER_ROLES = [
-  { value: 'Admin', label: 'Administrador' },
-  { value: 'Pastor', label: 'Pastor' },
-  { value: 'Anciano', label: 'Anciano' },
+  { value: 'Admin',                label: 'Administrador' },
+  { value: 'Pastor',               label: 'Pastor' },
+  { value: 'Anciano',              label: 'Anciano' },
   { value: 'CoordinadorMisionero', label: 'Coordinador Misionero' },
   { value: 'DirectorDepartamento', label: 'Director de Departamento' },
-  { value: 'Secretaria', label: 'Secretaria' },
-  { value: 'MaestroClase', label: 'Maestro de Clase' },
+  { value: 'Secretaria',           label: 'Secretaria' },
+  { value: 'MaestroClase',         label: 'Maestro de Clase' },
 ]
 
 const createSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  role: z.string().min(1, 'El rol es requerido'),
+  name:          z.string().min(1, 'El nombre es requerido'),
+  email:         z.string().email('Email inválido'),
+  password:      z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  role:          z.string().min(1, 'El rol es requerido'),
   departmentIds: z.array(z.string()).optional(),
+  personId:      z.string().optional(),
 })
 
 const editSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Mínimo 6 caracteres').optional().or(z.literal('')),
-  role: z.string().min(1, 'El rol es requerido'),
+  name:          z.string().min(1, 'El nombre es requerido'),
+  email:         z.string().email('Email inválido'),
+  password:      z.string().min(6, 'Mínimo 6 caracteres').optional().or(z.literal('')),
+  role:          z.string().min(1, 'El rol es requerido'),
   departmentIds: z.array(z.string()).optional(),
+  personId:      z.string().optional(),
 })
 
 type CreateFormValues = z.infer<typeof createSchema>
-type EditFormValues = z.infer<typeof editSchema>
+type EditFormValues   = z.infer<typeof editSchema>
 
 export function UserFormPage() {
   const { id } = useParams<{ id: string }>()
@@ -67,6 +71,13 @@ export function UserFormPage() {
     enabled: isEdit,
   })
 
+  // People list for the person selector
+  const { data: peopleData } = usePeopleList('')
+  const peopleList = (peopleData?.data ?? []).map((p) => ({
+    id: p.id,
+    label: [p.firstName, p.lastName].filter(Boolean).join(' '),
+  }))
+
   const {
     register,
     handleSubmit,
@@ -77,11 +88,8 @@ export function UserFormPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(isEdit ? editSchema : createSchema) as Resolver<any>,
     defaultValues: {
-      name: '',
-      email: '',
-      password: '',
-      role: '',
-      departmentIds: [],
+      name: '', email: '', password: '', role: '',
+      departmentIds: [], personId: '',
     },
   })
 
@@ -90,11 +98,12 @@ export function UserFormPage() {
       const deptIds = existingUser.departments.map((d) => d.id)
       setSelectedDeptIds(deptIds)
       reset({
-        name: existingUser.name,
-        email: existingUser.email,
-        password: '',
-        role: existingUser.role,
+        name:          existingUser.name,
+        email:         existingUser.email,
+        password:      '',
+        role:          existingUser.role,
         departmentIds: deptIds,
+        personId:      existingUser.personId ?? '',
       })
     }
   }, [existingUser, reset])
@@ -102,11 +111,12 @@ export function UserFormPage() {
   const createMutation = useMutation({
     mutationFn: (data: CreateFormValues) =>
       UsersService.usersControllerCreate({
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        role: data.role as CreateUserDto['role'],
+        name:          data.name,
+        email:         data.email,
+        password:      data.password,
+        role:          data.role as CreateUserDto['role'],
         departmentIds: selectedDeptIds,
+        personId:      data.personId || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
@@ -121,11 +131,13 @@ export function UserFormPage() {
   const updateMutation = useMutation({
     mutationFn: (data: EditFormValues) =>
       UsersService.usersControllerUpdate(id!, {
-        name: data.name,
-        email: data.email,
-        password: data.password || undefined,
-        role: data.role as UpdateUserDto['role'],
+        name:          data.name,
+        email:         data.email,
+        password:      data.password || undefined,
+        role:          data.role as UpdateUserDto['role'],
         departmentIds: selectedDeptIds,
+        // empty string → desvincular (null); valor → vincular; undefined → no tocar
+        personId:      data.personId === '' ? null : (data.personId || undefined),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
@@ -140,17 +152,14 @@ export function UserFormPage() {
 
   async function onSubmit(values: CreateFormValues | EditFormValues) {
     setServerError(null)
-    if (isEdit) {
-      updateMutation.mutate(values as EditFormValues)
-    } else {
-      createMutation.mutate(values as CreateFormValues)
-    }
+    if (isEdit) updateMutation.mutate(values as EditFormValues)
+    else createMutation.mutate(values as CreateFormValues)
   }
 
   function toggleDepartment(deptId: string) {
     setSelectedDeptIds((prev) =>
       prev.includes(deptId)
-        ? prev.filter((id) => id !== deptId)
+        ? prev.filter((i) => i !== deptId)
         : [...prev, deptId],
     )
   }
@@ -179,33 +188,42 @@ export function UserFormPage() {
         </h2>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 bg-card rounded-xl border border-border p-6">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-5 bg-card rounded-xl border border-border p-6"
+      >
         {serverError && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {serverError}
           </div>
         )}
 
+        {/* Nombre */}
         <div className="space-y-2">
           <Label htmlFor="name">Nombre *</Label>
           <Input id="name" {...register('name')} placeholder="Nombre completo" />
           {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
         </div>
 
+        {/* Email */}
         <div className="space-y-2">
           <Label htmlFor="email">Email *</Label>
           <Input id="email" type="email" {...register('email')} placeholder="correo@ejemplo.com" />
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
 
+        {/* Contraseña */}
         <div className="space-y-2">
           <Label htmlFor="password">
             {isEdit ? 'Nueva contraseña (dejar vacío para no cambiar)' : 'Contraseña *'}
           </Label>
           <Input id="password" type="password" {...register('password')} />
-          {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+          {errors.password && (
+            <p className="text-xs text-destructive">{errors.password.message}</p>
+          )}
         </div>
 
+        {/* Rol */}
         <div className="space-y-2">
           <Label>Rol *</Label>
           <Controller
@@ -229,6 +247,35 @@ export function UserFormPage() {
           {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
         </div>
 
+        {/* Persona vinculada */}
+        <div className="space-y-2">
+          <Label>
+            Persona vinculada
+            <span className="ml-1.5 text-xs text-muted-foreground font-normal">
+              (opcional — conecta el usuario con su registro en el módulo misionero)
+            </span>
+          </Label>
+          <Controller
+            control={control}
+            name="personId"
+            render={({ field }) => (
+              <PersonCombobox
+                value={field.value ?? ''}
+                onChange={(v) => field.onChange(v)}
+                people={peopleList}
+                clearable
+                placeholder="Buscar persona por nombre..."
+              />
+            )}
+          />
+          {existingUser?.personName && (
+            <p className="text-xs text-muted-foreground">
+              Vinculado actualmente a: <span className="font-medium">{existingUser.personName}</span>
+            </p>
+          )}
+        </div>
+
+        {/* Departamentos */}
         <div className="space-y-2">
           <Label>Departamentos donde es director</Label>
           {departments.length === 0 ? (
