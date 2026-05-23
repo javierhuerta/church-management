@@ -59,6 +59,7 @@ export function UserFormPage() {
   const queryClient = useQueryClient()
   const [serverError, setServerError] = useState<string | null>(null)
   const [selectedDeptIds, setSelectedDeptIds] = useState<string[]>([])
+  const [formReady, setFormReady] = useState(!isEdit)
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
@@ -105,6 +106,7 @@ export function UserFormPage() {
         departmentIds: deptIds,
         personId:      existingUser.personId ?? '',
       })
+      setFormReady(true)
     }
   }, [existingUser, reset])
 
@@ -226,24 +228,28 @@ export function UserFormPage() {
         {/* Rol */}
         <div className="space-y-2">
           <Label>Rol *</Label>
-          <Controller
-            control={control}
-            name="role"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar rol" />
-                </SelectTrigger>
-                <SelectContent>
-                  {USER_ROLES.map((r) => (
-                    <SelectItem key={r.value} value={r.value}>
-                      {r.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
+          {formReady ? (
+            <Controller
+              control={control}
+              name="role"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar rol" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {USER_ROLES.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>
+                        {r.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          ) : (
+            <div className="h-9 rounded-md border border-border bg-muted animate-pulse" />
+          )}
           {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
         </div>
 
