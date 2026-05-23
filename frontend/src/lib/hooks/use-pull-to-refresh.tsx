@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 
-const PULL_THRESHOLD = 80
+// Pixels the user must drag to trigger a refresh
+const PULL_THRESHOLD = 150
+// Resistance factor: drag feels heavier (lower = more resistance)
+const RESISTANCE = 0.4
+// Dead zone: ignore the first N pixels of drag to avoid accidental triggers
+const DEAD_ZONE = 20
 
 export function usePullToRefresh() {
   const [isPulling, setIsPulling] = useState(false)
@@ -23,11 +28,14 @@ export function usePullToRefresh() {
     if (!isAtTopRef.current || touchStartRef.current === null) return
 
     const currentY = e.touches[0].clientY
-    const delta = currentY - touchStartRef.current
+    const rawDelta = currentY - touchStartRef.current
 
-    if (delta > 0) {
+    // Only activate after the dead zone to ignore micro-scrolls
+    if (rawDelta > DEAD_ZONE) {
       e.preventDefault()
-      const progress = Math.min(delta / PULL_THRESHOLD, 1.5)
+      // Apply resistance: drag feels progressively heavier
+      const effectiveDelta = (rawDelta - DEAD_ZONE) * RESISTANCE
+      const progress = Math.min(effectiveDelta / PULL_THRESHOLD, 1.5)
       setPullProgress(progress)
       setIsPulling(progress >= 1)
     }
