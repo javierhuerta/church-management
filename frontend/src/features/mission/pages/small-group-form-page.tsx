@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form'
-import type { Control } from 'react-hook-form'
+import type { Control, FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
@@ -26,6 +26,7 @@ import { hasMissionFullAccess } from '../lib/permissions'
 import { PersonCombobox } from '../components/person-combobox'
 import { usePeopleList } from '../hooks/use-people-list'
 import type { SmallGroupLeaderInputDto } from '@/lib/api/models/SmallGroupLeaderInputDto'
+import type { CreateSmallGroupDto } from '@/lib/api/models/CreateSmallGroupDto'
 
 const NAVY = '#1B3A6B'
 
@@ -36,8 +37,11 @@ const leaderSchema = z.object({
   leaderUserId: z.string().optional(),
   leaderPersonId: z.string().optional(),
 }).refine(
-  (v) => !!(v.leaderUserId) !== !!(v.leaderPersonId),
-  { message: 'Debe seleccionar usuario o persona, no ambos' },
+  (v) => !!(v.leaderUserId) || !!(v.leaderPersonId),
+  { message: 'Selecciona un usuario o una persona para este líder' },
+).refine(
+  (v) => !(v.leaderUserId && v.leaderPersonId),
+  { message: 'No puede seleccionar usuario y persona al mismo tiempo' },
 )
 
 const groupSchema = z.object({
@@ -71,18 +75,28 @@ const ROLE_LABEL: Record<string, string> = {
 interface LeaderRowProps {
   idx: number
   control: Control<GroupFormValues>
+  errors: FieldErrors<GroupFormValues>
   users: Array<{ id: string; name: string; email: string; role: string }>
   peopleList: Array<{ id: string; label: string }>
   readOnly: boolean
   onRemove: () => void
 }
 
-function LeaderRow({ idx, control, users, peopleList, readOnly, onRemove }: LeaderRowProps) {
+function LeaderRow({ idx, control, errors, users, peopleList, readOnly, onRemove }: LeaderRowProps) {
   const leaderUserId   = useWatch({ control, name: `leaders.${idx}.leaderUserId` })
   const leaderPersonId = useWatch({ control, name: `leaders.${idx}.leaderPersonId` })
 
-  // Current mode: if a userId is set → 'user', else → 'person'
-  const mode: 'user' | 'person' = leaderUserId ? 'user' : 'person'
+  // Tab mode is independent from field values: clicking a tab changes the view
+  // without requiring the field to already have a value.
+  // Syncs from form data when reset() populates the fields (e.g. on edit load).
+  const [tabMode, setTabMode] = useState<'user' | 'person'>(
+    leaderUserId ? 'user' : 'person'
+  )
+
+  useEffect(() => {
+    if (leaderUserId) setTabMode('user')
+    else if (leaderPersonId) setTabMode('person')
+  }, [leaderUserId, leaderPersonId])
 
   return (
     <div className="rounded-lg border border-border p-3 space-y-3">
@@ -102,10 +116,11 @@ function LeaderRow({ idx, control, users, peopleList, readOnly, onRemove }: Lead
                       type="button"
                       disabled={readOnly}
                       onClick={() => {
-                        fPerson.onChange(undefined)   // clear person when switching to user
+                        setTabMode('user')
+                        fPerson.onChange(undefined)
                       }}
                       className={`px-3 py-1 rounded-md transition-all ${
-                        mode === 'user'
+                        tabMode === 'user'
                           ? 'bg-background text-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
@@ -116,10 +131,11 @@ function LeaderRow({ idx, control, users, peopleList, readOnly, onRemove }: Lead
                       type="button"
                       disabled={readOnly}
                       onClick={() => {
-                        fUser.onChange(undefined)     // clear user when switching to person
+                        setTabMode('person')
+                        fUser.onChange(undefined)
                       }}
                       className={`px-3 py-1 rounded-md transition-all ${
-                        mode === 'person'
+                        tabMode === 'person'
                           ? 'bg-background text-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
@@ -146,7 +162,7 @@ function LeaderRow({ idx, control, users, peopleList, readOnly, onRemove }: Lead
       </div>
 
       {/* Selector según modo */}
-      {mode === 'user' ? (
+      {tabMode === 'user' ? (
         <Controller
           control={control}
           name={`leaders.${idx}.leaderUserId`}
@@ -192,15 +208,10 @@ function LeaderRow({ idx, control, users, peopleList, readOnly, onRemove }: Lead
         />
       )}
 
-      {/* Validation hint */}
-      {mode === 'user' && !leaderUserId && (
-        <p className="text-xs text-muted-foreground">
-          Selecciona un usuario o cambia a "Persona sin login".
-        </p>
-      )}
-      {mode === 'person' && !leaderPersonId && (
-        <p className="text-xs text-muted-foreground">
-          Busca una persona o cambia a "Usuario con login".
+      {/* Validation error */}
+      {(errors.leaders?.[idx] as { message?: string } | undefined)?.message && (
+        <p className="text-xs text-destructive">
+          {(errors.leaders?.[idx] as { message?: string }).message}
         </p>
       )}
     </div>
@@ -292,14 +303,14 @@ export function SmallGroupFormPage() {
       actionUnit: values.actionUnit,
       name: values.name || undefined,
       promoterPersonId: values.promoterPersonId || undefined,
-      meetingDay: (values.meetingDay || undefined) as GroupFormValues['meetingDay'],
+      meetingDay: (values.meetingDay || undefined) as CreateSmallGroupDto.meetingDay | undefined,
       meetingTime: values.meetingTime || undefined,
-      meetingMode: (values.meetingMode || undefined) as GroupFormValues['meetingMode'],
+      meetingMode: (values.meetingMode || undefined) as CreateSmallGroupDto.meetingMode | undefined,
       meetingPlace: values.meetingPlace || undefined,
       contactPhone: values.contactPhone || undefined,
       isActive: values.isActive,
       notes: values.notes || undefined,
-      leaders: leaders.length > 0 ? leaders : undefined,
+      leaders,
     }
 
     try {
@@ -395,6 +406,7 @@ export function SmallGroupFormPage() {
               key={field.id}
               idx={idx}
               control={control}
+              errors={errors}
               users={users}
               peopleList={peopleList}
               readOnly={!fullAccess}
