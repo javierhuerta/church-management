@@ -72,6 +72,16 @@ const DepartmentFormPage = lazy(() =>
     default: m.DepartmentFormPage,
   })),
 )
+const CatalogsListPage = lazy(() =>
+  import('./features/mantenedores/pages/catalogs-list-page').then((m) => ({
+    default: m.CatalogsListPage,
+  })),
+)
+const CatalogFormPage = lazy(() =>
+  import('./features/mantenedores/pages/catalog-form-page').then((m) => ({
+    default: m.CatalogFormPage,
+  })),
+)
 const PeopleListPage = lazy(() =>
   import('./features/mission/pages/people-list-page').then((m) => ({
     default: m.PeopleListPage,
@@ -80,6 +90,26 @@ const PeopleListPage = lazy(() =>
 const PersonFormPage = lazy(() =>
   import('./features/mission/pages/person-form-page').then((m) => ({
     default: m.PersonFormPage,
+  })),
+)
+const VisitsListPage = lazy(() =>
+  import('./features/mission/pages/visits-list-page').then((m) => ({
+    default: m.VisitsListPage,
+  })),
+)
+const VisitFormPage = lazy(() =>
+  import('./features/mission/pages/visit-form-page').then((m) => ({
+    default: m.VisitFormPage,
+  })),
+)
+const RescueListPage = lazy(() =>
+  import('./features/mission/pages/rescue-list-page').then((m) => ({
+    default: m.RescueListPage,
+  })),
+)
+const RescueFormPage = lazy(() =>
+  import('./features/mission/pages/rescue-form-page').then((m) => ({
+    default: m.RescueFormPage,
   })),
 )
 
@@ -143,6 +173,12 @@ function App() {
                 <Route path="personas" element={<PeopleListPage />} />
                 <Route path="personas/nuevo" element={<PersonFormPage />} />
                 <Route path="personas/:id" element={<PersonFormPage />} />
+                <Route path="visitas" element={<VisitsListPage />} />
+                <Route path="visitas/nuevo" element={<VisitFormPage />} />
+                <Route path="visitas/:id" element={<VisitFormPage />} />
+                <Route path="rescate" element={<RescueListPage />} />
+                <Route path="rescate/nuevo" element={<RescueFormPage />} />
+                <Route path="rescate/:id" element={<RescueFormPage />} />
               </Route>
 
               <Route path="mantenedores" element={<MantenedoresLayout />}>
@@ -156,6 +192,8 @@ function App() {
                 <Route path="plantillas" element={<TemplatesListPage />} />
                 <Route path="plantillas/nuevo" element={<TemplateFormPage />} />
                 <Route path="plantillas/:id/editar" element={<TemplateFormPage />} />
+                <Route path="catalogos" element={<CatalogsListPage />} />
+                <Route path="catalogos/:id" element={<CatalogFormPage />} />
               </Route>
             </Route>
 

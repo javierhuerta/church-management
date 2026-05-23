@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Clock } from 'lucide-react'
 import { MissionPeopleService } from '@/lib/api'
 import type { CreatePersonDto } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { DatePicker } from '@/components/ui/date-picker'
 import { toast } from 'sonner'
+import { VisitStatusBadge } from '../components/visit-status-badge'
 
 const personSchema = z.object({
   firstName: z.string().min(1, 'El nombre es requerido'),
@@ -222,6 +223,34 @@ export function PersonFormPage() {
             {...register('notes')}
           />
         </div>
+
+        {/* Historial de visitas */}
+        {existingPerson?.visitHistory && existingPerson.visitHistory.length > 0 && (
+          <div className="space-y-4 border-t border-border pt-5" data-testid="person-visit-history">
+            <p className="text-sm font-semibold text-foreground">Historial de visitas</p>
+            <div className="space-y-3">
+              {existingPerson.visitHistory.map((visit) => (
+                <div key={visit.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+                  <Clock className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-sm font-medium text-foreground">
+                        {visit.completedDate ?? visit.scheduledDate ?? '—'}
+                      </p>
+                      <VisitStatusBadge status={visit.status} />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {visit.responsibleUserName ?? visit.responsibleText ?? '—'}
+                    </p>
+                    {visit.outcome && (
+                      <p className="text-sm text-muted-foreground mt-1">{visit.outcome}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-end gap-2 border-t border-border pt-5">
           <Button

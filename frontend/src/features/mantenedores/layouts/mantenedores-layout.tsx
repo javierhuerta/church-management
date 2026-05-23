@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Navigate, useLocation } from 'react-router-dom'
-import { Users, Building2, FileText } from 'lucide-react'
+import { Users, Building2, FileText, ListChecks } from 'lucide-react'
 
 function getUserRole(): string | null {
   try {
@@ -13,12 +13,13 @@ function getUserRole(): string | null {
   }
 }
 
-const ADMIN_ONLY_PATHS = ['/mantenedores/usuarios', '/mantenedores/departamentos']
+const ADMIN_ONLY_PATHS = ['/mantenedores/usuarios', '/mantenedores/departamentos', '/mantenedores/catalogos']
 
 const subNav = [
   { path: '/mantenedores/usuarios', label: 'Usuarios', icon: Users },
   { path: '/mantenedores/departamentos', label: 'Departamentos', icon: Building2 },
   { path: '/mantenedores/plantillas', label: 'Plantillas', icon: FileText },
+  { path: '/mantenedores/catalogos', label: 'Catálogos', icon: ListChecks },
 ]
 
 export function MantenedoresLayout() {

@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Users } from 'lucide-react'
+import { Users, CalendarCheck, HeartHandshake } from 'lucide-react'
 
 const subNav = [
   {
@@ -7,6 +7,18 @@ const subNav = [
     label: 'Personas',
     icon: Users,
     testId: 'nav-misionero-personas',
+  },
+  {
+    path: '/misionero/visitas',
+    label: 'Visitación',
+    icon: CalendarCheck,
+    testId: 'nav-misionero-visitas',
+  },
+  {
+    path: '/misionero/rescate',
+    label: 'Miembros a rescatar',
+    icon: HeartHandshake,
+    testId: 'nav-misionero-rescate',
   },
 ]
 

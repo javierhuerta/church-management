@@ -14,6 +14,7 @@ import { WorshipServicesModule } from './modules/worship-services/worship-servic
 import { UsersModule } from './modules/users/users.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
 import { MissionModule } from './modules/mission/mission.module';
+import { CatalogsModule } from './modules/catalogs/catalogs.module';
 import { HealthModule } from './modules/health/health.module';
 import { AllExceptionsFilter } from './modules/common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './modules/common/interceptors/logging.interceptor';
@@ -34,6 +35,8 @@ import { cacheFactory } from './config/factories/cache.factory';
 import { User } from './modules/auth/entities/user.entity';
 import { Department } from './modules/departments/entities/department.entity';
 import { Person } from './modules/mission/entities/person.entity';
+import { RescueMember } from './modules/mission/entities/rescue-member.entity';
+import { Visit } from './modules/mission/entities/visit.entity';
 import { Event } from './modules/calendar/entities/event.entity';
 import { EventAttachment } from './modules/calendar/entities/event-attachment.entity';
 import { EventOrganizer } from './modules/calendar/entities/event-organizer.entity';
@@ -47,11 +50,15 @@ import {
   ServiceProgramLog,
   Hymn,
 } from './modules/worship-services/entities';
+import { RescueStageEntity } from './modules/catalogs/entities/rescue-stage.entity';
+import { VisitStatusEntity } from './modules/catalogs/entities/visit-status.entity';
 
 const ENTITIES = [
   User,
   Department,
   Person,
+  RescueMember,
+  Visit,
   Event,
   EventAttachment,
   EventOrganizer,
@@ -63,6 +70,8 @@ const ENTITIES = [
   ServiceProgramSection,
   ServiceProgramLog,
   Hymn,
+  RescueStageEntity,
+  VisitStatusEntity,
 ];
 
 @Module({
@@ -97,6 +106,7 @@ const ENTITIES = [
     UsersModule,
     DepartmentsModule,
     MissionModule,
+    CatalogsModule,
     HealthModule,
   ],
   providers: [

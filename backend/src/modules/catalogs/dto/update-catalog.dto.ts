@@ -1,0 +1,25 @@
+import { IsString, IsOptional, IsInt, Min, IsBoolean } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+
+export class UpdateCatalogDto {
+  @ApiPropertyOptional({ description: 'Nombre para mostrar' })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiPropertyOptional({ description: 'Descripción opcional' })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional({ description: 'Orden de visualización' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  displayOrder?: number;
+
+  @ApiPropertyOptional({ description: 'Si está activo' })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
+}

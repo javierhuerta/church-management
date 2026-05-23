@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { PersonVisitHistoryDto } from './PersonVisitHistoryDto';
 export type PersonResponseDto = {
     id: string;
     firstName: string;
@@ -13,5 +14,6 @@ export type PersonResponseDto = {
     notes?: string | null;
     createdAt: string;
     updatedAt?: string | null;
+    visitHistory?: Array<PersonVisitHistoryDto> | null;
 };
 

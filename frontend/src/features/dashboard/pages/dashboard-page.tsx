@@ -223,7 +223,7 @@ export function DashboardPage() {
         {!isLoading && hasActivity && (
           <div className="space-y-3">
             {programs.map((program) => {
-              const style = PROGRAM_STATUS_COLORS[program.status] ?? PROGRAM_STATUS_COLORS.DRAFT
+              const style = PROGRAM_STATUS_COLORS[program.status?.toLowerCase() ?? 'draft'] ?? PROGRAM_STATUS_COLORS.draft
               const dateStr = format(parseISO(program.date), "h:mm a", { locale: es })
               return (
                 <ActivityItem
@@ -239,7 +239,7 @@ export function DashboardPage() {
             })}
 
             {events.map((event) => {
-              const style = EVENT_STATUS_COLORS[event.status] ?? EVENT_STATUS_COLORS.DRAFT
+              const style = EVENT_STATUS_COLORS[event.status?.toLowerCase() ?? 'draft'] ?? EVENT_STATUS_COLORS.draft
               const timeStr = format(parseISO(event.startDate), 'h:mm a', { locale: es })
               return (
                 <ActivityItem

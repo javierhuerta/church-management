@@ -23,6 +23,8 @@ import {
   PaginatedPersonResponseDto,
 } from './dto/person-response.dto';
 import { FindPeopleDto } from './dto/find-people.dto';
+import { VisitService } from './visit.service';
+import { VisitResponseDto } from './dto/visit-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -33,7 +35,10 @@ import { MISSION_FULL_ACCESS_ROLES } from './constants/mission-roles';
 @UseGuards(JwtAuthGuard)
 @Controller('mission/people')
 export class MissionController {
-  constructor(private readonly missionService: MissionService) {}
+  constructor(
+    private readonly missionService: MissionService,
+    private readonly visitService: VisitService,
+  ) {}
 
   @Get()
   @ApiOperation({
@@ -72,6 +77,13 @@ export class MissionController {
     @Body() dto: UpdatePersonDto,
   ): Promise<PersonResponseDto> {
     return this.missionService.update(id, dto);
+  }
+
+  @Get(':id/visits')
+  @ApiOperation({ summary: 'Obtener el historial de visitas de una persona' })
+  @ApiResponse({ status: 200, type: [VisitResponseDto] })
+  getPersonVisits(@Param('id') id: string): Promise<VisitResponseDto[]> {
+    return this.visitService.findByPersonId(id);
   }
 
   @Delete(':id')

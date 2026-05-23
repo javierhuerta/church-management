@@ -1,5 +1,30 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
+import { VisitStatus } from '../entities/visit-status.enum';
+
+export class PersonVisitHistoryDto {
+  @ApiProperty({ type: String }) @Expose() id: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) @Expose()
+  personFullName: string | null;
+  @ApiProperty({ enum: VisitStatus }) @Expose() status: VisitStatus;
+  @ApiPropertyOptional({ type: String, nullable: true }) @Expose()
+  scheduledDate: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) @Expose()
+  completedDate: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) @Expose()
+  responsibleUserId: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) @Expose()
+  responsibleUserName: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) @Expose()
+  responsiblePairId: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) @Expose()
+  responsibleText: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) @Expose()
+  outcome: string | null;
+  @ApiProperty({ type: Date }) @Expose() createdAt: Date;
+  @ApiPropertyOptional({ type: Date, nullable: true }) @Expose()
+  updatedAt: Date | null;
+}
 
 export class PersonResponseDto {
   @ApiProperty({ type: String }) @Expose() id: string;
@@ -15,9 +40,13 @@ export class PersonResponseDto {
   @ApiProperty({ type: Boolean }) @Expose() isBaptizedMember: boolean;
   @ApiPropertyOptional({ type: String, nullable: true }) @Expose()
   notes: string | null;
-  @ApiProperty({ type: String }) @Expose() createdAt: Date;
-  @ApiPropertyOptional({ type: String, nullable: true }) @Expose()
+  @ApiProperty({ type: Date }) @Expose() createdAt: Date;
+  @ApiPropertyOptional({ type: Date, nullable: true }) @Expose()
   updatedAt: Date | null;
+  @ApiPropertyOptional({ type: [PersonVisitHistoryDto], nullable: true })
+  @Expose()
+  @Type(() => PersonVisitHistoryDto)
+  visitHistory?: PersonVisitHistoryDto[];
 }
 
 export class PaginatedPersonResponseDto {

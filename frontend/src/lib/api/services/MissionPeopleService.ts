@@ -6,6 +6,7 @@ import type { CreatePersonDto } from '../models/CreatePersonDto';
 import type { PaginatedPersonResponseDto } from '../models/PaginatedPersonResponseDto';
 import type { PersonResponseDto } from '../models/PersonResponseDto';
 import type { UpdatePersonDto } from '../models/UpdatePersonDto';
+import type { VisitResponseDto } from '../models/VisitResponseDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -110,6 +111,23 @@ export class MissionPeopleService {
             },
             errors: {
                 404: `Person not found`,
+            },
+        });
+    }
+    /**
+     * Obtener el historial de visitas de una persona
+     * @param id
+     * @returns VisitResponseDto
+     * @throws ApiError
+     */
+    public static missionControllerGetPersonVisits(
+        id: string,
+    ): CancelablePromise<Array<VisitResponseDto>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/mission/people/{id}/visits',
+            path: {
+                'id': id,
             },
         });
     }

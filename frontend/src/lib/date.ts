@@ -46,6 +46,13 @@ export function timeFromDateTimeString(value?: string | null): string {
   return date ? format(date, 'HH:mm') : '00:00'
 }
 
+/** Format a `YYYY-MM-DD` API string as `DD-MM-YYYY` for display. Returns '—' if empty. */
+export function formatShortDate(value?: string | null): string {
+  const date = parseDateString(value)
+  if (!date) return '—'
+  return format(date, 'dd-MM-yyyy')
+}
+
 /** Localized (es) human-readable label for a single date. */
 export function displayDate(date?: Date): string {
   if (!date || !isValid(date)) return ''
