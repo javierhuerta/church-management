@@ -1,20 +1,31 @@
 import { useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { useTheme } from '@/components/theme-provider'
 import { LoginForm } from '../components/login-form'
 import { LoginControls } from '@/components/login-controls'
 import logoFull from '@/assets/images/logo.png'
+import { SYSTEM_NAME } from '@/lib/seo'
+import { usePullToRefresh, PullToRefreshIndicator } from '@/lib/hooks/use-pull-to-refresh'
 
 export function LoginPage() {
   const navigate = useNavigate()
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
 
+  const { pullProgress } = usePullToRefresh()
+
   const handleSuccess = () => {
     navigate('/')
   }
 
   return (
-    <div className="min-h-screen flex">
+    <>
+      <PullToRefreshIndicator progress={pullProgress} />
+      <Helmet>
+        <title>Iniciar sesión — {SYSTEM_NAME}</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div className="min-h-screen flex">
       {/* Left: Branding panel — hidden on mobile */}
       <div className="hidden lg:flex lg:w-1/2 bg-primary flex-col items-center justify-center p-12 relative">
         <div className="flex flex-col items-center gap-8 max-w-sm text-center">
@@ -74,6 +85,7 @@ export function LoginPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

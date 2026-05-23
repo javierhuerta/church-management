@@ -51,17 +51,17 @@ export function DepartmentsListPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3 px-1">
         <h2 className="text-xl font-semibold text-muted-foreground">Departamentos</h2>
-        <div className="flex items-center gap-2">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="relative min-w-0 w-full sm:w-auto">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="Buscar departamento..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-8 text-sm w-48"
+              className="pl-9 h-8 text-sm w-full sm:w-48"
             />
           </div>
-          <Link to="/mantenedores/departamentos/nuevo">
+          <Link to="/mantenedores/departamentos/nuevo" className="shrink-0">
             <Button size="sm">
               <Plus className="h-4 w-4 mr-1" /> Nuevo departamento
             </Button>

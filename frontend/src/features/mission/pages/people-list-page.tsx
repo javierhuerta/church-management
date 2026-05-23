@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { keepPreviousData } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2, UserX, Search, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -12,6 +13,7 @@ import { toast } from 'sonner'
 import { useTheme } from '@/components/theme-provider'
 import { BaptizedBadge } from '../components/baptized-badge'
 import { hasMissionFullAccess } from '../lib/permissions'
+import { SYSTEM_NAME } from '@/lib/seo'
 
 const PAGE_SIZE = 20
 
@@ -80,7 +82,12 @@ export function PeopleListPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <>
+      <Helmet>
+        <title>Personas — {SYSTEM_NAME}</title>
+        <meta name="description" content="Directorio de personas gestionadas por el módulo misionero — bautizados, interesados y contactos." />
+      </Helmet>
+      <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
@@ -293,6 +300,7 @@ export function PeopleListPage() {
         variant="destructive"
         onConfirm={() => deleteId && deleteMutation.mutate(deleteId)}
       />
-    </div>
+      </div>
+    </>
   )
 }

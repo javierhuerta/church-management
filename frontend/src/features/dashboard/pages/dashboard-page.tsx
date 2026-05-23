@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { Calendar, FileText, Church, ArrowRight, Loader2 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -7,6 +8,7 @@ import { useTheme } from '@/components/theme-provider'
 import { useCalendar } from '@/features/calendar/hooks/use-calendar'
 import { usePrograms } from '@/features/worship-services/hooks/use-worship-services'
 import { Button } from '@/components/ui/button'
+import { SYSTEM_NAME } from '@/lib/seo'
 
 const quickActions = [
   {
@@ -116,7 +118,12 @@ export function DashboardPage() {
   const hasActivity = events.length > 0 || programs.length > 0
 
   return (
-    <div className="space-y-8">
+    <>
+      <Helmet>
+        <title>Inicio — {SYSTEM_NAME}</title>
+        <meta name="description" content="Sistema de gestión eclesiástica para la Iglesia Adventista Central Osorno — eventos, programas de culto, misión y administración." />
+      </Helmet>
+      <div className="space-y-8">
       <div className="flex items-center gap-5">
         <img src={logoFull} alt="Adventistas Central Osorno" className="h-20 w-auto shrink-0" style={{ filter: logoFilter }} />
         <div>
@@ -256,6 +263,7 @@ export function DashboardPage() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   )
 }

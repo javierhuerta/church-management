@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import {
   ArrowLeft,
   Calendar,
@@ -22,11 +23,16 @@ import { ShareButtons } from '../components/share-buttons'
 import { MeetingButton } from '../components/meeting-button'
 import { OrganizerChip, type OrganizerEntry } from '../components/organizer-chip'
 import { formatEventDateRange } from '../utils/event-date'
+import { SYSTEM_NAME } from '@/lib/seo'
 
-// For og:image meta tags (require absolute URL for crawlers), use the window origin.
-// For img src, use paths as-is — the Vite proxy handles /uploads and /api.
 const resolveAbsoluteUrl = (path: string) =>
   path.startsWith('http') ? path : `${window.location.origin}${path}`
+
+function stripHtml(html: string): string {
+  const div = document.createElement('div')
+  div.innerHTML = html
+  return (div.textContent || div.innerText || '').slice(0, 200)
+}
 
 
 export function EventDetailPage() {
@@ -36,19 +42,6 @@ export function EventDetailPage() {
   const canEdit = isEditorRole(user?.role)
   const { data: event, isLoading, isError } = useEventBySlug(slug ?? '')
   const [coverErrored, setCoverErrored] = useState(false)
-
-  useEffect(() => {
-    if (!event) return
-    document.title = `${event.title} — Calendario`
-    setMetaTag('og:title', event.title)
-    setMetaTag('og:description', stripHtml(event.description ?? ''))
-    setMetaTag(
-      'og:image',
-      event.coverImageUrl ? resolveAbsoluteUrl(event.coverImageUrl) : '',
-    )
-    setMetaTag('og:url', window.location.href)
-    setMetaTag('og:type', 'event')
-  }, [event])
 
   if (isLoading) {
     return <DetailSkeleton />
@@ -119,8 +112,34 @@ export function EventDetailPage() {
     }
   }
 
+  const eventDescription = stripHtml(event.description ?? '')
+  const eventStart = event.startDate ? new Date(event.startDate).toISOString() : undefined
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <>
+      <Helmet>
+        <title>{event.title} — Calendario — {SYSTEM_NAME}</title>
+        <meta property="og:title" content={event.title} />
+        <meta property="og:description" content={eventDescription} />
+        {event.coverImageUrl && <meta property="og:image" content={resolveAbsoluteUrl(event.coverImageUrl)} />}
+        <meta property="og:url" content={window.location.href} />
+        <meta property="og:type" content="event" />
+        {eventStart && <meta property="event:start_time" content={eventStart} />}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Event',
+            name: event.title,
+            description: eventDescription,
+            startDate: eventStart,
+            endDate: event.endDate ? new Date(event.endDate).toISOString() : undefined,
+            location: { '@type': 'Place', name: event.location ?? undefined },
+            organizer: { '@type': 'Organization', name: 'Iglesia Adventista Central Osorno' },
+            url: window.location.href,
+          })}
+        </script>
+      </Helmet>
+      <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between gap-3">
         <Link to="/calendario">
           <Button variant="ghost" size="sm">
@@ -278,7 +297,8 @@ export function EventDetailPage() {
         </h3>
         <ShareButtons url={window.location.href} title={event.title} />
       </section>
-    </div>
+      </div>
+    </>
   )
 }
 
@@ -293,19 +313,3 @@ function DetailSkeleton() {
   )
 }
 
-function setMetaTag(property: string, content: string): void {
-  if (!content) return
-  let tag = document.querySelector(`meta[property="${property}"]`)
-  if (!tag) {
-    tag = document.createElement('meta')
-    tag.setAttribute('property', property)
-    document.head.appendChild(tag)
-  }
-  tag.setAttribute('content', content)
-}
-
-function stripHtml(html: string): string {
-  const div = document.createElement('div')
-  div.innerHTML = html
-  return (div.textContent || div.innerText || '').slice(0, 200)
-}

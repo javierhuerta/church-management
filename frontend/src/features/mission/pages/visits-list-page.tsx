@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { useTheme } from '@/components/theme-provider'
 import { useVisitsList, useVisitStatuses } from '../hooks/use-visits-list'
 import { VisitStatusBadge } from '../components/visit-status-badge'
@@ -16,6 +17,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { normalizeSearch } from '@/lib/utils'
+import { SYSTEM_NAME } from '@/lib/seo'
 
 type SortKey = 'personFullName' | 'lastAttemptDate' | 'attemptCount'
 type SortDir = 'asc' | 'desc'
@@ -103,7 +105,12 @@ export function VisitsListPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <>
+      <Helmet>
+        <title>Visitación — {SYSTEM_NAME}</title>
+        <meta name="description" content="Gestión de casos de visitación — seguimiento a personas con estados, intentos de contacto y responsables." />
+      </Helmet>
+      <div className="space-y-4">
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -301,6 +308,7 @@ export function VisitsListPage() {
         variant="destructive"
         onConfirm={() => deleteId && deleteMutation.mutate(deleteId)}
       />
-    </div>
+      </div>
+    </>
   )
 }

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, Download, Loader2 } from 'lucide-react'
 import { useCalendar, useCalendarInfinite, type EventType, type CalendarInfiniteFilters } from '../hooks/use-calendar'
@@ -11,6 +12,7 @@ import { EventFilters } from '../components/event-filters'
 import { Button } from '@/components/ui/button'
 import { DepartmentsService } from '@/lib/api'
 import { downloadCalendarPdf } from '../hooks/use-calendar-pdf'
+import { SYSTEM_NAME } from '@/lib/seo'
 
 function startOfMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), 1)
@@ -65,7 +67,12 @@ export function CalendarPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <Helmet>
+        <title>Calendario — {SYSTEM_NAME}</title>
+        <meta name="description" content="Calendario de eventos de la Iglesia Adventista Central Osorno — actividades eclesiásticas, eventos ASACH y distritales." />
+      </Helmet>
+      <div className="space-y-6">
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-muted-foreground">
@@ -139,7 +146,8 @@ export function CalendarPage() {
       <div className="block md:hidden">
         <MobileCalendarList filters={{ eventType, departmentId, startMonth: currentMonth }} />
       </div>
-    </div>
+      </div>
+    </>
   )
 }
 
