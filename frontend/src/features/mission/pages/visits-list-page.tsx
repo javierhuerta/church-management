@@ -47,7 +47,7 @@ export function VisitsListPage() {
 
   const { data: statuses = [] } = useVisitStatuses()
   const statusCodeToId: Record<string, string> = {}
-  statuses.forEach((s: { code: string; id: string }) => { statusCodeToId[s.code] = s.id })
+  statuses.forEach((s: { code: string; id: string; color?: string | null }) => { statusCodeToId[s.code] = s.id })
 
   const { data: raw = [], isLoading } = useVisitsList(
     statusFilter ? statusCodeToId[statusFilter] : undefined,
@@ -154,14 +154,20 @@ export function VisitsListPage() {
           >
             Todas
           </button>
-          {statuses.map((s: { id: string; name: string; code: string }) => (
+          {statuses.map((s: { id: string; name: string; code: string; color?: string | null }) => (
             <button
               key={s.id}
               onClick={() => setStatusFilter(s.code)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 ${
                 statusFilter === s.code ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
+              {s.color && (
+                <span
+                  className="inline-block h-2 w-2 rounded-full shrink-0"
+                  style={{ backgroundColor: s.color }}
+                />
+              )}
               {s.name}
             </button>
           ))}

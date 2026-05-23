@@ -27,6 +27,7 @@ interface CatalogItem {
   name: string
   description: string | null
   displayOrder: number
+  color?: string | null
   active: boolean
 }
 
@@ -70,8 +71,9 @@ function CatalogSection({
               <tr className="border-b border-border bg-muted/50">
                 <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Nombre</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Código</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground w-32">Color</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Descripción</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Orden</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground w-16">Orden</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Estado</th>
                 <th className="w-24 px-4 py-3"></th>
               </tr>
@@ -84,6 +86,24 @@ function CatalogSection({
                   </td>
                   <td className="px-4 py-3">
                     <p className="text-sm text-muted-foreground font-mono">{item.code}</p>
+                  </td>
+                  <td className="px-4 py-3 w-32">
+                    {item.color ? (
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="inline-block h-4 w-4 rounded-full shrink-0 border border-white/20 shadow-sm"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span
+                          className="inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full text-white whitespace-nowrap"
+                          style={{ backgroundColor: item.color }}
+                        >
+                          {item.name}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Sin color</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <p className="text-sm text-muted-foreground">{item.description ?? '—'}</p>

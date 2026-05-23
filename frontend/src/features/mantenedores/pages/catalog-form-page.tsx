@@ -77,12 +77,12 @@ export function CatalogFormPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (isEditing) {
-      // Al editar no enviamos code (es read-only)
+      // Al editar no enviamos code (es inmutable)
       const payload: UpdateCatalogDto = {
         name,
-        description: description || undefined,
+        description: description.trim() || undefined,
         displayOrder,
-        color: color || null,
+        color: color.trim() || null,
         active,
       }
       mutation.mutate(payload)
@@ -139,7 +139,10 @@ export function CatalogFormPage() {
                 )}
               </label>
               {isEditing ? (
-                <div className="flex h-9 items-center px-3 rounded-md border border-border bg-muted text-sm font-mono text-muted-foreground">
+                <div
+                  title="El código es único e inmutable una vez creado"
+                  className="flex h-9 items-center px-3 rounded-md border border-border bg-muted text-sm font-mono text-muted-foreground cursor-not-allowed select-none"
+                >
                   {code}
                 </div>
               ) : (

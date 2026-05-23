@@ -45,7 +45,11 @@ export function RescueListPage() {
 
   const { data: stages = [] } = useRescueStages()
   const stageCodeToId: Record<string, string> = {}
-  stages.forEach((s: { code: string; id: string }) => { stageCodeToId[s.code] = s.id })
+  const stageCodeToColor: Record<string, string | null> = {}
+  stages.forEach((s: { code: string; id: string; color?: string | null }) => {
+    stageCodeToId[s.code] = s.id
+    stageCodeToColor[s.code] = s.color ?? null
+  })
 
   const { data: raw = [], isLoading } = useRescueMembersList(
     stageFilter ? stageCodeToId[stageFilter] : undefined,
@@ -152,14 +156,20 @@ export function RescueListPage() {
           >
             Todas
           </button>
-          {stages.map((s: { id: string; name: string; code: string }) => (
+          {stages.map((s: { id: string; name: string; code: string; color?: string | null }) => (
             <button
               key={s.id}
               onClick={() => setStageFilter(s.code)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 ${
                 stageFilter === s.code ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
+              {s.color && (
+                <span
+                  className="inline-block h-2 w-2 rounded-full shrink-0"
+                  style={{ backgroundColor: s.color }}
+                />
+              )}
               {s.name}
             </button>
           ))}
@@ -192,7 +202,7 @@ export function RescueListPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {members.map((member) => (
-                  <tr key={member.id} className="hover:bg-muted/30 transition-colors">
+                  <tr key={member.id} className="hover:bg-muted/30 transition-colors group">
                     <td className="px-4 py-3">
                       <p className="text-sm font-medium text-foreground">{member.personFullName ?? '—'}</p>
                     </td>
@@ -204,19 +214,23 @@ export function RescueListPage() {
                         {member.yearsSinceBaptism != null ? `${member.yearsSinceBaptism} años` : '—'}
                       </p>
                     </td>
-                    <td className="px-4 py-3">
-                      <p className="text-sm text-muted-foreground">
-                        {member.responsiblePersonNames?.length
-                          ? member.responsiblePersonNames.join(', ')
-                          : '—'}
-                      </p>
+                    <td className="px-4 py-3 max-w-[220px]">
+                      {member.responsiblePersonNames?.length ? (
+                        <p className="text-sm text-muted-foreground truncate" title={member.responsiblePersonNames.join(', ')}>
+                          {member.responsiblePersonNames.length === 1
+                            ? member.responsiblePersonNames[0]
+                            : `${member.responsiblePersonNames[0]} +${member.responsiblePersonNames.length - 1}`}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">—</p>
+                      )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 max-w-xs">
                       <p className="text-sm text-muted-foreground line-clamp-1">{member.notes ?? '—'}</p>
                     </td>
                     {canWrite && (
                       <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                             <Link to={`/misionero/rescate/${member.id}`}><Pencil className="h-3.5 w-3.5" /></Link>
                           </Button>
@@ -237,7 +251,13 @@ export function RescueListPage() {
           {/* Mobile cards */}
           <div className="md:hidden space-y-3">
             {members.map((member) => (
-              <div key={member.id} className="rounded-xl border border-border bg-card p-4 space-y-2.5">
+              <div
+                key={member.id}
+                className="rounded-xl border border-border bg-card p-4 space-y-2.5 overflow-hidden relative"
+                style={member.rescueStageColor ? {
+                  borderLeft: `3px solid ${member.rescueStageColor}`,
+                } : undefined}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-sm font-semibold text-foreground min-w-0 truncate">{member.personFullName ?? '—'}</p>
                   <RescueStageBadge name={member.rescueStageName} color={member.rescueStageColor} />
@@ -247,7 +267,11 @@ export function RescueListPage() {
                     <span>{member.yearsSinceBaptism} años bautismo</span>
                   )}
                   {member.responsiblePersonNames?.length ? (
-                    <span>{member.responsiblePersonNames.join(', ')}</span>
+                    <span>
+                      {member.responsiblePersonNames.length === 1
+                        ? member.responsiblePersonNames[0]
+                        : `${member.responsiblePersonNames[0]} +${member.responsiblePersonNames.length - 1}`}
+                    </span>
                   ) : null}
                 </div>
                 {member.notes && <p className="text-sm text-muted-foreground line-clamp-2">{member.notes}</p>}
