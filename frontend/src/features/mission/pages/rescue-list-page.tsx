@@ -141,10 +141,10 @@ export function RescueListPage() {
         )}
       </div>
 
-      {/* Filters row */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      {/* Filters */}
+      <div className="space-y-3">
         {/* Search */}
-        <div className="relative flex-1 max-w-xs">
+        <div className="relative max-w-xs">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Buscar persona..."
@@ -154,7 +154,7 @@ export function RescueListPage() {
           />
         </div>
 
-        {/* Stage tabs */}
+        {/* Stage tabs — fila propia para que puedan hacer wrap sin romper el buscador */}
         <div className="flex flex-wrap gap-1 bg-muted rounded-lg p-1 w-fit">
           <button
             onClick={() => setStageFilter('')}
