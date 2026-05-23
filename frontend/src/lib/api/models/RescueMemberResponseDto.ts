@@ -9,6 +9,7 @@ export type RescueMemberResponseDto = {
     rescueStageId: string;
     rescueStageName?: string | null;
     rescueStageCode?: string | null;
+    rescueStageColor?: string | null;
     yearsSinceBaptism?: number | null;
     responsiblePersonIds?: Array<string>;
     responsiblePersonNames?: Array<string>;

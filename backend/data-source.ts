@@ -5,6 +5,7 @@ import { Department } from './src/modules/departments/entities/department.entity
 import { Person } from './src/modules/mission/entities/person.entity';
 import { RescueMember } from './src/modules/mission/entities/rescue-member.entity';
 import { Visit } from './src/modules/mission/entities/visit.entity';
+import { VisitAttempt } from './src/modules/mission/entities/visit-attempt.entity';
 import { Event } from './src/modules/calendar/entities/event.entity';
 import { EventAttachment } from './src/modules/calendar/entities/event-attachment.entity';
 import { EventOrganizer } from './src/modules/calendar/entities/event-organizer.entity';
@@ -21,7 +22,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_DATABASE || 'church_management',
-  entities: [User, Department, Person, RescueMember, Visit, Event, EventAttachment, EventOrganizer, ServiceTemplate, ServiceTemplateGroup, ServiceTemplateSection, ServiceProgram, ServiceProgramGroup, ServiceProgramSection, ServiceProgramLog, Hymn, RescueStageEntity, VisitStatusEntity],
+  entities: [User, Department, Person, RescueMember, Visit, VisitAttempt, Event, EventAttachment, EventOrganizer, ServiceTemplate, ServiceTemplateGroup, ServiceTemplateSection, ServiceProgram, ServiceProgramGroup, ServiceProgramSection, ServiceProgramLog, Hymn, RescueStageEntity, VisitStatusEntity],
   migrations: [isProd ? 'dist/src/migrations/*.js' : 'src/migrations/*.ts'],
   synchronize: false,
 });

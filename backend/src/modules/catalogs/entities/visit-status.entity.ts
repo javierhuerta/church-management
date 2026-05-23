@@ -15,6 +15,10 @@ export class VisitStatusEntity extends BaseEntity {
   @Column({ name: 'display_order', type: 'int', default: 0 })
   displayOrder: number;
 
+  /** Color hex para el badge (ej. #0F766E). Si es null usa el color por defecto. */
+  @Column({ nullable: true, type: 'varchar', length: 7 })
+  color: string | null;
+
   @Column({ default: true })
   active: boolean;
 }

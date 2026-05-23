@@ -1,7 +1,8 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Person } from './person.entity';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { VisitStatusEntity } from '../../catalogs/entities/visit-status.entity';
+import { VisitAttempt } from './visit-attempt.entity';
 
 @Entity('visits')
 export class Visit extends BaseEntity {
@@ -19,18 +20,13 @@ export class Visit extends BaseEntity {
   @Column({ name: 'visit_status_id', type: 'uuid' })
   visitStatusId: string;
 
-  @Column({ name: 'scheduled_date', type: 'date', nullable: true })
-  scheduledDate: string | null;
-
-  @Column({ name: 'completed_date', type: 'date', nullable: true })
-  completedDate: string | null;
-
-  @Column({ name: 'responsible_person_ids', type: 'uuid', array: true, nullable: true, default: [] })
+  /** Coordinadores generales del caso */
+  @Column({ name: 'responsible_person_ids', type: 'uuid', array: true, default: [] })
   responsiblePersonIds: string[];
 
-  @Column({ name: 'responsible_text', type: 'varchar', nullable: true })
-  responsibleText: string | null;
-
   @Column({ type: 'text', nullable: true })
-  outcome: string | null;
+  notes: string | null;
+
+  @OneToMany(() => VisitAttempt, (a) => a.visit, { cascade: false })
+  attempts: VisitAttempt[];
 }

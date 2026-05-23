@@ -197,7 +197,7 @@ export function RescueListPage() {
                       <p className="text-sm font-medium text-foreground">{member.personFullName ?? '—'}</p>
                     </td>
                     <td className="px-4 py-3 w-36">
-                      <RescueStageBadge stage={member.rescueStageCode ?? member.rescueStageName} />
+                      <RescueStageBadge name={member.rescueStageName} color={member.rescueStageColor} />
                     </td>
                     <td className="px-4 py-3 w-36">
                       <p className="text-sm text-foreground tabular-nums">
@@ -240,7 +240,7 @@ export function RescueListPage() {
               <div key={member.id} className="rounded-xl border border-border bg-card p-4 space-y-2.5">
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-sm font-semibold text-foreground min-w-0 truncate">{member.personFullName ?? '—'}</p>
-                  <RescueStageBadge stage={member.rescueStageCode ?? member.rescueStageName} />
+                  <RescueStageBadge name={member.rescueStageName} color={member.rescueStageColor} />
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                   {member.yearsSinceBaptism != null && (

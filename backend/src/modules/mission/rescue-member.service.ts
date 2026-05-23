@@ -107,8 +107,9 @@ export class RescueMemberService {
       dto.personFullName = m.person
         ? `${m.person.firstName}${m.person.lastName ? ' ' + m.person.lastName : ''}`
         : null;
-      dto.rescueStageName = m.rescueStage?.name ?? null;
-      dto.rescueStageCode = m.rescueStage?.code ?? null;
+      dto.rescueStageName  = m.rescueStage?.name  ?? null;
+      dto.rescueStageCode  = m.rescueStage?.code  ?? null;
+      dto.rescueStageColor = m.rescueStage?.color ?? null;
       dto.responsiblePersonIds = m.responsiblePersonIds ?? [];
       dto.responsiblePersonNames = (m.responsiblePersonIds ?? [])
         .map((pid) => {

@@ -46,9 +46,16 @@ export function timeFromDateTimeString(value?: string | null): string {
   return date ? format(date, 'HH:mm') : '00:00'
 }
 
-/** Format a `YYYY-MM-DD` API string as `DD-MM-YYYY` for display. Returns '—' if empty. */
-export function formatShortDate(value?: string | null): string {
-  const date = parseDateString(value)
+/**
+ * Formatea cualquier string de fecha de la API como `DD-MM-YYYY`.
+ * Acepta `YYYY-MM-DD` y también ISO datetime `YYYY-MM-DDTHH:mm:ss...`
+ * que devuelve pg/TypeORM en queries raw. Retorna '—' si vacío/inválido.
+ */
+export function formatShortDate(value?: string | null | Date): string {
+  if (!value) return '—'
+  // Tomar solo los primeros 10 caracteres para normalizar a YYYY-MM-DD
+  const normalized = typeof value === 'string' ? value.substring(0, 10) : format(value, DATE_FORMAT)
+  const date = parseDateString(normalized)
   if (!date) return '—'
   return format(date, 'dd-MM-yyyy')
 }

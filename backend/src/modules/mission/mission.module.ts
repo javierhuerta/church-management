@@ -9,15 +9,17 @@ import { VisitService } from './visit.service';
 import { PersonRepository } from './repositories/person.repository';
 import { RescueMemberRepository } from './repositories/rescue-member.repository';
 import { VisitRepository } from './repositories/visit.repository';
+import { VisitAttemptRepository } from './repositories/visit-attempt.repository';
 import { Person } from './entities/person.entity';
 import { RescueMember } from './entities/rescue-member.entity';
 import { Visit } from './entities/visit.entity';
+import { VisitAttempt } from './entities/visit-attempt.entity';
 import { AuthModule } from '../auth/auth.module';
 import { CatalogsModule } from '../catalogs/catalogs.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Person, RescueMember, Visit]),
+    TypeOrmModule.forFeature([Person, RescueMember, Visit, VisitAttempt]),
     AuthModule,
     CatalogsModule,
   ],
@@ -29,6 +31,7 @@ import { CatalogsModule } from '../catalogs/catalogs.module';
     PersonRepository,
     RescueMemberRepository,
     VisitRepository,
+    VisitAttemptRepository,
   ],
   exports: [
     MissionService,
@@ -37,6 +40,7 @@ import { CatalogsModule } from '../catalogs/catalogs.module';
     PersonRepository,
     RescueMemberRepository,
     VisitRepository,
+    VisitAttemptRepository,
     TypeOrmModule,
   ],
 })

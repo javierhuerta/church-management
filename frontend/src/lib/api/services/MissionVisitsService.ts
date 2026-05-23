@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { CreateVisitAttemptDto } from '../models/CreateVisitAttemptDto';
 import type { CreateVisitDto } from '../models/CreateVisitDto';
 import type { UpdateVisitDto } from '../models/UpdateVisitDto';
 import type { VisitResponseDto } from '../models/VisitResponseDto';
@@ -109,6 +110,47 @@ export class MissionVisitsService {
             },
             errors: {
                 404: `Visit not found`,
+            },
+        });
+    }
+    /**
+     * Registrar un intento de visita
+     * @param id
+     * @param requestBody
+     * @returns VisitResponseDto
+     * @throws ApiError
+     */
+    public static visitControllerAddAttempt(
+        id: string,
+        requestBody: CreateVisitAttemptDto,
+    ): CancelablePromise<VisitResponseDto> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/mission/visits/{id}/attempts',
+            path: {
+                'id': id,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+        });
+    }
+    /**
+     * Eliminar un intento de visita
+     * @param id
+     * @param attemptId
+     * @returns VisitResponseDto
+     * @throws ApiError
+     */
+    public static visitControllerRemoveAttempt(
+        id: string,
+        attemptId: string,
+    ): CancelablePromise<VisitResponseDto> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/mission/visits/{id}/attempts/{attemptId}',
+            path: {
+                'id': id,
+                'attemptId': attemptId,
             },
         });
     }

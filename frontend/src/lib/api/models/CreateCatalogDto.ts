@@ -20,6 +20,10 @@ export type CreateCatalogDto = {
      */
     displayOrder?: number;
     /**
+     * Color hex (ej. #DC2626)
+     */
+    color?: string | null;
+    /**
      * Si está activo
      */
     active?: boolean;

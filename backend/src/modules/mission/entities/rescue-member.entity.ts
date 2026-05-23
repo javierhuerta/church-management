@@ -22,7 +22,13 @@ export class RescueMember extends BaseEntity {
   @Column({ name: 'years_since_baptism', type: 'int', nullable: true })
   yearsSinceBaptism: number | null;
 
-  @Column({ name: 'responsible_person_ids', type: 'uuid', array: true, nullable: true, default: [] })
+  @Column({
+    name: 'responsible_person_ids',
+    type: 'uuid',
+    array: true,
+    nullable: true,
+    default: [],
+  })
   responsiblePersonIds: string[];
 
   @Column({ type: 'text', nullable: true })

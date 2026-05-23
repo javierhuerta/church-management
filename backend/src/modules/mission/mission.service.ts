@@ -48,7 +48,7 @@ export class MissionService {
     dto.visitHistory = visits.map((v) => {
       const vd = toDto(PersonVisitHistoryDto, v) as PersonVisitHistoryDto;
       vd.personFullName = null;
-      vd.responsibleUserName = v.responsibleText ?? null;
+      vd.responsibleUserName = null;
       return vd;
     });
     return dto;

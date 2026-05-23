@@ -19,6 +19,7 @@ export type { CreateRescueMemberDto } from './models/CreateRescueMemberDto';
 export type { CreateSectionInGroupDto } from './models/CreateSectionInGroupDto';
 export { CreateTemplateDto } from './models/CreateTemplateDto';
 export { CreateUserDto } from './models/CreateUserDto';
+export { CreateVisitAttemptDto } from './models/CreateVisitAttemptDto';
 export type { CreateVisitDto } from './models/CreateVisitDto';
 export type { DepartmentResponseDto } from './models/DepartmentResponseDto';
 export type { DepartmentSummaryDto } from './models/DepartmentSummaryDto';
@@ -63,6 +64,7 @@ export type { UploadAttachmentDto } from './models/UploadAttachmentDto';
 export type { UploadCoverDto } from './models/UploadCoverDto';
 export type { UserBriefResponseDto } from './models/UserBriefResponseDto';
 export { UserResponseDto } from './models/UserResponseDto';
+export type { VisitAttemptResponseDto } from './models/VisitAttemptResponseDto';
 export type { VisitResponseDto } from './models/VisitResponseDto';
 
 export { AuthService } from './services/AuthService';

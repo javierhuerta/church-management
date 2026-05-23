@@ -12,21 +12,12 @@ export type CreateVisitDto = {
      */
     visitStatusId: string;
     /**
-     * Fecha planificada (YYYY-MM-DD)
-     */
-    scheduledDate?: string | null;
-    /**
-     * Fecha de realizacion (YYYY-MM-DD)
-     */
-    completedDate?: string | null;
-    /**
-     * IDs de las personas responsables
+     * IDs de los coordinadores del caso
      */
     responsiblePersonIds?: Array<string>;
     /**
-     * Responsable como texto libre
+     * Notas generales del caso
      */
-    responsibleText?: string | null;
-    outcome?: string | null;
+    notes?: string | null;
 };
 

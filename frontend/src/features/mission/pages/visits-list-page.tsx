@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { normalizeSearch } from '@/lib/utils'
 
-type SortKey = 'personFullName' | 'scheduledDate' | 'completedDate'
+type SortKey = 'personFullName' | 'lastAttemptDate' | 'attemptCount'
 type SortDir = 'asc' | 'desc'
 
 function SortIcon({ col, active, dir }: { col: string; active: string; dir: SortDir }) {
@@ -27,10 +27,10 @@ function SortIcon({ col, active, dir }: { col: string; active: string; dir: Sort
     : <ArrowDown className="h-3.5 w-3.5 ml-1 text-primary" />
 }
 
-function sortValue(v: VisitResponseDto, key: SortKey): string {
-  if (key === 'personFullName') return (v.personFullName ?? '').toLowerCase()
-  if (key === 'scheduledDate')  return v.scheduledDate ?? ''
-  if (key === 'completedDate')  return v.completedDate ?? ''
+function sortValue(v: VisitResponseDto, key: SortKey): string | number {
+  if (key === 'personFullName')  return (v.personFullName ?? '').toLowerCase()
+  if (key === 'lastAttemptDate') return v.lastAttemptDate ?? ''
+  if (key === 'attemptCount')    return v.attemptCount ?? 0
   return ''
 }
 
@@ -41,7 +41,7 @@ export function VisitsListPage() {
 
   const [statusFilter, setStatusFilter] = useState('')
   const [search, setSearch]             = useState('')
-  const [sortKey, setSortKey]           = useState<SortKey>('scheduledDate')
+  const [sortKey, setSortKey]           = useState<SortKey>('lastAttemptDate')
   const [sortDir, setSortDir]           = useState<SortDir>('desc')
   const [deleteId, setDeleteId]         = useState<string | null>(null)
 
@@ -186,10 +186,10 @@ export function VisitsListPage() {
                 <tr className="border-b border-border bg-muted/50">
                   <Th col="personFullName" label="Persona" />
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground w-32">Estado</th>
-                  <Th col="scheduledDate"  label="F. programada" className="w-36" />
-                  <Th col="completedDate"  label="F. completada"  className="w-36" />
+                  <Th col="attemptCount"   label="Intentos"       className="w-24" />
+                  <Th col="lastAttemptDate" label="Última visita" className="w-36" />
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Responsable</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Resultado</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Notas</th>
                   {canWrite && <th className="w-20 px-4 py-3" />}
                 </tr>
               </thead>
@@ -200,23 +200,29 @@ export function VisitsListPage() {
                       <p className="text-sm font-medium text-foreground">{visit.personFullName ?? '—'}</p>
                     </td>
                     <td className="px-4 py-3 w-32">
-                      <VisitStatusBadge status={visit.visitStatusCode ?? visit.visitStatusName} />
+                      <VisitStatusBadge name={visit.visitStatusName} color={visit.visitStatusColor} />
+                    </td>
+                    <td className="px-4 py-3 w-24 text-center">
+                      <span className="text-sm font-medium text-foreground tabular-nums">
+                        {visit.attemptCount ?? 0}
+                      </span>
                     </td>
                     <td className="px-4 py-3 w-36">
-                      <p className="text-sm text-foreground tabular-nums">{formatShortDate(visit.scheduledDate)}</p>
-                    </td>
-                    <td className="px-4 py-3 w-36">
-                      <p className="text-sm text-foreground tabular-nums">{formatShortDate(visit.completedDate)}</p>
+                      {visit.lastAttemptDate ? (
+                        <p className="text-sm text-foreground tabular-nums">{formatShortDate(visit.lastAttemptDate)}</p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Sin visitas</p>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <p className="text-sm text-muted-foreground">
                         {visit.responsiblePersonNames?.length
                           ? visit.responsiblePersonNames.join(', ')
-                          : (visit.responsibleText ?? '—')}
+                          : '—'}
                       </p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-sm text-muted-foreground line-clamp-1">{visit.outcome ?? '—'}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-1">{visit.notes ?? '—'}</p>
                     </td>
                     {canWrite && (
                       <td className="px-4 py-3">
@@ -244,20 +250,18 @@ export function VisitsListPage() {
               <div key={visit.id} className="rounded-xl border border-border bg-card p-4 space-y-2.5">
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-sm font-semibold text-foreground min-w-0 truncate">{visit.personFullName ?? '—'}</p>
-                  <VisitStatusBadge status={visit.visitStatusCode ?? visit.visitStatusName} />
+                  <VisitStatusBadge name={visit.visitStatusName} color={visit.visitStatusColor} />
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                  <span><span className="text-xs font-medium text-foreground/60">Programada</span><br />{formatShortDate(visit.scheduledDate)}</span>
-                  <span><span className="text-xs font-medium text-foreground/60">Completada</span><br />{formatShortDate(visit.completedDate)}</span>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                  <span>{visit.attemptCount ?? 0} intento{(visit.attemptCount ?? 0) !== 1 ? 's' : ''}</span>
+                  {visit.lastAttemptDate && <span>Último: {formatShortDate(visit.lastAttemptDate)}</span>}
                 </div>
-                {(visit.responsiblePersonNames?.length || visit.responsibleText) && (
+                {visit.responsiblePersonNames?.length ? (
                   <p className="text-sm text-muted-foreground">
-                    {visit.responsiblePersonNames?.length
-                      ? visit.responsiblePersonNames.join(', ')
-                      : visit.responsibleText}
+                    {visit.responsiblePersonNames.join(', ')}
                   </p>
-                )}
-                {visit.outcome && <p className="text-sm text-muted-foreground line-clamp-2">{visit.outcome}</p>}
+                ) : null}
+                {visit.notes && <p className="text-sm text-muted-foreground line-clamp-2">{visit.notes}</p>}
                 {canWrite && (
                   <div className="flex gap-1 pt-1 border-t border-border">
                     <Button variant="ghost" size="icon" className="h-8 w-8" asChild>

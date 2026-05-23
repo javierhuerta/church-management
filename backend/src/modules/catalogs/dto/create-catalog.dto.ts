@@ -21,6 +21,11 @@ export class CreateCatalogDto {
   @Min(0)
   displayOrder?: number;
 
+  @ApiPropertyOptional({ type: String, nullable: true, description: 'Color hex (ej. #DC2626)' })
+  @IsOptional()
+  @IsString()
+  color?: string | null;
+
   @ApiPropertyOptional({ description: 'Si está activo' })
   @IsOptional()
   active?: boolean;

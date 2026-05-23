@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { VisitAttemptResponseDto } from './VisitAttemptResponseDto';
 export type VisitResponseDto = {
     id: string;
     personId: string;
@@ -9,12 +10,13 @@ export type VisitResponseDto = {
     visitStatusId: string;
     visitStatusName?: string | null;
     visitStatusCode?: string | null;
-    scheduledDate?: string | null;
-    completedDate?: string | null;
+    visitStatusColor?: string | null;
     responsiblePersonIds?: Array<string>;
     responsiblePersonNames?: Array<string>;
-    responsibleText?: string | null;
-    outcome?: string | null;
+    notes?: string | null;
+    attemptCount?: number;
+    lastAttemptDate?: string | null;
+    attempts?: Array<VisitAttemptResponseDto>;
     createdAt: string;
     updatedAt?: string | null;
 };

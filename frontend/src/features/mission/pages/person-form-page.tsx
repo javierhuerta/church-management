@@ -237,7 +237,7 @@ export function PersonFormPage() {
                       <p className="text-sm font-medium text-foreground">
                         {visit.completedDate ?? visit.scheduledDate ?? '—'}
                       </p>
-                      <VisitStatusBadge status={visit.status} />
+                      <VisitStatusBadge name={visit.responsibleUserName ?? '—'} />
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {visit.responsibleUserName ?? visit.responsibleText ?? '—'}

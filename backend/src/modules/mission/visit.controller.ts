@@ -19,6 +19,7 @@ import {
 import { VisitService } from './visit.service';
 import { CreateVisitDto } from './dto/create-visit.dto';
 import { UpdateVisitDto } from './dto/update-visit.dto';
+import { CreateVisitAttemptDto } from './dto/create-visit-attempt.dto';
 import { VisitResponseDto } from './dto/visit-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -90,5 +91,31 @@ export class VisitController {
   async remove(@Param('id') id: string): Promise<{ message: string }> {
     await this.service.remove(id);
     return { message: 'Visit deleted' };
+  }
+
+  // ── Intentos ──────────────────────────────────────────────────────────────
+
+  @Post(':id/attempts')
+  @UseGuards(RolesGuard)
+  @Roles(...MISSION_FULL_ACCESS_ROLES)
+  @ApiOperation({ summary: 'Registrar un intento de visita' })
+  @ApiResponse({ status: 201, type: VisitResponseDto })
+  addAttempt(
+    @Param('id') id: string,
+    @Body() dto: CreateVisitAttemptDto,
+  ): Promise<VisitResponseDto> {
+    return this.service.addAttempt(id, dto);
+  }
+
+  @Delete(':id/attempts/:attemptId')
+  @UseGuards(RolesGuard)
+  @Roles(...MISSION_FULL_ACCESS_ROLES)
+  @ApiOperation({ summary: 'Eliminar un intento de visita' })
+  @ApiResponse({ status: 200, type: VisitResponseDto })
+  removeAttempt(
+    @Param('id') id: string,
+    @Param('attemptId') attemptId: string,
+  ): Promise<VisitResponseDto> {
+    return this.service.removeAttempt(id, attemptId);
   }
 }

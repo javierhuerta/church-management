@@ -9,6 +9,7 @@ export class RescueMemberResponseDto {
   @ApiProperty({ type: String }) @Expose() rescueStageId: string;
   @ApiPropertyOptional({ type: String, nullable: true }) @Expose() rescueStageName: string | null;
   @ApiPropertyOptional({ type: String, nullable: true }) @Expose() rescueStageCode: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) @Expose() rescueStageColor: string | null;
 
   @ApiPropertyOptional({ type: Number, nullable: true }) @Expose() yearsSinceBaptism: number | null;
 
