@@ -4,19 +4,6 @@ export class CreateSmallGroups1779600000000 implements MigrationInterface {
   name = 'CreateSmallGroups1779600000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Sabbath school classes catalog
-    await queryRunner.query(`
-      CREATE TABLE sabbath_classes (
-        id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        name          VARCHAR NOT NULL,
-        description   TEXT,
-        display_order INT NOT NULL DEFAULT 0,
-        is_active     BOOLEAN NOT NULL DEFAULT true,
-        created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-        updated_at    TIMESTAMPTZ
-      )
-    `);
-
     // Small groups
     await queryRunner.query(`
       CREATE TABLE small_groups (
