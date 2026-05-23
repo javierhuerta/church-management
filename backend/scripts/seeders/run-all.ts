@@ -1,7 +1,10 @@
 import 'reflect-metadata';
-import { runAllSeeders } from '../../src/seeds';
+import { runSeeders } from '../../src/seeds';
 
-runAllSeeders()
+// process.argv: ['node', 'run-all.js', ...filters]
+const filter = process.argv.slice(2);
+
+runSeeders(filter)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error('Error running seeders:', error);

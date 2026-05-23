@@ -34,8 +34,40 @@ export interface Seeder {
   run(dataSource: DataSource): Promise<void>;
 }
 
-export async function runAllSeeders(): Promise<void> {
-  const dataSource = new DataSource({
+// -------------------------------------------------------
+// Registro de seeders con nombre y categoria
+//
+// Categorias disponibles:
+//   catalog — datos de configuracion seguros en produccion
+//             (departamentos, etapas, estados, himnos, plantillas, usuarios)
+//   demo    — datos de ejemplo, solo para desarrollo/staging
+//             (personas, grupos, visitas, eventos)
+// -------------------------------------------------------
+interface SeederEntry {
+  name: string;
+  category: 'catalog' | 'demo';
+  instance: Seeder;
+}
+
+const SEEDER_REGISTRY: SeederEntry[] = [
+  // catalog — orden de dependencias
+  { name: 'rescue-stages',   category: 'catalog', instance: new RescueStageSeeder() },
+  { name: 'visit-statuses',  category: 'catalog', instance: new VisitStatusSeeder() },
+  { name: 'departments',     category: 'catalog', instance: new DepartmentSeeder() },
+  { name: 'users',           category: 'catalog', instance: new UserSeeder() },
+  { name: 'templates',       category: 'catalog', instance: new TemplateSeeder() },
+  { name: 'hymns',           category: 'catalog', instance: new HymnSeeder() },
+
+  // demo — requieren que los seeders de catalog se hayan ejecutado antes
+  { name: 'persons',         category: 'demo',    instance: new PersonSeeder() },
+  { name: 'rescue-members',  category: 'demo',    instance: new RescueMemberSeeder() },
+  { name: 'visits',          category: 'demo',    instance: new VisitSeeder() },
+  { name: 'small-groups',    category: 'demo',    instance: new SmallGroupSeeder() },
+  { name: 'events',          category: 'demo',    instance: new EventSeeder() },
+];
+
+function createDataSource(): DataSource {
+  return new DataSource({
     type: 'postgres',
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432'),
@@ -64,29 +96,60 @@ export async function runAllSeeders(): Promise<void> {
       SabbathClassEntity,
     ],
   });
+}
 
+/**
+ * Ejecuta seeders filtrados por nombre(s) o categoria(s).
+ *
+ * @param filter Lista de nombres o categorias a ejecutar.
+ *               Si esta vacio o no se pasa, ejecuta todos.
+ *
+ * Ejemplos:
+ *   runSeeders()                          → todos
+ *   runSeeders(['catalog'])               → solo catalog
+ *   runSeeders(['hymns', 'departments'])  → solo esos dos
+ *   runSeeders(['demo'])                  → solo demo
+ */
+export async function runSeeders(filter: string[] = []): Promise<void> {
+  const dataSource = createDataSource();
   await dataSource.initialize();
 
-  const seeders: Seeder[] = [
-    new RescueStageSeeder(),
-    new VisitStatusSeeder(),
-    new DepartmentSeeder(),
-    new PersonSeeder(),
-    new RescueMemberSeeder(),
-    new VisitSeeder(),
-    new UserSeeder(),
-    new SmallGroupSeeder(),  // After PersonSeeder and UserSeeder
-    new EventSeeder(),
-    new TemplateSeeder(),
-    new HymnSeeder(),
-  ];
+  const selected =
+    filter.length === 0
+      ? SEEDER_REGISTRY
+      : SEEDER_REGISTRY.filter(
+          (entry) =>
+            filter.includes(entry.name) || filter.includes(entry.category),
+        );
 
-  console.log('Running all seeders...');
-  for (const seeder of seeders) {
-    console.log(`Running ${seeder.constructor.name}...`);
-    await seeder.run(dataSource);
+  if (selected.length === 0) {
+    const available = [
+      'all (default)',
+      'catalog',
+      'demo',
+      ...SEEDER_REGISTRY.map((e) => e.name),
+    ].join(', ');
+    console.error(`No se encontraron seeders para: ${filter.join(', ')}`);
+    console.error(`Disponibles: ${available}`);
+    await dataSource.destroy();
+    process.exit(1);
   }
-  console.log('All seeders completed.');
 
+  console.log(
+    `Running ${selected.length} seeder(s): ${selected.map((e) => e.name).join(', ')}`,
+  );
+
+  for (const entry of selected) {
+    console.log(`  ▶ ${entry.name} (${entry.category})...`);
+    await entry.instance.run(dataSource);
+    console.log(`  ✔ ${entry.name}`);
+  }
+
+  console.log('All seeders completed.');
   await dataSource.destroy();
+}
+
+/** @deprecated Usar runSeeders() — mantenida por retrocompatibilidad */
+export async function runAllSeeders(): Promise<void> {
+  return runSeeders();
 }

@@ -4,9 +4,17 @@ set -e
 # -------------------------------------------------------
 # Entrypoint de produccion — backend NestJS
 # Uso desde Portainer (console del contenedor):
-#   sh entrypoint.sh migrate          → corre migraciones
-#   sh entrypoint.sh seed             → corre seeders
-#   sh entrypoint.sh migrate-and-seed → ambos
+#   sh entrypoint.sh migrate                     → corre migraciones
+#   sh entrypoint.sh seed                        → corre TODOS los seeders
+#   sh entrypoint.sh seed catalog                → solo catalogo (prod-safe)
+#   sh entrypoint.sh seed hymns departments      → seeders especificos
+#   sh entrypoint.sh migrate-and-seed            → migraciones + todos los seeders
+#   sh entrypoint.sh migrate-and-seed catalog    → migraciones + solo catalogo
+#
+# Categorias: catalog | demo
+# Nombres:    rescue-stages | visit-statuses | departments | users |
+#             templates | hymns | persons | rescue-members |
+#             visits | small-groups | events
 # -------------------------------------------------------
 
 run_migrations() {
@@ -36,14 +44,16 @@ case "$1" in
     run_migrations
     ;;
   seed)
-    echo "▶ Corriendo seeders..."
-    node dist/scripts/seeders/run-all.js
+    shift
+    echo "▶ Corriendo seeders${1:+ [$@]}..."
+    node dist/scripts/seeders/run-all.js "$@"
     ;;
   migrate-and-seed)
+    shift
     echo "▶ Corriendo migraciones..."
     run_migrations
-    echo "▶ Corriendo seeders..."
-    node dist/scripts/seeders/run-all.js
+    echo "▶ Corriendo seeders${1:+ [$@]}..."
+    node dist/scripts/seeders/run-all.js "$@"
     ;;
   *)
     echo "Starting server..."
