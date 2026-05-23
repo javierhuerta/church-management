@@ -127,6 +127,11 @@ const SmallGroupDetailPage = lazy(() =>
     default: m.SmallGroupDetailPage,
   })),
 )
+const DocumentCenterPage = lazy(() =>
+  import('./features/document-center/pages/document-center-page').then((m) => ({
+    default: m.DocumentCenterPage,
+  })),
+)
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token')
@@ -199,6 +204,8 @@ function App() {
                 <Route path="grupos/:id/editar" element={<SmallGroupFormPage />} />
                 <Route path="grupos/:id" element={<SmallGroupDetailPage />} />
               </Route>
+
+              <Route path="documentos" element={<DocumentCenterPage />} />
 
               <Route path="mantenedores" element={<MantenedoresLayout />}>
                 <Route index element={<Navigate to="usuarios" replace />} />

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Calendar, FileText, Church, LogOut, User, ChevronDown, ChevronLeft, Settings, Sun, Moon, Monitor } from 'lucide-react'
+import { Calendar, FileText, Church, LogOut, User, ChevronDown, ChevronLeft, Settings, Sun, Moon, Monitor, FolderOpen } from 'lucide-react'
 import logoFull from '@/assets/images/logo.png'
 import logoMark from '@/assets/images/logo-mark.png'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -32,6 +32,7 @@ const navItems: NavItem[] = [
   { id: 'calendario', label: 'Calendario', icon: Calendar, path: '/calendario' },
   { id: 'cultos', label: 'Cultos', icon: FileText, path: '/cultos/programas', matchPrefix: '/cultos' },
   { id: 'misionero', label: 'Misión', icon: Church, path: '/misionero/personas', matchPrefix: '/misionero' },
+  { id: 'documentos', label: 'Documentos', icon: FolderOpen, path: '/documentos' },
 ]
 
 const adminNavItems: NavItem[] = [

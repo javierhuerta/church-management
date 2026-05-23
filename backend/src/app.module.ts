@@ -16,6 +16,7 @@ import { DepartmentsModule } from './modules/departments/departments.module';
 import { MissionModule } from './modules/mission/mission.module';
 import { CatalogsModule } from './modules/catalogs/catalogs.module';
 import { HealthModule } from './modules/health/health.module';
+import { DocumentCenterModule } from './modules/document-center/document-center.module';
 import { AllExceptionsFilter } from './modules/common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './modules/common/interceptors/logging.interceptor';
 
@@ -57,6 +58,9 @@ import { SmallGroup } from './modules/mission/entities/small-group.entity';
 import { SmallGroupLeader } from './modules/mission/entities/small-group-leader.entity';
 import { SmallGroupMember } from './modules/mission/entities/small-group-member.entity';
 import { SabbathClassEntity } from './modules/catalogs/entities/sabbath-class.entity';
+import { Period } from './modules/document-center/entities/period.entity';
+import { ElderShift } from './modules/document-center/entities/elder-shift.entity';
+import { ChurchDocument } from './modules/document-center/entities/church-document.entity';
 
 const ENTITIES = [
   User,
@@ -82,6 +86,9 @@ const ENTITIES = [
   SmallGroupMember,
   SmallGroupLeader,
   SabbathClassEntity,
+  Period,
+  ElderShift,
+  ChurchDocument,
 ];
 
 @Module({
@@ -118,6 +125,7 @@ const ENTITIES = [
     MissionModule,
     CatalogsModule,
     HealthModule,
+    DocumentCenterModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

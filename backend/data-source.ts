@@ -21,6 +21,9 @@ import {
 } from './src/modules/worship-services/entities';
 import { RescueStageEntity } from './src/modules/catalogs/entities/rescue-stage.entity';
 import { VisitStatusEntity } from './src/modules/catalogs/entities/visit-status.entity';
+import { Period } from './src/modules/document-center/entities/period.entity';
+import { ElderShift } from './src/modules/document-center/entities/elder-shift.entity';
+import { ChurchDocument } from './src/modules/document-center/entities/church-document.entity';
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -51,7 +54,10 @@ export const AppDataSource = new DataSource({
     Hymn,
     RescueStageEntity,
     VisitStatusEntity,
+    Period,
+    ElderShift,
+    ChurchDocument,
   ],
-  migrations: [isProd ? 'dist/src/migrations/*.js' : 'src/migrations/*.ts'],
+  migrations: [isProd ? 'dist/src/migrations/*.js' : 'src/migrations/*.ts', 'src/modules/document-center/migrations/*.ts'],
   synchronize: false,
 });

@@ -63,7 +63,7 @@ export function formatShortDate(value?: string | null | Date): string {
 /** Localized (es) human-readable label for a single date. */
 export function displayDate(date?: Date): string {
   if (!date || !isValid(date)) return ''
-  return format(date, "d 'de' MMMM 'de' yyyy", { locale: es })
+  return format(date, 'd MMM yyyy', { locale: es })
 }
 
 /** Localized (es) human-readable label for a date and time. */
