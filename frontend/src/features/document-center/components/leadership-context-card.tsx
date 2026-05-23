@@ -40,7 +40,7 @@ function groupShiftsByDate(shifts: ElderShift[]) {
 
 function fmtDate(d: string) {
   const dateStr = d.split('T')[0]
-  const [year, month, day] = dateStr.split('-')
+  const [, month, day] = dateStr.split('-')
   const monthNames = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
   return `${parseInt(day)} ${monthNames[parseInt(month) - 1]}`
 }
