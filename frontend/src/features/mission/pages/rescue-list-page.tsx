@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTheme } from '@/components/theme-provider'
 import { useRescueMembersList, useRescueStages } from '../hooks/use-visits-list'
 import { RescueStageBadge } from '../components/rescue-stage-badge'
@@ -33,6 +33,7 @@ function sortValue(m: RescueMemberResponseDto, key: SortKey): string | number {
 }
 
 export function RescueListPage() {
+  const navigate = useNavigate()
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
   const canWrite = hasMissionFullAccess()
@@ -202,7 +203,7 @@ export function RescueListPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {members.map((member) => (
-                  <tr key={member.id} className="hover:bg-muted/30 transition-colors group">
+                  <tr key={member.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
                       <p className="text-sm font-medium text-foreground">{member.personFullName ?? '—'}</p>
                     </td>
@@ -230,7 +231,7 @@ export function RescueListPage() {
                     </td>
                     {canWrite && (
                       <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                             <Link to={`/misionero/rescate/${member.id}`}><Pencil className="h-3.5 w-3.5" /></Link>
                           </Button>
@@ -253,7 +254,8 @@ export function RescueListPage() {
             {members.map((member) => (
               <div
                 key={member.id}
-                className="rounded-xl border border-border bg-card p-4 space-y-2.5 overflow-hidden relative"
+                onClick={() => navigate(`/misionero/rescate/${member.id}`)}
+                className="rounded-xl border border-border bg-card p-4 space-y-2.5 hover:shadow-md transition-shadow cursor-pointer"
                 style={member.rescueStageColor ? {
                   borderLeft: `3px solid ${member.rescueStageColor}`,
                 } : undefined}
@@ -276,7 +278,7 @@ export function RescueListPage() {
                 </div>
                 {member.notes && <p className="text-sm text-muted-foreground line-clamp-2">{member.notes}</p>}
                 {canWrite && (
-                  <div className="flex gap-1 pt-1 border-t border-border">
+                  <div className="flex items-center gap-1 pt-1 border-t border-border" onClick={(e) => e.stopPropagation()}>
                     <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                       <Link to={`/misionero/rescate/${member.id}`}><Pencil className="h-3.5 w-3.5" /></Link>
                     </Button>

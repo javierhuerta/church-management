@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTheme } from '@/components/theme-provider'
 import { useVisitsList, useVisitStatuses } from '../hooks/use-visits-list'
 import { VisitStatusBadge } from '../components/visit-status-badge'
@@ -35,6 +35,7 @@ function sortValue(v: VisitResponseDto, key: SortKey): string | number {
 }
 
 export function VisitsListPage() {
+  const navigate = useNavigate()
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
   const canWrite = hasMissionFullAccess()
@@ -253,7 +254,12 @@ export function VisitsListPage() {
           {/* Mobile cards */}
           <div className="md:hidden space-y-3">
             {visits.map((visit) => (
-              <div key={visit.id} className="rounded-xl border border-border bg-card p-4 space-y-2.5">
+              <div
+                key={visit.id}
+                onClick={() => navigate(`/misionero/visitas/${visit.id}`)}
+                className="rounded-xl border border-border bg-card p-4 space-y-2.5 hover:shadow-md transition-shadow cursor-pointer"
+                style={{ borderLeft: `3px solid ${visit.visitStatusColor ?? '#475569'}` }}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-sm font-semibold text-foreground min-w-0 truncate">{visit.personFullName ?? '—'}</p>
                   <VisitStatusBadge name={visit.visitStatusName} color={visit.visitStatusColor} />
@@ -269,7 +275,7 @@ export function VisitsListPage() {
                 ) : null}
                 {visit.notes && <p className="text-sm text-muted-foreground line-clamp-2">{visit.notes}</p>}
                 {canWrite && (
-                  <div className="flex gap-1 pt-1 border-t border-border">
+                  <div className="flex items-center gap-1 pt-1 border-t border-border" onClick={(e) => e.stopPropagation()}>
                     <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                       <Link to={`/misionero/visitas/${visit.id}`}><Pencil className="h-3.5 w-3.5" /></Link>
                     </Button>

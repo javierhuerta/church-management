@@ -15,31 +15,31 @@ const INITIAL_VISITS: SeedVisit[] = [
   {
     personFirstName: 'Francisco',
     personLastName: 'Vargas',
-    statusCode: 'Planificada',  // Se mapeará a "Sin comenzar"
+    statusCode: 'SinComenzar',
     notes: 'Vive en el sector sur, mejor visitarlo los sábados',
   },
   {
     personFirstName: 'Oscar',
     personLastName: 'Ortega',
-    statusCode: 'Completada',   // Se mapeará a "En curso"
+    statusCode: 'EnCurso',
     notes: null,
   },
   {
     personFirstName: 'Robinsón',
     personLastName: 'Vargas',
-    statusCode: 'Planificada',
+    statusCode: 'SinComenzar',
     notes: null,
   },
   {
     personFirstName: 'Javiera',
     personLastName: 'Tejeda Cárdenas',
-    statusCode: 'Completada',
+    statusCode: 'EnCurso',
     notes: 'Contacto realizado, quedaron de estudiar',
   },
   {
     personFirstName: 'Angelina',
     personLastName: 'Cárdenas',
-    statusCode: 'Cancelada',    // Se mapeará a "Cancelado"
+    statusCode: 'Cancelado',
     notes: null,
   },
 ]

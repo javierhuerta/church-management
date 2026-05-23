@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
+import { useTheme } from '@/components/theme-provider'
 import { BaptizedBadge } from '../components/baptized-badge'
 import { hasMissionFullAccess } from '../lib/permissions'
 
@@ -37,6 +38,8 @@ function fullName(person: PersonResponseDto): string {
 export function PeopleListPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
   const canEdit = hasMissionFullAccess()
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
@@ -78,27 +81,42 @@ export function PeopleListPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3 px-1">
-        <p className="text-xl font-semibold text-muted-foreground">Personas</p>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              data-testid="people-search-input"
-              placeholder="Buscar persona..."
-              value={search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-9 h-8 text-sm w-48"
-            />
-          </div>
-          {canEdit && (
-            <Link to="/misionero/personas/nuevo">
-              <Button size="sm" data-testid="people-new-button">
-                <Plus className="h-4 w-4 mr-1" /> Nueva persona
-              </Button>
-            </Link>
-          )}
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <p className="text-2xl font-bold text-foreground">Personas</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {total} persona{total !== 1 ? 's' : ''}
+          </p>
         </div>
+        {canEdit && (
+          <Link
+            to="/misionero/personas/nuevo"
+            data-testid="people-new-button"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: isDark ? 'hsl(219,70%,60%)' : '#1B3A6B',
+              color: isDark ? 'hsl(222,47%,8%)' : '#FAFAFA',
+              border: 'none', borderRadius: 8, padding: '8px 16px',
+              fontSize: 14, fontWeight: 600, textDecoration: 'none',
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            Nueva persona
+          </Link>
+        )}
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-xs">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <Input
+          data-testid="people-search-input"
+          placeholder="Buscar persona..."
+          value={search}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          className="pl-8"
+        />
       </div>
 
       {isLoading && (
@@ -122,27 +140,28 @@ export function PeopleListPage() {
           {/* Mobile: tarjetas apiladas */}
           <div className="md:hidden space-y-2">
             {people.map((person) => (
-              <div
-                key={person.id}
-                onClick={() => navigate(`/misionero/personas/${person.id}`)}
-                className="rounded-lg border border-border bg-card p-4 hover:shadow-md transition-shadow cursor-pointer"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-medium text-foreground truncate">
-                      {fullName(person)}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      {person.phone ?? 'Sin teléfono'}
-                    </p>
+                <div
+                  key={person.id}
+                  onClick={() => navigate(`/misionero/personas/${person.id}`)}
+                  className="rounded-xl border border-border bg-card p-4 space-y-2.5 hover:shadow-md transition-shadow cursor-pointer"
+                  style={{ borderLeft: `3px solid ${person.isBaptizedMember ? '#0F766E' : '#475569'}` }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {fullName(person)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {person.phone ?? 'Sin teléfono'}
+                      </p>
+                    </div>
+                    <BaptizedBadge isBaptized={person.isBaptizedMember} />
                   </div>
-                  <BaptizedBadge isBaptized={person.isBaptizedMember} />
-                </div>
-                {canEdit && (
-                  <div
-                    className="flex items-center gap-1 justify-end mt-2"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  {canEdit && (
+                    <div
+                      className="flex items-center gap-1 pt-1 border-t border-border"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                     <Link to={`/misionero/personas/${person.id}`}>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
                         <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
