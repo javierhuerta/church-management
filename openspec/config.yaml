@@ -65,7 +65,7 @@ rules:
   design: |
     Si el change incluye UI (páginas, formularios, modales, flujos de navegación), incluir siempre
     una sección "## UI Scenarios" al final del design.md. Esta sección es usada por el comando
-/qa para validar la UI con Playwright antes de archivar.
+    /qa para validar la UI con Playwright antes de archivar.
 
     El flujo de QA: /plan → /build → /check → /qa → /done
 
