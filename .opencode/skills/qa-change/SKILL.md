@@ -1,6 +1,6 @@
 ---
 name: qa-change
-description: QA validation of a change using Playwright MCP. Navigates to documented UI Scenarios in design.md, executes interaction steps, and generates a QA report with screenshots. Use after /opsx-verify and before /opsx-archive.
+description: QA validation of a change using Playwright MCP. Navigates to documented UI Scenarios in design.md, executes interaction steps, and generates a QA report with screenshots. Use after /check and before /done.
 license: MIT
 compatibility: Requires Playwright MCP configured in opencode.json. Frontend and backend must be reachable (or skill will detect and warn).
 metadata:
@@ -129,7 +129,7 @@ If either is DOWN:
   | Frontend | http://localhost:5173     | DOWN   |
   | Backend  | http://localhost:3000/api | UP     |
 
-  Start the required services and re-run `/qa-change <name>`.
+  Start the required services and re-run `/qa <name>`.
 
   Frontend: `cd frontend && npm run dev`
   Backend:  `cd backend && npm run start:dev`
@@ -215,11 +215,11 @@ All 5 steps passed. Final state matches expected wireframe.
 
 **Overall**: ⚠️ PARTIAL PASS — 1 scenario(s) failed. Review failures before archiving.
 
-**Recommendation**: Fix the failing scenario(s) and re-run `/qa-change <name>` before running `/opsx-archive`.
+**Recommendation**: Fix the failing scenario(s) and re-run `/qa <name>` before running `/done`.
 ```
 
 **Verdict rules**:
-- All scenarios PASS → `✅ FULL PASS — Ready to archive. Run /opsx-archive <name>.`
+- All scenarios PASS → `✅ FULL PASS — Ready to archive. Run /done <name>.`
 - Any scenario FAIL or PARTIAL → `⚠️ PARTIAL PASS` or `❌ FAIL — Fix issues before archiving.`
 - Zero scenarios executed (all errored) → `❌ BLOCKED — Could not execute any scenarios.`
 
@@ -231,6 +231,15 @@ All 5 steps passed. Final state matches expected wireframe.
 - **Never assume a selector works** — if a step fails, record it precisely and continue where possible
 - **Screenshots are mandatory** — capture at least one screenshot per scenario (final state or failure state)
 - **ASCII wireframes are reference only** — use them as a visual guide to assess final state, not as pixel-perfect assertions
-- **Credentials**: If steps require login and no credentials are documented, use **AskUserQuestion** to ask the user for test credentials before starting
+- **Credentials**: Use the following test accounts from the seeder. Do NOT ask the user for credentials — these are the known test accounts:
+
+  | Role | Email | Password |
+  |------|-------|----------|
+  | Admin | admin@iglesia.cl | password123 |
+  | Pastor | pastor@iglesia.cl | password123 |
+  | Anciano | anciano@iglesia.cl | password123 |
+  | Secretaria | secretaria@iglesia.cl | password123 |
+
+  **Login flow**: Navigate to `/login`, fill email and password fields, click submit. After login, the app redirects to the dashboard. Use the appropriate role for each scenario (e.g., Admin for full access, Pastor for pastor-specific features).
 - **Do NOT modify any application files** — this skill is read-only from the app's perspective
 - **If design.md has scenarios but they reference routes that 404** — mark scenario as FAIL with note "Route not found: <url>"

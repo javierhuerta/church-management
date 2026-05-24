@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { DatePicker } from '@/components/ui/date-picker'
 import { useTheme } from '@/components/theme-provider'
-import { UsersService } from '@/lib/api'
+import { UsersService, PeriodsService, OpenAPI } from '@/lib/api'
+import { request as apiRequest } from '@/lib/api/core/request'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Plus, Trash2, X, Users, RotateCw, ChevronRight, Loader2 } from 'lucide-react'
-import { PeriodsService } from '@/lib/api'
 
 const NAVY = '#1B3A6B'
 const GOLD = '#C9A84C'
@@ -104,59 +104,45 @@ export function ManageElderShiftsDialog({ open, onOpenChange, periodId }: Manage
   }
 
   const addShiftMutation = useMutation({
-    mutationFn: async (data: { periodId: string; elderIds: string[]; weekStart: string; weekEnd: string }) => {
-      const token = localStorage.getItem('token')
-      const res = await fetch('/api/periods/elder-shifts', {
+    mutationFn: (data: { periodId: string; elderIds: string[]; weekStart: string; weekEnd: string }) =>
+      apiRequest(OpenAPI, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(data),
-      })
-      if (!res.ok) { const e = await res.json(); throw new Error(e.message ?? 'Error') }
-      return res.json()
-    },
+        url: '/api/periods/elder-shifts',
+        body: data,
+        mediaType: 'application/json',
+      }),
     onSuccess: () => { invalidate(); toast.success('Turno agregado'); setSelectedIds([]); setWeekStart(''); setWeekEnd('') },
-    onError: (e: any) => toast.error(e.message ?? 'Error al agregar turno'),
+    onError: (e: any) => toast.error(e.body?.message ?? e.message ?? 'Error al agregar turno'),
   })
 
   const removeShiftMutation = useMutation({
-    mutationFn: async (shiftId: string) => {
-      const token = localStorage.getItem('token')
-      const res = await fetch(`/api/periods/elder-shifts/${shiftId}`, {
-        method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) throw new Error('Error')
-    },
+    mutationFn: (shiftId: string) =>
+      PeriodsService.periodControllerRemoveElderShift(shiftId),
     onSuccess: () => { invalidate(); toast.success('Turno eliminado') },
     onError: () => toast.error('Error al eliminar turno'),
   })
 
   const removeGroupMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      const token = localStorage.getItem('token')
-      await Promise.all(ids.map((id) => fetch(`/api/periods/elder-shifts/${id}`, {
-        method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
-      })))
-    },
+    mutationFn: (ids: string[]) =>
+      Promise.all(ids.map((id) => PeriodsService.periodControllerRemoveElderShift(id))),
     onSuccess: () => { invalidate(); toast.success('Grupo eliminado') },
     onError: () => toast.error('Error al eliminar grupo'),
   })
 
   const regenerateMutation = useMutation({
-    mutationFn: async () => {
-      const token = localStorage.getItem('token')
-      const res = await fetch(`/api/periods/${periodId}/regenerate-rotation`, {
+    mutationFn: () =>
+      apiRequest(OpenAPI, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+        url: '/api/periods/{id}/regenerate-rotation',
+        path: { id: periodId },
+        body: {
           shiftWeeks: period?.shiftWeeks ?? 2,
           startDate: regenStartDate || undefined,
-        }),
-      })
-      if (!res.ok) { const e = await res.json(); throw new Error(e.message ?? 'Error') }
-      return res.json()
-    },
+        },
+        mediaType: 'application/json',
+      }),
     onSuccess: () => { invalidate(); toast.success('Rotación regenerada') },
-    onError: (e: any) => toast.error(e.message ?? 'Error al regenerar'),
+    onError: (e: any) => toast.error(e.body?.message ?? e.message ?? 'Error al regenerar'),
   })
 
   const isAutomatic = period?.rotationMode === 'AUTOMATIC'

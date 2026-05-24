@@ -91,7 +91,7 @@ Crea una rama Git `feature/<name>` desde una rama base seleccionada por el usuar
 
    ```
    Rama feature/<name> lista (base: <base>).
-   Ahora corre /opsx-propose <name> para crear los artefactos del change.
+   Ahora corre /plan <name> para crear los artefactos del change.
    ```
 
 **Guardrails**

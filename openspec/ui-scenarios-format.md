@@ -1,7 +1,7 @@
 # UI Scenarios — Formato de referencia
 
 Este archivo es una referencia de formato para el agente al generar la sección `## UI Scenarios`
-en `design.md`. Es leído por el skill `/qa-change` para ejecutar validación con Playwright.
+en `design.md`. Es leído por el skill `/qa` para ejecutar validación con Playwright.
 
 ---
 
@@ -10,7 +10,7 @@ en `design.md`. Es leído por el skill `/qa-change` para ejecutar validación co
 ```markdown
 ## UI Scenarios
 
-> Estos escenarios son ejecutados por `/qa-change` con Playwright MCP.
+> Estos escenarios son ejecutados por `/qa` con Playwright MCP.
 > Requiere frontend en http://localhost:5173 y backend en http://localhost:3000.
 
 ### Scenario: <nombre descriptivo del flujo de usuario>
@@ -18,7 +18,7 @@ en `design.md`. Es leído por el skill `/qa-change` para ejecutar validación co
 **Description**: Una oración explicando qué flujo o funcionalidad valida este escenario.
 
 > **Auth required** (incluir solo si el escenario requiere login previo):
-> Usa credenciales de prueba admin. `/qa-change` pedirá estos datos antes de ejecutar.
+> Usa credenciales de prueba admin. `/qa` pedirá estos datos antes de ejecutar.
 
 **Steps**:
 1. Navigate to `/ruta`
@@ -72,7 +72,7 @@ en `design.md`. Es leído por el skill `/qa-change` para ejecutar validación co
 ```markdown
 ## UI Scenarios
 
-> Estos escenarios son ejecutados por `/qa-change` con Playwright MCP.
+> Estos escenarios son ejecutados por `/qa` con Playwright MCP.
 > Requiere frontend en http://localhost:5173 y backend en http://localhost:3000.
 
 ### Scenario: Crear nuevo miembro

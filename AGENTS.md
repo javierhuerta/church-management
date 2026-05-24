@@ -11,15 +11,42 @@
 
 Flujo completo para una nueva feature:
 
-1. `/start-feature <name>` — crear rama Git desde development antes de cualquier trabajo
-2. `/opsx-propose <name>` — generar propuesta, design y tasks
-3. `/opsx-apply <name>` — implementar las tasks
-4. `/opsx-verify <name>` — verificar completeness/correctness/coherence
-5. `/qa-change <name>` — validar UI con Playwright (si el change tiene pantallas)
-6. `/opsx-archive <name>` — archivar el change
+1. `/init <name>` — crear rama Git `feature/<name>` desde development
+2. `/plan <name>` — generar propuesta, design y tasks (agente: planner/GLM-5.1)
+3. `/build <name>` — implementar las tasks (agente: builder/Sonnet-4.6)
+4. `/test <name>` — generar tests unitarios/integración (agente: tester/Minimax-M2.7)
+5. `/check <name>` — verificar completeness/correctness/skills (agente: reviewer/DeepSeek-V4-Pro)
+6. `/review <name>` — review de código contra best practices (agente: reviewer/DeepSeek-V4-Pro)
+7. `/qa <name>` — validar UI con Playwright (agente: reviewer/DeepSeek-V4-Pro)
+8. `/done <name>` — archivar el change
 
-`start-feature` debe ejecutarse siempre antes de proponer. Si el usuario describe una feature nueva
-sin haber creado rama, sugerir `/start-feature` primero antes de continuar con `/opsx-propose`.
+`/init` debe ejecutarse siempre antes de proponer. Si el usuario describe una feature nueva
+sin haber creado rama, sugerir `/init` primero antes de continuar con `/plan`.
+
+### Comandos adicionales
+
+- `/explore` — modo exploración read-only para pensar e investigar (agente: planner)
+- `/sync <name>` — sincronizar specs delta a specs principales (agente: planner)
+- `/onboard` — tutorial guiado del flujo completo
+
+### Asignación de modelos por comando
+
+| Comando | Agente | Modelo | Subtask |
+|---------|--------|--------|---------|
+| `/init` | planner | opencode-go/glm-5.1 | No |
+| `/plan` | planner | opencode-go/glm-5.1 | Si |
+| `/build` | builder | anthropic/claude-sonnet-4-6 | Si |
+| `/test` | tester | opencode-go/minimax-m2.7 | Si |
+| `/check` | reviewer | opencode-go/deepseek-v4-pro | Si |
+| `/review` | reviewer | opencode-go/deepseek-v4-pro | Si |
+| `/qa` | reviewer | opencode-go/deepseek-v4-pro | Si |
+| `/done` | planner | opencode-go/glm-5.1 | No |
+| `/explore` | planner | opencode-go/glm-5.1 | No |
+| `/sync` | planner | opencode-go/glm-5.1 | Si |
+
+La columna "Subtask" indica si el comando corre en una sesión aislada (contexto limpio).
+`/build` usa Sonnet-4.6 (el unico de pago) porque es donde se necesita maxima precision.
+Los demas usan modelos gratuitos de Go para optimizar costos.
 
 ## Stack Tecnologico — Reglas estrictas
 
@@ -226,13 +253,28 @@ church-management/
 
 ## Skills disponibles por contexto
 
-Los skills estan organizados por subdirectorio y se cargan automaticamente segun el contexto del trabajo.
+Los skills se cargan bajo demanda via la herramienta `skill`. Los agentes (builder, tester, reviewer) tienen instrucciones explicitas de cargar skills antes de trabajar.
 
 ### OpenCode
 Registrados via `.opencode/opencode.json` → `skills.paths`. OpenCode los escanea y los expone al agente cuando son relevantes al prompt.
 
-### Claude Code
-Cada subdirectorio tiene su propio `AGENTS.md` que lista los skills disponibles. Claude Code los carga de forma lazy al trabajar en archivos de ese directorio.
+### Agentes custom (`.opencode/agents/`)
+- `planner` (GLM-5.1) — proposals, specs, design, tasks, archive
+- `builder` (Sonnet-4.6) — implementación con carga obligatoria de skills
+- `tester` (Minimax-M2.7) — generación de tests siguiendo patrones del proyecto
+- `reviewer` (DeepSeek-V4-Pro) — review de código contra skills y best practices
+
+### Reglas de carga de skills (para el agente builder)
+
+| Ámbito del archivo | Skills obligatorias |
+|---|---|
+| `frontend/src/**/*.tsx` | `church-ui-design` (siempre) |
+| Formularios React | + `react-hook-form` |
+| Componentes UI nuevos | + `shadcn` |
+| Layouts/estilos | + `tailwind-v4-shadcn` |
+| `backend/src/modules/**/*.ts` | `nestjs-best-practices` |
+| Entidades/DTOs | + `typescript-advanced-types` |
+| Ambos lados | Todas las relevantes |
 
 ### Backend (`backend/.agents/skills/`)
 - `nestjs-best-practices` — arquitectura NestJS, DI, seguridad, performance
@@ -257,4 +299,4 @@ Cada subdirectorio tiene su propio `AGENTS.md` que lista los skills disponibles.
 
 ---
 
-**Version**: 1.3 — 2026-05-22
+**Version**: 2.0 — 2026-05-24

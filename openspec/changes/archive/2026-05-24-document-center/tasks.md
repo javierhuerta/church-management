@@ -74,9 +74,9 @@
 
 ## 12. Integration and Testing
 
-- [ ] 12.1 Create test period for current month
-- [ ] 12.2 Verify elder rotation calculation (10 elders, 2-week shifts = 5 shifts)
-- [ ] 12.3 Test document upload with period association
-- [ ] 12.4 Test document list showing leadership context
-- [ ] 12.5 Test viewer role can see leadership info but not create periods
-- [ ] 12.6 Test with documents from multiple periods to verify filtering
+- [x] 12.1 Create test period for current month
+- [x] 12.2 Verify elder rotation calculation (10 elders, 2-week shifts = 5 shifts)
+- [x] 12.3 Test document upload with period association
+- [x] 12.4 Test document list showing leadership context
+- [x] 12.5 Test viewer role can see leadership info but not create periods
+- [x] 12.6 Test with documents from multiple periods to verify filtering

@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useDeleteDocument } from '../hooks/use-document-center'
 import { getDepartmentStyle } from '@/features/calendar/utils/labels'
 import { toast } from 'sonner'
+import { OpenAPI } from '@/lib/api'
 
 const NAVY = '#1B3A6B'
 
@@ -55,9 +56,11 @@ export function DocumentList({ documents, canEdit }: DocumentListProps) {
 
   const handleDownload = async (id: string, originalName: string) => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`/api/documents/${id}/download`, {
-        headers: { Authorization: `Bearer ${token}` },
+      // Binary blob downloads require direct fetch — the generated client only handles JSON/text.
+      // We use OpenAPI.TOKEN (set by setup.ts) to stay consistent with the auth layer.
+      const token = typeof OpenAPI.TOKEN === 'string' ? OpenAPI.TOKEN : (OpenAPI.TOKEN ? await OpenAPI.TOKEN({} as any) : null)
+      const response = await fetch(`${OpenAPI.BASE}/api/documents/${id}/download`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       if (!response.ok) throw new Error('Download failed')
       const blob = await response.blob()

@@ -65,20 +65,11 @@ rules:
   design: |
     Si el change incluye UI (páginas, formularios, modales, flujos de navegación), incluir siempre
     una sección "## UI Scenarios" al final del design.md. Esta sección es usada por el comando
-    /qa-change para validar la UI con Playwright antes de archivar.
+/qa para validar la UI con Playwright antes de archivar.
 
-    Para changes con UI, el design.md debe también incluir una sección "## Diseño visual" que describa:
-    - Qué colores de la paleta de marca se usarán (STATUS_COLORS, EVENT_TYPE_STYLE, NAVY, GOLD, etc.)
-    - Si el componente requiere variante mobile y desktop separadas (obligatorio cuando el layout o la
-      información mostrada difiere entre breakpoints)
-    - Qué nivel de la jerarquía tipográfica aplica a cada texto del componente
-    La skill `church-ui-design` es la referencia para estos lineamientos.
+    El flujo de QA: /plan → /build → /check → /qa → /done
 
-    Si el change es backend-only (sin pantallas nuevas), omitir la sección y agregar al final del
-    archivo el comentario: <!-- No UI Scenarios: backend-only change -->
-
-    Flujo de QA: /opsx-propose → /opsx-apply → /opsx-verify → /qa-change → /opsx-archive
-    El comando /qa-change verifica el stack (frontend localhost:5173, backend localhost:3000),
+    El comando /qa verifica el stack (frontend localhost:5173, backend localhost:3000),
     ejecuta los steps documentados con Playwright y genera un reporte con screenshots y veredicto PASS/FAIL.
 
     Formato de cada escenario en la sección UI Scenarios (ver openspec/ui-scenarios-format.md para el

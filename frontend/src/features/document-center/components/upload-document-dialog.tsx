@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { DepartmentsService } from '@/lib/api'
+import { DepartmentsService, DocumentsService } from '@/lib/api'
+import type { CreateDocumentDto } from '@/lib/api'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
@@ -118,30 +119,19 @@ export function UploadDocumentDialog({
 
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('year', String(year))
-      formData.append('month', String(month))
-      formData.append('category', category)
-      formData.append('originalName', customName)
-      if (periodId) {
-        formData.append('periodId', periodId)
-      }
-      if (departmentId) {
-        formData.append('departmentId', departmentId)
+      const formData: CreateDocumentDto & { file: unknown } = {
+        file: file,
+        year,
+        month,
+        category: category as CreateDocumentDto.category,
+        originalName: customName,
+        ...(periodId ? { periodId } : {}),
+        ...(departmentId ? { departmentId } : {}),
       }
 
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/documents', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Error al subir documento')
-      }
+      await DocumentsService.documentCenterControllerUpload(
+        formData as unknown as CreateDocumentDto,
+      )
 
       toast.success('Documento subido exitosamente')
       onOpenChange(false)

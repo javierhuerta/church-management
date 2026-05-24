@@ -37,7 +37,11 @@ export function usePeriods() {
 export function usePeriodByYear(year: number) {
   return useQuery({
     queryKey: ['period', year],
-    queryFn: () => PeriodsService.periodControllerFindByYear(year) as Promise<Period | null>,
+    queryFn: async () => {
+      const result = await PeriodsService.periodControllerFindByYear(year)
+      // Ensure we never return undefined — React Query invariant requires null instead
+      return result ?? null
+    },
   })
 }
 

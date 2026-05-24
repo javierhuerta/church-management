@@ -7,6 +7,98 @@
       "frontend/.agents/skills"
     ]
   },
+  "agent": {
+    "planner": {
+      "description": "Planning agent for OpenSpec proposals, specs, and design artifacts. Uses GLM-5.1 for fast structured output.",
+      "mode": "subagent",
+      "model": "opencode-go/glm-5.1",
+      "temperature": 0.3,
+      "hidden": true,
+      "permission": {
+        "edit": {
+          "openspec/**": "allow",
+          ".opencode/**": "allow",
+          "*": "deny"
+        },
+        "bash": {
+          "git *": "allow",
+          "openspec *": "allow",
+          "*": "ask"
+        }
+      }
+    },
+    "builder": {
+      "description": "Implementation agent for building OpenSpec tasks. Uses Claude Sonnet 4.6 for precise code generation with mandatory skill loading.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "temperature": 0.2,
+      "hidden": true,
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+    "tester": {
+      "description": "Test generation agent that creates .spec.ts and .test.ts files following project patterns. Uses Minimax M2.7.",
+      "mode": "subagent",
+      "model": "opencode-go/minimax-m2.7",
+      "temperature": 0.1,
+      "hidden": true,
+      "permission": {
+        "edit": {
+          "*.spec.ts": "allow",
+          "*.test.ts": "allow",
+          "vitest.config.*": "allow",
+          "frontend/vitest.config.*": "allow",
+          "frontend/vitest-setup.*": "allow",
+          "*": "deny"
+        },
+        "bash": {
+          "npm test*": "allow",
+          "npx vitest*": "allow",
+          "npm run test*": "allow",
+          "cd backend*": "allow",
+          "cd frontend*": "allow",
+          "*": "ask"
+        }
+      }
+    },
+    "reviewer": {
+      "description": "Code review agent that checks implementation against project skills and best practices. Uses DeepSeek V4 Pro for deep analysis.",
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-pro",
+      "temperature": 0.1,
+      "hidden": true,
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "git diff*": "allow",
+          "git log*": "allow",
+          "*": "ask"
+        }
+      }
+    },
+    "orchestrator": {
+      "description": "Orquestador del flujo OpenSpec. Fuerza la ejecución ordenada: /init → /plan → /build → /test → /check → /qa → /done. Úsalo con Tab para guiarte paso a paso.",
+      "mode": "primary",
+      "model": "opencode-go/glm-5.1",
+      "temperature": 0.1,
+      "hidden": false,
+      "permission": {
+        "edit": {
+          "openspec/**": "allow",
+          ".opencode/**": "allow",
+          "*": "deny"
+        },
+        "bash": {
+          "openspec *": "allow",
+          "git *": "allow",
+          "cat openspec/*": "allow",
+          "*": "ask"
+        }
+      }
+    }
+  },
   "mcp": {
     "excel": {
       "type": "local",

@@ -1,10 +1,12 @@
 ---
 description: Crea una rama Git feature/<name> desde una rama base para comenzar el trabajo en una nueva feature
+agent: planner
+subtask: false
 ---
 
 Crea una rama Git `feature/<name>` desde una rama base seleccionada por el usuario.
 
-**Input**: El argumento opcional después de `/start-feature` es el nombre de la feature en kebab-case (ej: `/start-feature add-user-auth`). Si se omite, se pregunta.
+**Input**: El argumento opcional después de `/init` es el nombre de la feature en kebab-case (ej: `/init add-user-auth`). Si se omite, se pregunta.
 
 **Steps**
 
@@ -51,10 +53,6 @@ Crea una rama Git `feature/<name>` desde una rama base seleccionada por el usuar
 
    Si sigue sin existir después del fetch: mostrar error claro y detener.
 
-   ```
-   Error: la rama '<base>' no existe localmente ni en origin. Verificá el nombre e intentá de nuevo.
-   ```
-
 5. **Verificar si la rama destino ya existe**
 
    ```bash
@@ -90,7 +88,7 @@ Crea una rama Git `feature/<name>` desde una rama base seleccionada por el usuar
 
    ```
    Rama feature/<name> lista (base: <base>).
-   Ahora corre /opsx-propose <name> para crear los artefactos del change.
+   Ahora corre /plan <name> para crear los artefactos del change.
    ```
 
 **Guardrails**
