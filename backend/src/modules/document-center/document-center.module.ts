@@ -15,6 +15,6 @@ import { Department } from '@/modules/departments/entities/department.entity';
   imports: [TypeOrmModule.forFeature([Period, ElderShift, ChurchDocument, User, Department])],
   controllers: [DocumentCenterController, PeriodController],
   providers: [DocumentCenterService, PeriodService, ElderRotationService],
-  exports: [DocumentCenterService, PeriodService],
+  exports: [DocumentCenterService, PeriodService, TypeOrmModule],
 })
 export class DocumentCenterModule {}

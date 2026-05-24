@@ -127,6 +127,46 @@ const SmallGroupDetailPage = lazy(() =>
     default: m.SmallGroupDetailPage,
   })),
 )
+const SabbathClassesListPage = lazy(() =>
+  import('./features/mission/pages/sabbath-classes-list-page').then((m) => ({
+    default: m.SabbathClassesListPage,
+  })),
+)
+const SabbathClassFormPage = lazy(() =>
+  import('./features/mission/pages/sabbath-class-form-page').then((m) => ({
+    default: m.SabbathClassFormPage,
+  })),
+)
+const MissionaryTeamsListPage = lazy(() =>
+  import('./features/mission/pages/missionary-teams-list-page').then((m) => ({
+    default: m.MissionaryTeamsListPage,
+  })),
+)
+const MissionaryTeamFormPage = lazy(() =>
+  import('./features/mission/pages/missionary-team-form-page').then((m) => ({
+    default: m.MissionaryTeamFormPage,
+  })),
+)
+const MissionaryTeamDetailPage = lazy(() =>
+  import('./features/mission/pages/missionary-team-detail-page').then((m) => ({
+    default: m.MissionaryTeamDetailPage,
+  })),
+)
+const BibleCoursesListPage = lazy(() =>
+  import('./features/mission/pages/bible-courses-list-page').then((m) => ({
+    default: m.BibleCoursesListPage,
+  })),
+)
+const BibleStudiesListPage = lazy(() =>
+  import('./features/mission/pages/bible-studies-list-page').then((m) => ({
+    default: m.BibleStudiesListPage,
+  })),
+)
+const BibleStudyFormPage = lazy(() =>
+  import('./features/mission/pages/bible-study-form-page').then((m) => ({
+    default: m.BibleStudyFormPage,
+  })),
+)
 const DocumentCenterPage = lazy(() =>
   import('./features/document-center/pages/document-center-page').then((m) => ({
     default: m.DocumentCenterPage,
@@ -203,6 +243,17 @@ function App() {
                 <Route path="grupos/nuevo" element={<SmallGroupFormPage />} />
                 <Route path="grupos/:id/editar" element={<SmallGroupFormPage />} />
                 <Route path="grupos/:id" element={<SmallGroupDetailPage />} />
+                <Route path="clases-es" element={<SabbathClassesListPage />} />
+                <Route path="clases-es/nuevo" element={<SabbathClassFormPage />} />
+                <Route path="clases-es/:id/editar" element={<SabbathClassFormPage />} />
+                <Route path="equipos" element={<MissionaryTeamsListPage />} />
+                <Route path="equipos/nuevo" element={<MissionaryTeamFormPage />} />
+                <Route path="equipos/:id/editar" element={<MissionaryTeamFormPage />} />
+                <Route path="equipos/:id" element={<MissionaryTeamDetailPage />} />
+                <Route path="cursos" element={<BibleCoursesListPage />} />
+                <Route path="estudios" element={<BibleStudiesListPage />} />
+                <Route path="estudios/nuevo" element={<BibleStudyFormPage />} />
+                <Route path="estudios/:id" element={<BibleStudyFormPage />} />
               </Route>
 
               <Route path="documentos" element={<DocumentCenterPage />} />

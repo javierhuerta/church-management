@@ -61,6 +61,10 @@ import { SabbathClassEntity } from './modules/catalogs/entities/sabbath-class.en
 import { Period } from './modules/document-center/entities/period.entity';
 import { ElderShift } from './modules/document-center/entities/elder-shift.entity';
 import { ChurchDocument } from './modules/document-center/entities/church-document.entity';
+import { MissionaryTeam } from './modules/mission/entities/missionary-team.entity';
+import { MissionaryTeamMember } from './modules/mission/entities/missionary-team-member.entity';
+import { BibleCourse } from './modules/mission/entities/bible-course.entity';
+import { BibleStudy } from './modules/mission/entities/bible-study.entity';
 
 const ENTITIES = [
   User,
@@ -89,6 +93,10 @@ const ENTITIES = [
   Period,
   ElderShift,
   ChurchDocument,
+  MissionaryTeam,
+  MissionaryTeamMember,
+  BibleCourse,
+  BibleStudy,
 ];
 
 @Module({

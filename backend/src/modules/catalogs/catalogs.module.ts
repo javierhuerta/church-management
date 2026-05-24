@@ -5,8 +5,10 @@ import { VisitStatusEntity } from './entities/visit-status.entity';
 import { SabbathClassEntity } from './entities/sabbath-class.entity';
 import { RescueStagesService } from './rescue-stages.service';
 import { VisitStatusesService } from './visit-statuses.service';
+import { SabbathClassService } from './sabbath-class.service';
 import { RescueStagesController } from './rescue-stages.controller';
 import { VisitStatusesController } from './visit-statuses.controller';
+import { SabbathClassController } from './sabbath-class.controller';
 
 @Module({
   imports: [
@@ -16,8 +18,8 @@ import { VisitStatusesController } from './visit-statuses.controller';
       SabbathClassEntity,
     ]),
   ],
-  controllers: [RescueStagesController, VisitStatusesController],
-  providers: [RescueStagesService, VisitStatusesService],
-  exports: [RescueStagesService, VisitStatusesService, TypeOrmModule],
+  controllers: [RescueStagesController, VisitStatusesController, SabbathClassController],
+  providers: [RescueStagesService, VisitStatusesService, SabbathClassService],
+  exports: [RescueStagesService, VisitStatusesService, SabbathClassService, TypeOrmModule],
 })
 export class CatalogsModule {}

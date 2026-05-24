@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { PersonMissionaryTeamDto } from './PersonMissionaryTeamDto';
 import type { PersonVisitHistoryDto } from './PersonVisitHistoryDto';
 export type PersonResponseDto = {
     id: string;
@@ -15,5 +16,6 @@ export type PersonResponseDto = {
     createdAt: string;
     updatedAt?: string | null;
     visitHistory?: Array<PersonVisitHistoryDto> | null;
+    missionaryTeam?: PersonMissionaryTeamDto | null;
 };
 

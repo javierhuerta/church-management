@@ -8,6 +8,12 @@ import { VisitAttempt } from '../modules/mission/entities/visit-attempt.entity';
 import { SmallGroup } from '../modules/mission/entities/small-group.entity';
 import { SmallGroupLeader } from '../modules/mission/entities/small-group-leader.entity';
 import { SmallGroupMember } from '../modules/mission/entities/small-group-member.entity';
+import { MissionaryTeam } from '../modules/mission/entities/missionary-team.entity';
+import { MissionaryTeamMember } from '../modules/mission/entities/missionary-team-member.entity';
+import { BibleCourse } from '../modules/mission/entities/bible-course.entity';
+import { BibleStudy } from '../modules/mission/entities/bible-study.entity';
+import { Period } from '../modules/document-center/entities/period.entity';
+import { ElderShift } from '../modules/document-center/entities/elder-shift.entity';
 import { Event } from '../modules/calendar/entities/event.entity';
 import { EventAttachment } from '../modules/calendar/entities/event-attachment.entity';
 import { EventOrganizer } from '../modules/calendar/entities/event-organizer.entity';
@@ -24,11 +30,15 @@ import { PersonSeeder } from './mission/person.seeder';
 import { RescueMemberSeeder } from './mission/rescue-member.seeder';
 import { VisitSeeder } from './mission/visit.seeder';
 import { SmallGroupSeeder } from './mission/small-group.seeder';
+import { MissionaryTeamSeeder } from './mission/missionary-team.seeder';
+import { BibleCourseSeeder } from './mission/bible-course.seeder';
+import { BibleStudySeeder } from './mission/bible-study.seeder';
 import { EventSeeder } from './calendar/event.seeder';
 import { TemplateSeeder } from './worship-services/template.seeder';
 import { HymnSeeder } from './worship-services/hymn.seeder';
 import { RescueStageSeeder } from './catalogs/rescue-stage.seeder';
 import { VisitStatusSeeder } from './catalogs/visit-status.seeder';
+import { SabbathClassSeeder } from './catalogs/sabbath-class.seeder';
 
 export interface Seeder {
   run(dataSource: DataSource): Promise<void>;
@@ -51,19 +61,23 @@ interface SeederEntry {
 
 const SEEDER_REGISTRY: SeederEntry[] = [
   // catalog — orden de dependencias
-  { name: 'rescue-stages',   category: 'catalog', instance: new RescueStageSeeder() },
-  { name: 'visit-statuses',  category: 'catalog', instance: new VisitStatusSeeder() },
-  { name: 'departments',     category: 'catalog', instance: new DepartmentSeeder() },
-  { name: 'users',           category: 'catalog', instance: new UserSeeder() },
-  { name: 'templates',       category: 'catalog', instance: new TemplateSeeder() },
-  { name: 'hymns',           category: 'catalog', instance: new HymnSeeder() },
+  { name: 'rescue-stages',    category: 'catalog', instance: new RescueStageSeeder() },
+  { name: 'visit-statuses',   category: 'catalog', instance: new VisitStatusSeeder() },
+  { name: 'sabbath-classes',  category: 'catalog', instance: new SabbathClassSeeder() },
+  { name: 'departments',      category: 'catalog', instance: new DepartmentSeeder() },
+  { name: 'users',            category: 'catalog', instance: new UserSeeder() },
+  { name: 'templates',        category: 'catalog', instance: new TemplateSeeder() },
+  { name: 'hymns',            category: 'catalog', instance: new HymnSeeder() },
 
   // demo — requieren que los seeders de catalog se hayan ejecutado antes
   { name: 'persons',         category: 'demo',    instance: new PersonSeeder() },
   { name: 'rescue-members',  category: 'demo',    instance: new RescueMemberSeeder() },
   { name: 'visits',          category: 'demo',    instance: new VisitSeeder() },
-  { name: 'small-groups',    category: 'demo',    instance: new SmallGroupSeeder() },
-  { name: 'events',          category: 'demo',    instance: new EventSeeder() },
+  { name: 'small-groups',       category: 'demo',    instance: new SmallGroupSeeder() },
+  { name: 'missionary-teams',   category: 'demo',    instance: new MissionaryTeamSeeder() },
+  { name: 'bible-courses',      category: 'catalog', instance: new BibleCourseSeeder() },
+  { name: 'bible-studies',      category: 'demo',    instance: new BibleStudySeeder() },
+  { name: 'events',             category: 'demo',    instance: new EventSeeder() },
 ];
 
 function createDataSource(): DataSource {
@@ -94,6 +108,12 @@ function createDataSource(): DataSource {
       RescueStageEntity,
       VisitStatusEntity,
       SabbathClassEntity,
+      MissionaryTeam,
+      MissionaryTeamMember,
+      BibleCourse,
+      BibleStudy,
+      Period,
+      ElderShift,
     ],
   });
 }

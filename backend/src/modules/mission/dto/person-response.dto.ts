@@ -2,6 +2,14 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { VisitStatus } from '../entities/visit-status.enum';
 
+export class PersonMissionaryTeamDto {
+  @ApiProperty({ type: String }) id: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) label: string | null;
+  @ApiProperty({ type: Number }) periodYear: number;
+  @ApiProperty({ type: String }) audience: string;
+  @ApiProperty({ type: Boolean }) isActive: boolean;
+}
+
 export class PersonVisitHistoryDto {
   @ApiProperty({ type: String }) @Expose() id: string;
   @ApiPropertyOptional({ type: String, nullable: true }) @Expose()
@@ -47,6 +55,9 @@ export class PersonResponseDto {
   @Expose()
   @Type(() => PersonVisitHistoryDto)
   visitHistory?: PersonVisitHistoryDto[];
+
+  @ApiPropertyOptional({ type: PersonMissionaryTeamDto, nullable: true })
+  missionaryTeam?: PersonMissionaryTeamDto | null;
 }
 
 export class PaginatedPersonResponseDto {

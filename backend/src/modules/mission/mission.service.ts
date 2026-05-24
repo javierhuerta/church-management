@@ -8,6 +8,8 @@ import { PersonRepository } from './repositories/person.repository';
 import { RescueMemberRepository } from './repositories/rescue-member.repository';
 import { VisitRepository } from './repositories/visit.repository';
 import { SmallGroupRepository } from './repositories/small-group.repository';
+import { MissionaryTeamRepository } from './repositories/missionary-team.repository';
+import { BibleStudyRepository } from './repositories/bible-study.repository';
 import { Person } from './entities/person.entity';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
@@ -29,6 +31,8 @@ export class MissionService {
     private readonly rescueMemberRepo: RescueMemberRepository,
     private readonly visitRepo: VisitRepository,
     private readonly smallGroupRepo: SmallGroupRepository,
+    private readonly missionaryTeamRepo: MissionaryTeamRepository,
+    private readonly bibleStudyRepo: BibleStudyRepository,
   ) {}
 
   async findAll(filter: FindPeopleDto): Promise<PaginatedPersonResponseDto> {
@@ -53,7 +57,35 @@ export class MissionService {
       vd.responsibleUserName = null;
       return vd;
     });
+
+    // Expose active missionary team membership (across all periods)
+    const allTeams = await this.missionaryTeamRepo.findAll({});
+    const activeTeam = allTeams.find((team) =>
+      team.members?.some((m) => m.personId === id && m.leftAt === null),
+    );
+
+    if (activeTeam) {
+      dto.missionaryTeam = {
+        id: activeTeam.id,
+        label: activeTeam.label,
+        periodYear: activeTeam.period?.year ?? 0,
+        audience: this.inferAudienceFromTeam(activeTeam),
+        isActive: activeTeam.isActive,
+      };
+    } else {
+      dto.missionaryTeam = null;
+    }
+
     return dto;
+  }
+
+  private inferAudienceFromTeam(team: import('./entities/missionary-team.entity').MissionaryTeam): string {
+    if (team.smallGroup) {
+      if (team.smallGroup.sabbathClass) return team.smallGroup.sabbathClass.name;
+      return team.smallGroup.actionUnit;
+    }
+    if (team.sabbathClass) return team.sabbathClass.name;
+    return 'Iglesia';
   }
 
   async create(dto: CreatePersonDto): Promise<PersonResponseDto> {
@@ -84,13 +116,16 @@ export class MissionService {
   async remove(id: string): Promise<void> {
     const person = await this.loadOne(id);
 
-    const [hasRescue, visitCount, isGroupMember, isGroupLeader, isGroupPromoter] =
+    const [hasRescue, visitCount, isGroupMember, isGroupLeader, isGroupPromoter, isTeamMember, bibleStudyStudentCount, bibleStudyInstructorCount] =
       await Promise.all([
         this.rescueMemberRepo.existsByPersonId(id),
         this.visitRepo.countByPersonId(id),
         this.smallGroupRepo.existsByMemberPersonId(id),
         this.smallGroupRepo.existsByLeaderPersonId(id),
         this.smallGroupRepo.existsByPromoterPersonId(id),
+        this.missionaryTeamRepo.isPersonActiveMember(id),
+        this.bibleStudyRepo.countByStudentId(id),
+        this.bibleStudyRepo.countByInstructorId(id),
       ]);
 
     if (hasRescue || visitCount > 0) {
@@ -114,6 +149,24 @@ export class MissionService {
     if (isGroupPromoter) {
       throw new ConflictException(
         'No se puede eliminar la persona porque es promotora de un grupo pequeño',
+      );
+    }
+
+    if (isTeamMember) {
+      throw new ConflictException(
+        'No se puede eliminar la persona porque es miembro activo de un equipo misionero',
+      );
+    }
+
+    if (bibleStudyStudentCount > 0) {
+      throw new ConflictException(
+        'No se puede eliminar la persona porque tiene estudios bíblicos asociados como estudiante',
+      );
+    }
+
+    if (bibleStudyInstructorCount > 0) {
+      throw new ConflictException(
+        'No se puede eliminar la persona porque es instructora de estudios bíblicos activos',
       );
     }
 

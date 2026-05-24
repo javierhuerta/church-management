@@ -15,9 +15,9 @@ Flujo completo para una nueva feature:
 2. `/plan <name>` — generar propuesta, design y tasks (agente: planner/GLM-5.1)
 3. `/build <name>` — implementar las tasks (agente: builder/Sonnet-4.6)
 4. `/test <name>` — generar tests unitarios/integración (agente: tester/Minimax-M2.7)
-5. `/check <name>` — verificar completeness/correctness/skills (agente: reviewer/DeepSeek-V4-Pro)
-6. `/review <name>` — review de código contra best practices (agente: reviewer/DeepSeek-V4-Pro)
-7. `/qa <name>` — validar UI con Playwright (agente: reviewer/DeepSeek-V4-Pro)
+5. `/check <name>` — verificar completeness/correctness/skills (agente: reviewer/DeepSeek-4-Flash)
+6. `/review <name>` — review de código contra best practices (agente: reviewer/DeepSeek-4-Flash)
+7. `/qa <name>` — validar UI con Playwright (agente: reviewer/DeepSeek-4-Flash)
 8. `/done <name>` — archivar el change
 
 `/init` debe ejecutarse siempre antes de proponer. Si el usuario describe una feature nueva
@@ -37,9 +37,9 @@ sin haber creado rama, sugerir `/init` primero antes de continuar con `/plan`.
 | `/plan` | planner | opencode-go/glm-5.1 | Si |
 | `/build` | builder | anthropic/claude-sonnet-4-6 | Si |
 | `/test` | tester | opencode-go/minimax-m2.7 | Si |
-| `/check` | reviewer | opencode-go/deepseek-v4-pro | Si |
-| `/review` | reviewer | opencode-go/deepseek-v4-pro | Si |
-| `/qa` | reviewer | opencode-go/deepseek-v4-pro | Si |
+| `/check` | reviewer | opencode-go/deepseek-4-flash | Si |
+| `/review` | reviewer | opencode-go/deepseek-4-flash | Si |
+| `/qa` | reviewer | opencode-go/deepseek-4-flash | Si |
 | `/done` | planner | opencode-go/glm-5.1 | No |
 | `/explore` | planner | opencode-go/glm-5.1 | No |
 | `/sync` | planner | opencode-go/glm-5.1 | Si |
@@ -259,10 +259,11 @@ Los skills se cargan bajo demanda via la herramienta `skill`. Los agentes (build
 Registrados via `.opencode/opencode.json` → `skills.paths`. OpenCode los escanea y los expone al agente cuando son relevantes al prompt.
 
 ### Agentes custom (`.opencode/agents/`)
+- `orchestrator` (Mimo-v2.5-pro) — orquestador del flujo OpenSpec, guía paso a paso
 - `planner` (GLM-5.1) — proposals, specs, design, tasks, archive
 - `builder` (Sonnet-4.6) — implementación con carga obligatoria de skills
 - `tester` (Minimax-M2.7) — generación de tests siguiendo patrones del proyecto
-- `reviewer` (DeepSeek-V4-Pro) — review de código contra skills y best practices
+- `reviewer` (DeepSeek-4-Flash) — review de código contra skills y best practices, QA con Playwright
 
 ### Reglas de carga de skills (para el agente builder)
 

@@ -64,9 +64,9 @@
       }
     },
     "reviewer": {
-      "description": "Code review agent that checks implementation against project skills and best practices. Uses DeepSeek V4 Pro for deep analysis.",
+      "description": "Code review agent that checks implementation against project skills and best practices. Uses DeepSeek 4 Flash for deep analysis with more tokens.",
       "mode": "subagent",
-      "model": "opencode-go/deepseek-v4-pro",
+      "model": "opencode-go/deepseek-4-flash",
       "temperature": 0.1,
       "hidden": true,
       "permission": {
@@ -81,7 +81,7 @@
     "orchestrator": {
       "description": "Orquestador del flujo OpenSpec. Fuerza la ejecución ordenada: /init → /plan → /build → /test → /check → /qa → /done. Úsalo con Tab para guiarte paso a paso.",
       "mode": "primary",
-      "model": "opencode-go/glm-5.1",
+      "model": "opencode-go/mimo-v2.5-pro",
       "temperature": 0.1,
       "hidden": false,
       "permission": {

@@ -1,7 +1,7 @@
 ---
 description: Orquestador del flujo OpenSpec. Fuerza la ejecución ordenada del workflow y redirige si el usuario intenta saltar pasos.
 mode: primary
-model: opencode-go/glm-5.1
+model: opencode-go/mimo
 temperature: 0.1
 ---
 

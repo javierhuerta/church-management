@@ -25,6 +25,8 @@ import {
 import { FindPeopleDto } from './dto/find-people.dto';
 import { VisitService } from './visit.service';
 import { VisitResponseDto } from './dto/visit-response.dto';
+import { BibleStudyService } from './bible-study.service';
+import { BibleStudyResponseDto } from './dto/bible-study.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -38,6 +40,7 @@ export class MissionController {
   constructor(
     private readonly missionService: MissionService,
     private readonly visitService: VisitService,
+    private readonly bibleStudyService: BibleStudyService,
   ) {}
 
   @Get()
@@ -84,6 +87,13 @@ export class MissionController {
   @ApiResponse({ status: 200, type: [VisitResponseDto] })
   getPersonVisits(@Param('id') id: string): Promise<VisitResponseDto[]> {
     return this.visitService.findByPersonId(id);
+  }
+
+  @Get(':id/bible-studies')
+  @ApiOperation({ summary: 'Obtener los estudios bíblicos de una persona como estudiante' })
+  @ApiResponse({ status: 200, type: [BibleStudyResponseDto] })
+  getPersonBibleStudies(@Param('id') id: string): Promise<BibleStudyResponseDto[]> {
+    return this.bibleStudyService.findByStudentId(id);
   }
 
   @Delete(':id')

@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { BibleStudyResponseDto } from '../models/BibleStudyResponseDto';
 import type { CreatePersonDto } from '../models/CreatePersonDto';
 import type { PaginatedPersonResponseDto } from '../models/PaginatedPersonResponseDto';
 import type { PersonResponseDto } from '../models/PersonResponseDto';
@@ -126,6 +127,23 @@ export class MissionPeopleService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/mission/people/{id}/visits',
+            path: {
+                'id': id,
+            },
+        });
+    }
+    /**
+     * Obtener los estudios bíblicos de una persona como estudiante
+     * @param id
+     * @returns BibleStudyResponseDto
+     * @throws ApiError
+     */
+    public static missionControllerGetPersonBibleStudies(
+        id: string,
+    ): CancelablePromise<Array<BibleStudyResponseDto>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/mission/people/{id}/bible-studies',
             path: {
                 'id': id,
             },

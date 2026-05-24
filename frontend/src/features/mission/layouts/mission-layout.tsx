@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { Users, CalendarCheck, HeartHandshake, ChevronLeft, ChevronRight, UsersRound } from 'lucide-react'
+import { Users, CalendarCheck, HeartHandshake, ChevronLeft, ChevronRight, UsersRound, BookOpen, School, GraduationCap, BookMarked } from 'lucide-react'
 
 const subNav = [
   {
@@ -8,6 +8,18 @@ const subNav = [
     label: 'Personas',
     icon: Users,
     testId: 'nav-misionero-personas',
+  },
+  {
+    path: '/misionero/estudios',
+    label: 'Interesados y estudios',
+    icon: GraduationCap,
+    testId: 'nav-misionero-estudios',
+  },
+  {
+    path: '/misionero/cursos',
+    label: 'Cursos bíblicos',
+    icon: BookMarked,
+    testId: 'nav-misionero-cursos',
   },
   {
     path: '/misionero/visitas',
@@ -26,6 +38,18 @@ const subNav = [
     label: 'Grupos pequeños',
     icon: UsersRound,
     testId: 'nav-misionero-grupos',
+  },
+  {
+    path: '/misionero/equipos',
+    label: 'Equipos misioneros',
+    icon: BookOpen,
+    testId: 'nav-misionero-equipos',
+  },
+  {
+    path: '/misionero/clases-es',
+    label: 'Clases ES',
+    icon: School,
+    testId: 'nav-misionero-clases-es',
   },
 ]
 
