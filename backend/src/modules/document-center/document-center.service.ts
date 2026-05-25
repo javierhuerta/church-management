@@ -93,7 +93,10 @@ export class DocumentCenterService {
     });
 
     const saved = await this.documentRepository.save(document);
-    return toDto(ChurchDocumentResponseDto, await this.cargarDocumento(saved.id));
+    return toDto(
+      ChurchDocumentResponseDto,
+      await this.cargarDocumento(saved.id),
+    );
   }
 
   async findByYear(year: number): Promise<ChurchDocumentResponseDto[]> {

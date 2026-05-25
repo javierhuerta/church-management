@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2, Building2, Search } from 'lucide-react'
+import { Plus, Pencil, Trash2, Building2, Search, BookOpen } from 'lucide-react'
 import { DepartmentsService } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +22,7 @@ function EmptyState() {
 
 export function DepartmentsListPage() {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
 
@@ -88,7 +89,8 @@ export function DepartmentsListPage() {
           {filteredDepartments.map((dept) => (
             <div
               key={dept.id}
-              className="bg-card rounded-xl border border-border p-4 flex items-center justify-between hover:border-primary/40 transition-colors"
+              className="bg-card rounded-xl border border-border p-4 flex items-center justify-between hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer"
+              onClick={() => navigate(`/departamentos/${dept.id}`)}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div
@@ -103,6 +105,14 @@ export function DepartmentsListPage() {
                         {dept.sigla}
                       </span>
                     )}
+                    {/* Task 9.3: Showcase indicator */}
+                    {dept.hasShowcase && (
+                      <BookOpen
+                        className="h-3.5 w-3.5 shrink-0"
+                        style={{ color: dept.color }}
+                        title="Tiene showcase publicado"
+                      />
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {dept.directors && dept.directors.length > 0
@@ -111,7 +121,7 @@ export function DepartmentsListPage() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                 <Link to={`/mantenedores/departamentos/${dept.id}`}>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
                     <Pencil className="h-3.5 w-3.5 text-muted-foreground" />

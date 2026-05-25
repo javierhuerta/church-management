@@ -7,6 +7,11 @@ export class DirectorSummaryDto {
   @ApiProperty() @Expose() email: string;
 }
 
+export class ShowcaseSummaryDto {
+  @ApiPropertyOptional({ type: String, nullable: true }) @Expose() descriptionSummary: string | null;
+  @ApiProperty() @Expose() attachmentCount: number;
+}
+
 export class DepartmentResponseDto {
   @ApiProperty() @Expose() id: string;
   @ApiProperty() @Expose() name: string;
@@ -22,8 +27,16 @@ export class DepartmentResponseDto {
     ),
   )
   directors: DirectorSummaryDto[];
+
+  @ApiPropertyOptional({ type: Boolean })
+  @Expose()
+  hasShowcase: boolean;
+
+  @ApiPropertyOptional({ type: ShowcaseSummaryDto, nullable: true })
+  @Expose()
+  showcase: ShowcaseSummaryDto | null;
 }
 
 export class DepartmentWithDirectorsDto extends DepartmentResponseDto {
-  // directors is already inherited from DepartmentResponseDto
+  // directors, hasShowcase, showcase are inherited from DepartmentResponseDto
 }

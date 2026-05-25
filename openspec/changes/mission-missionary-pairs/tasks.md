@@ -65,12 +65,12 @@
 
 ## 9. Verificación
 
-- [ ] 9.1 Probar CRUD de clases de escuela sabática vía API [pendiente: requiere backend corriendo]
-- [ ] 9.2 Probar CRUD de equipos misioneros vía API [pendiente: requiere backend corriendo]
-- [ ] 9.3 Verificar que un equipo requiere mínimo 2 miembros activos [pendiente: requiere backend corriendo]
-- [ ] 9.4 Verificar que una Persona no puede estar en dos equipos activos del mismo período [pendiente: requiere backend corriendo]
-- [ ] 9.5 Verificar que `smallGroupId` y `sabbathClassId` son mutuamente excluyentes [pendiente: requiere backend corriendo]
-- [ ] 9.6 Verificar la audiencia inferida (grupo → clase, clase directa → nombre, ninguno → "Iglesia") [pendiente: requiere backend corriendo]
+- [x] 9.1 Probar CRUD de clases de escuela sabática vía API
+- [x] 9.2 Probar CRUD de equipos misioneros vía API
+- [x] 9.3 Verificar que un equipo requiere mínimo 2 miembros activos
+- [x] 9.4 Verificar que una Persona no puede estar en dos equipos activos del mismo período
+- [x] 9.5 Verificar que `smallGroupId` y `sabbathClassId` son mutuamente excluyentes
+- [x] 9.6 Verificar la audiencia inferida (grupo → clase, clase directa → nombre, ninguno → "Iglesia")
 - [ ] 9.7 Verificar que un estudio acepta instructor Persona O equipo, no ambos [BLOQUEADO: requiere mission-bible-studies]
 - [ ] 9.8 Verificar que un miembro activo del equipo instructor puede gestionar el progreso del estudio [BLOQUEADO: requiere mission-bible-studies]
 - [ ] 9.9 Verificar bloqueo de eliminación de Persona miembro activo de equipo [pendiente: requiere backend corriendo]

@@ -35,6 +35,8 @@ import { cacheFactory } from './config/factories/cache.factory';
 
 import { User } from './modules/auth/entities/user.entity';
 import { Department } from './modules/departments/entities/department.entity';
+import { DepartmentShowcase } from './modules/departments/entities/department-showcase.entity';
+import { ShowcaseAttachment } from './modules/departments/entities/showcase-attachment.entity';
 import { Person } from './modules/mission/entities/person.entity';
 import { RescueMember } from './modules/mission/entities/rescue-member.entity';
 import { Visit } from './modules/mission/entities/visit.entity';
@@ -97,6 +99,8 @@ const ENTITIES = [
   MissionaryTeamMember,
   BibleCourse,
   BibleStudy,
+  DepartmentShowcase,
+  ShowcaseAttachment,
 ];
 
 @Module({

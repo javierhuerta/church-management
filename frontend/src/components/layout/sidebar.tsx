@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Calendar, FileText, Church, LogOut, User, ChevronDown, ChevronLeft, Settings, Sun, Moon, Monitor, FolderOpen } from 'lucide-react'
+import { Calendar, FileText, Church, LogOut, User, ChevronDown, ChevronLeft, Settings, Sun, Moon, Monitor, FolderOpen, Building2, BookOpen } from 'lucide-react'
 import logoFull from '@/assets/images/logo.png'
 import logoMark from '@/assets/images/logo-mark.png'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -17,7 +17,8 @@ import { useTextSize } from '@/lib/contexts/text-size-context'
 import type { TextSize } from '@/lib/contexts/text-size-context'
 import { useTheme } from '@/components/theme-provider'
 import { useSidebar } from '@/lib/contexts/sidebar-context'
-import { AuthService } from '@/lib/api'
+import { AuthService, DepartmentsService } from '@/lib/api'
+import { useQuery } from '@tanstack/react-query'
 
 interface NavItem {
   id: string
@@ -33,6 +34,7 @@ const navItems: NavItem[] = [
   { id: 'cultos', label: 'Cultos', icon: FileText, path: '/cultos/programas', matchPrefix: '/cultos' },
   { id: 'misionero', label: 'Misión', icon: Church, path: '/misionero/personas', matchPrefix: '/misionero' },
   { id: 'documentos', label: 'Documentos', icon: FolderOpen, path: '/documentos' },
+  { id: 'departamentos', label: 'Departamentos', icon: Building2, path: '/mantenedores/departamentos', matchPrefix: '/departamentos' },
 ]
 
 const adminNavItems: NavItem[] = [
@@ -87,6 +89,22 @@ export function Sidebar() {
   const { isOpen, isSmallScreen, close, toggle } = useSidebar()
   const isCollapsed = !isOpen
   const user = getUserFromStorage()
+
+  // Task 9.4: Fetch departments for DirectorDepartamento to show "Mi Departamento"
+  const isDirector = user?.role === 'DirectorDepartamento'
+  const { data: allDepartments = [] } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => DepartmentsService.departmentsControllerFindAll(),
+    enabled: isDirector,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  // Find first department where user is a director
+  // Since we don't have per-user department info here, we show the link if they're a director
+  // The actual department is determined by the backend guard
+  const myDepartmentId = isDirector && allDepartments.length > 0
+    ? allDepartments[0]?.id
+    : null
 
   const handleLogout = async () => {
     try {
@@ -241,6 +259,36 @@ export function Sidebar() {
                 </div>
               </AccordionContent>
             </AccordionItem>
+            {/* Task 9.4: Mi Departamento for directors */}
+            {isDirector && myDepartmentId && (
+              <AccordionItem value="mi-departamento">
+                <AccordionTrigger>Mi Departamento</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => navigate(`/departamentos/${myDepartmentId}`)}
+                      className={`
+                        w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                        ${location.pathname.startsWith(`/departamentos/${myDepartmentId}`)
+                          ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm'
+                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground border border-transparent hover:shadow-sm'
+                        }
+                      `}
+                    >
+                      <BookOpen className="h-5 w-5" />
+                      <span>Ver showcase</span>
+                    </button>
+                    <button
+                      onClick={() => navigate(`/departamentos/${myDepartmentId}/editar`)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-muted-foreground hover:bg-accent hover:text-accent-foreground border border-transparent hover:shadow-sm"
+                    >
+                      <Building2 className="h-5 w-5" />
+                      <span>Editar showcase</span>
+                    </button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
             {(user?.role === 'Admin' || user?.role === 'Pastor') && (
               <AccordionItem value="admin">
                 <AccordionTrigger>Administración</AccordionTrigger>

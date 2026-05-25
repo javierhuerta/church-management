@@ -172,6 +172,16 @@ const DocumentCenterPage = lazy(() =>
     default: m.DocumentCenterPage,
   })),
 )
+const ShowcaseViewPage = lazy(() =>
+  import('./features/departments/pages/showcase-view-page').then((m) => ({
+    default: m.ShowcaseViewPage,
+  })),
+)
+const ShowcaseEditPage = lazy(() =>
+  import('./features/departments/pages/showcase-edit-page').then((m) => ({
+    default: m.ShowcaseEditPage,
+  })),
+)
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token')
@@ -257,6 +267,10 @@ function App() {
               </Route>
 
               <Route path="documentos" element={<DocumentCenterPage />} />
+
+              {/* Department showcase routes */}
+              <Route path="departamentos/:id" element={<ShowcaseViewPage />} />
+              <Route path="departamentos/:id/editar" element={<ShowcaseEditPage />} />
 
               <Route path="mantenedores" element={<MantenedoresLayout />}>
                 <Route index element={<Navigate to="usuarios" replace />} />
