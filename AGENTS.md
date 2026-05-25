@@ -12,7 +12,7 @@
 Flujo completo para una nueva feature:
 
 1. `/init <name>` — crear rama Git `feature/<name>` desde development
-2. `/plan <name>` — generar propuesta, design y tasks (agente: planner/GLM-5.1)
+2. `/plan <name>` — generar propuesta, design y tasks (agente: planner/Kimi-K2.6)
 3. `/build <name>` — implementar las tasks (agente: builder/Sonnet-4.6)
 4. `/test <name>` — generar tests unitarios/integración (agente: tester/Minimax-M2.7)
 5. `/check <name>` — verificar completeness/correctness/skills (agente: reviewer/DeepSeek-4-Flash)
@@ -33,16 +33,16 @@ sin haber creado rama, sugerir `/init` primero antes de continuar con `/plan`.
 
 | Comando | Agente | Modelo | Subtask |
 |---------|--------|--------|---------|
-| `/init` | planner | opencode-go/glm-5.1 | No |
-| `/plan` | planner | opencode-go/glm-5.1 | Si |
+| `/init` | planner | opencode-go/kimi-k2.6 | No |
+| `/plan` | planner | opencode-go/kimi-k2.6 | Si |
 | `/build` | builder | anthropic/claude-sonnet-4-6 | Si |
 | `/test` | tester | opencode-go/minimax-m2.7 | Si |
 | `/check` | reviewer | opencode-go/deepseek-4-flash | Si |
 | `/review` | reviewer | opencode-go/deepseek-4-flash | Si |
 | `/qa` | reviewer | opencode-go/deepseek-4-flash | Si |
-| `/done` | planner | opencode-go/glm-5.1 | No |
-| `/explore` | planner | opencode-go/glm-5.1 | No |
-| `/sync` | planner | opencode-go/glm-5.1 | Si |
+| `/done` | planner | opencode-go/kimi-k2.6 | No |
+| `/explore` | planner | opencode-go/kimi-k2.6 | No |
+| `/sync` | planner | opencode-go/kimi-k2.6 | Si |
 
 La columna "Subtask" indica si el comando corre en una sesión aislada (contexto limpio).
 `/build` usa Sonnet-4.6 (el unico de pago) porque es donde se necesita maxima precision.
@@ -259,8 +259,8 @@ Los skills se cargan bajo demanda via la herramienta `skill`. Los agentes (build
 Registrados via `.opencode/opencode.json` → `skills.paths`. OpenCode los escanea y los expone al agente cuando son relevantes al prompt.
 
 ### Agentes custom (`.opencode/agents/`)
-- `orchestrator` (Mimo-v2.5-pro) — orquestador del flujo OpenSpec, guía paso a paso
-- `planner` (GLM-5.1) — proposals, specs, design, tasks, archive
+- `orchestrator` (google/gemini-3-flash-preview) — orquestador del flujo OpenSpec, guía paso a paso
+- `planner` (Kimi-K2.6) — proposals, specs, design, tasks, archive
 - `builder` (Sonnet-4.6) — implementación con carga obligatoria de skills
 - `tester` (Minimax-M2.7) — generación de tests siguiendo patrones del proyecto
 - `reviewer` (DeepSeek-4-Flash) — review de código contra skills y best practices, QA con Playwright

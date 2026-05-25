@@ -1,7 +1,7 @@
 ---
-description: Planning agent for OpenSpec proposals, specs, and design artifacts. Uses GLM-5.1 for fast structured output.
+description: Planning agent for OpenSpec proposals, specs, and design artifacts. Uses Kimi K2.6 for fast structured output.
 mode: subagent
-model: opencode-go/glm-5.1
+model: opencode-go/kimi-k2.6
 temperature: 0.3
 hidden: true
 permission:
