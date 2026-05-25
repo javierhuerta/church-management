@@ -32,7 +32,7 @@ import { PersonCombobox } from '../components/person-combobox'
 
 const studySchema = z.object({
   studentId:           z.string().min(1, 'El estudiante es requerido'),
-  instructorType:      z.enum(['persona', 'equipo']).default('persona'),
+  instructorType:      z.enum(['persona', 'equipo']),
   instructorId:        z.string().optional(),
   instructorTeamId:    z.string().optional(),
   courseId:            z.string().optional(),
