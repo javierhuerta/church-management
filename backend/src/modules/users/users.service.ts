@@ -127,7 +127,7 @@ export class UsersService {
   }
 
   private mapToDto(user: User): UserResponseDto {
-    const base = toDto(UserResponseDto, user) as UserResponseDto;
+    const base = toDto(UserResponseDto, user);
     base.personId = user.personId ?? null;
     base.personName = user.person
       ? `${user.person.firstName} ${user.person.lastName ?? ''}`.trim()

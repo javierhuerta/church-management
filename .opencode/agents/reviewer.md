@@ -96,3 +96,12 @@ FAIL — Must fix before proceeding
 - Be specific: always cite file:line for issues
 - Prefer WARN over FAIL for style issues; reserve FAIL for architectural violations and security issues
 - If no skills are relevant (e.g., only config changes), state "No skills applicable" and do a conventions-only check
+
+## Engram Memory
+
+You have access to persistent memory via Engram MCP tools.
+
+- **Before reviewing**: Call `mem_search` to find related past decisions or conventions
+- **After review**: Call `mem_save` to record any new patterns, issues found, or conventions clarified
+- **Memory types**: `convention`, `learning`, `solution`
+- **Always include**: title, type, content, and relevant tags

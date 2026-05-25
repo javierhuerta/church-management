@@ -22,12 +22,12 @@ export class BibleCourseService {
 
   async findAll(): Promise<BibleCourseResponseDto[]> {
     const courses = await this.courseRepo.findAll();
-    return toDto(BibleCourseResponseDto, courses) as BibleCourseResponseDto[];
+    return toDto(BibleCourseResponseDto, courses);
   }
 
   async findOne(id: string): Promise<BibleCourseResponseDto> {
     const course = await this.loadOne(id);
-    return toDto(BibleCourseResponseDto, course) as BibleCourseResponseDto;
+    return toDto(BibleCourseResponseDto, course);
   }
 
   async create(dto: CreateBibleCourseDto): Promise<BibleCourseResponseDto> {
@@ -44,8 +44,10 @@ export class BibleCourseService {
       audience: dto.audience ?? null,
     });
     const saved = await this.courseRepo.save(course);
-    this.logger.log(`BibleCourse created [id=${saved.id}] name="${saved.name}"`);
-    return toDto(BibleCourseResponseDto, saved) as BibleCourseResponseDto;
+    this.logger.log(
+      `BibleCourse created [id=${saved.id}] name="${saved.name}"`,
+    );
+    return toDto(BibleCourseResponseDto, saved);
   }
 
   async update(
@@ -66,7 +68,7 @@ export class BibleCourseService {
     assignDefined(course, dto as Partial<BibleCourse>);
     const saved = await this.courseRepo.save(course);
     this.logger.log(`BibleCourse updated [id=${id}]`);
-    return toDto(BibleCourseResponseDto, saved) as BibleCourseResponseDto;
+    return toDto(BibleCourseResponseDto, saved);
   }
 
   async remove(id: string): Promise<void> {

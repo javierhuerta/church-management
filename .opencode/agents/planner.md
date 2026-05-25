@@ -48,3 +48,12 @@ This is a church management system for Iglesia Adventista Central Osorno. The sy
 - Reference `openspec/config.yaml` for project context and rules
 - All descriptions in Spanish unless the user requests English
 - Preserve existing artifacts — only modify what's needed
+
+## Engram Memory
+
+You have access to persistent memory via Engram MCP tools.
+
+- **Before planning**: Call `mem_search` to find related past decisions, conventions, or architectural context
+- **After generating proposals**: Call `mem_save` to record key architectural decisions or design patterns
+- **Memory types**: `decision`, `convention`, `learning`
+- **Always include**: title, type, content, and relevant tags

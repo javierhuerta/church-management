@@ -61,7 +61,9 @@ export class BibleStudyRepository {
       .getMany();
   }
 
-  async findByInstructorTeamId(instructorTeamId: string): Promise<BibleStudy[]> {
+  async findByInstructorTeamId(
+    instructorTeamId: string,
+  ): Promise<BibleStudy[]> {
     return this.baseQuery()
       .where('bs.instructor_team_id = :instructorTeamId', { instructorTeamId })
       .orderBy('student.first_name', 'ASC')
