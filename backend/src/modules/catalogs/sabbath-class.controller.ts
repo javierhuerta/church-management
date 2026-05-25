@@ -35,21 +35,21 @@ export class SabbathClassController {
   @Get()
   @ApiOperation({ summary: 'Listar todas las clases de escuela sabática' })
   @ApiResponse({ status: 200, type: [SabbathClassResponseDto] })
-  findAll(): Promise<unknown> {
+  findAll(): Promise<SabbathClassResponseDto[]> {
     return this.service.findAll();
   }
 
   @Get('active')
   @ApiOperation({ summary: 'Listar clases activas de escuela sabática' })
   @ApiResponse({ status: 200, type: [SabbathClassResponseDto] })
-  findAllActive(): Promise<unknown> {
+  findAllActive(): Promise<SabbathClassResponseDto[]> {
     return this.service.findAllActive();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener clase de escuela sabática por ID' })
   @ApiResponse({ status: 200, type: SabbathClassResponseDto })
-  findOne(@Param('id') id: string): Promise<unknown> {
+  findOne(@Param('id') id: string): Promise<SabbathClassResponseDto> {
     return this.service.findOne(id);
   }
 
@@ -57,7 +57,7 @@ export class SabbathClassController {
   @SetMetadata('roles', [...MISSION_FULL_ACCESS_ROLES])
   @ApiOperation({ summary: 'Crear clase de escuela sabática' })
   @ApiResponse({ status: 201, type: SabbathClassResponseDto })
-  create(@Body() dto: CreateSabbathClassDto): Promise<unknown> {
+  create(@Body() dto: CreateSabbathClassDto): Promise<SabbathClassResponseDto> {
     return this.service.create(dto);
   }
 
@@ -68,7 +68,7 @@ export class SabbathClassController {
   update(
     @Param('id') id: string,
     @Body() dto: UpdateSabbathClassDto,
-  ): Promise<unknown> {
+  ): Promise<SabbathClassResponseDto> {
     return this.service.update(id, dto);
   }
 

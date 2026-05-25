@@ -64,6 +64,7 @@ export type { RefreshTokenDto } from './models/RefreshTokenDto';
 export type { RemoveMemberDto } from './models/RemoveMemberDto';
 export type { ReorderDto } from './models/ReorderDto';
 export type { RescueMemberResponseDto } from './models/RescueMemberResponseDto';
+export type { RescueStageResponseDto } from './models/RescueStageResponseDto';
 export type { SabbathClassResponseDto } from './models/SabbathClassResponseDto';
 export type { SectionDto } from './models/SectionDto';
 export { ServiceProgramResponseDto } from './models/ServiceProgramResponseDto';
@@ -99,6 +100,7 @@ export type { UserBriefResponseDto } from './models/UserBriefResponseDto';
 export { UserResponseDto } from './models/UserResponseDto';
 export type { VisitAttemptResponseDto } from './models/VisitAttemptResponseDto';
 export type { VisitResponseDto } from './models/VisitResponseDto';
+export type { VisitStatusResponseDto } from './models/VisitStatusResponseDto';
 
 export { AuthService } from './services/AuthService';
 export { CalendarService } from './services/CalendarService';

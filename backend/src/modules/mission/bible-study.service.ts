@@ -60,7 +60,7 @@ export class BibleStudyService {
     const totals = await this.studyRepo.getTotals();
 
     return {
-      data: studies.map((s) => this.mapToDto(s)),
+      data: studies.map((s) => this.serializarEstudio(s)),
       total: studies.length,
       totals: {
         Invitar: totals[BibleStudyStatus.Invitar],
@@ -75,12 +75,12 @@ export class BibleStudyService {
   async findOne(id: string, currentUser: AuthUser): Promise<BibleStudyResponseDto> {
     const study = await this.loadOne(id);
     this.assertCanRead(study, currentUser);
-    return this.mapToDto(study);
+    return this.serializarEstudio(study);
   }
 
   async findByStudentId(studentId: string): Promise<BibleStudyResponseDto[]> {
     const studies = await this.studyRepo.findByStudentId(studentId);
-    return studies.map((s) => this.mapToDto(s));
+    return studies.map((s) => this.serializarEstudio(s));
   }
 
   async create(
@@ -148,7 +148,7 @@ export class BibleStudyService {
     this.logger.log(`BibleStudy created [id=${saved.id}] student=${dto.studentId}`);
 
     const loaded = await this.studyRepo.findById(saved.id);
-    return this.mapToDto(loaded!);
+    return this.serializarEstudio(loaded!);
   }
 
   async update(
@@ -217,7 +217,7 @@ export class BibleStudyService {
     this.logger.log(`BibleStudy updated [id=${id}]`);
 
     const loaded = await this.studyRepo.findById(saved.id);
-    return this.mapToDto(loaded!);
+    return this.serializarEstudio(loaded!);
   }
 
   async remove(id: string, currentUser: AuthUser): Promise<void> {
@@ -291,52 +291,32 @@ export class BibleStudyService {
 
   private inferTeamAudience(team: MissionaryTeam): string {
     if (team.smallGroup) {
-      if ((team.smallGroup as any).sabbathClass) {
-        return (team.smallGroup as any).sabbathClass.name;
+      if (team.smallGroup.sabbathClass) {
+        return team.smallGroup.sabbathClass.name;
       }
-      return (team.smallGroup as any).actionUnit ?? 'Equipo';
+      return team.smallGroup.actionUnit ?? 'Equipo';
     }
     if (team.sabbathClass) {
-      return (team.sabbathClass as any).name;
+      return team.sabbathClass.name;
     }
     return 'Iglesia';
   }
 
-  private mapToDto(study: BibleStudy): BibleStudyResponseDto {
-    const dto = new BibleStudyResponseDto();
-    dto.id = study.id;
-    dto.studentId = study.studentId;
-    dto.student = study.student
-      ? { id: study.student.id, firstName: study.student.firstName, lastName: study.student.lastName }
-      : null;
-    dto.courseId = study.courseId;
-    dto.course = study.course
-      ? {
-          id: study.course.id,
-          name: study.course.name,
-          lessonCount: study.course.lessonCount,
-          audience: study.course.audience,
-        }
-      : null;
-    dto.instructorId = study.instructorId;
-    dto.instructor = study.instructor
-      ? { id: study.instructor.id, firstName: study.instructor.firstName, lastName: study.instructor.lastName }
-      : null;
-    dto.instructorTeamId = study.instructorTeamId;
-    dto.instructorTeam = study.instructorTeam
-      ? {
-          id: study.instructorTeam.id,
-          label: study.instructorTeam.label,
-          audience: this.inferTeamAudience(study.instructorTeam),
-        }
-      : null;
-    dto.status = study.status;
-    dto.lessonProgress = study.lessonProgress;
-    dto.currentLesson = study.currentLesson;
-    dto.interestedInBaptism = study.interestedInBaptism;
-    dto.notes = study.notes;
-    dto.createdAt = study.createdAt;
-    dto.updatedAt = study.updatedAt;
+  /**
+   * Serializa un estudio bíblico a DTO usando toDto() para campos simples.
+   * El campo instructorTeam.audience se calcula post-toDto() porque requiere
+   * lógica de negocio (inferTeamAudience) que no existe en la entidad.
+   */
+  private serializarEstudio(study: BibleStudy): BibleStudyResponseDto {
+    const dto = toDto(BibleStudyResponseDto, study);
+    // instructorTeam.audience es un campo calculado — se asigna después de toDto()
+    if (study.instructorTeam) {
+      dto.instructorTeam = {
+        id: study.instructorTeam.id,
+        label: study.instructorTeam.label,
+        audience: this.inferTeamAudience(study.instructorTeam),
+      };
+    }
     return dto;
   }
 

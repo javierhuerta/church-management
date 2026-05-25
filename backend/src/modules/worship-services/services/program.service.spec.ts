@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { ProgramService } from './program.service';
 import { ProgramRepository } from '../repositories/program.repository';
+import { CalendarService } from '../../calendar/calendar.service';
 import {
   ServiceProgram,
   ServiceProgramGroup,
@@ -223,6 +224,7 @@ describe('ProgramService — unit tests', () => {
         },
         { provide: DataSource, useValue: dataSource },
         { provide: ProgramRepository, useValue: mockProgramRepository },
+        { provide: CalendarService, useValue: { create: jest.fn() } },
       ],
     }).compile();
 
@@ -560,6 +562,7 @@ describe('ProgramService — createFromTemplate workflow', () => {
         },
         { provide: DataSource, useValue: dataSource },
         { provide: ProgramRepository, useValue: mockProgramRepository },
+        { provide: CalendarService, useValue: { create: jest.fn() } },
       ],
     }).compile();
 
@@ -762,6 +765,7 @@ describe('ProgramService — audit logging on updateSection', () => {
         },
         { provide: DataSource, useValue: dataSource },
         { provide: ProgramRepository, useValue: mockProgramRepo },
+        { provide: CalendarService, useValue: { create: jest.fn() } },
       ],
     })
       .compile()

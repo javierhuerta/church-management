@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { RescueStageEntity } from './entities/rescue-stage.entity';
 import { CreateCatalogDto } from './dto/create-catalog.dto';
 import { UpdateCatalogDto } from './dto/update-catalog.dto';
+import { RescueStageResponseDto } from './dto/rescue-stage-response.dto';
+import { toDto } from '../common';
 
 @Injectable()
 export class RescueStagesService {
@@ -12,29 +14,34 @@ export class RescueStagesService {
     private readonly repository: Repository<RescueStageEntity>,
   ) {}
 
-  async findAll(): Promise<RescueStageEntity[]> {
-    return this.repository.find({ order: { displayOrder: 'ASC' } });
+  async findAll(): Promise<RescueStageResponseDto[]> {
+    const items = await this.repository.find({ order: { displayOrder: 'ASC' } });
+    return toDto(RescueStageResponseDto, items);
   }
 
-  async findAllActive(): Promise<RescueStageEntity[]> {
-    return this.repository.find({ where: { active: true }, order: { displayOrder: 'ASC' } });
+  async findAllActive(): Promise<RescueStageResponseDto[]> {
+    const items = await this.repository.find({ where: { active: true }, order: { displayOrder: 'ASC' } });
+    return toDto(RescueStageResponseDto, items);
   }
 
-  async findOne(id: string): Promise<RescueStageEntity> {
+  async findOne(id: string): Promise<RescueStageResponseDto> {
     const item = await this.repository.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`RescueStage "${id}" not found`);
-    return item;
+    return toDto(RescueStageResponseDto, item);
   }
 
-  async create(dto: CreateCatalogDto): Promise<RescueStageEntity> {
+  async create(dto: CreateCatalogDto): Promise<RescueStageResponseDto> {
     const exists = await this.repository.findOne({ where: { code: dto.code } });
     if (exists) throw new ConflictException(`El código "${dto.code}" ya está en uso`);
     const entity = this.repository.create(dto as Partial<RescueStageEntity>);
-    return this.repository.save(entity);
+    const saved = await this.repository.save(entity);
+    return toDto(RescueStageResponseDto, saved);
   }
 
-  async update(id: string, dto: UpdateCatalogDto): Promise<RescueStageEntity> {
-    const item = await this.findOne(id);
+  async update(id: string, dto: UpdateCatalogDto): Promise<RescueStageResponseDto> {
+    // Cargamos la entidad cruda para validar y actualizar
+    const item = await this.repository.findOne({ where: { id } });
+    if (!item) throw new NotFoundException(`RescueStage "${id}" not found`);
 
     // Construir solo los campos que llegaron
     const changes: Partial<RescueStageEntity> = {};
@@ -49,7 +56,8 @@ export class RescueStagesService {
   }
 
   async remove(id: string): Promise<void> {
-    const item = await this.findOne(id);
+    const item = await this.repository.findOne({ where: { id } });
+    if (!item) throw new NotFoundException(`RescueStage "${id}" not found`);
     await this.repository.remove(item);
   }
 }

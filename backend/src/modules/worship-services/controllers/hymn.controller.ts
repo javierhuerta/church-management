@@ -21,7 +21,6 @@ import {
   HymnAutocompleteResponseDto,
 } from '../dto/hymn-response.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { toDto } from '../../common';
 
 @ApiTags('hymns')
 @ApiBearerAuth()
@@ -45,8 +44,8 @@ export class HymnController {
     description: 'List of hymns',
     type: [HymnResponseDto],
   })
-  async findAll(@Query('q') query?: string) {
-    return toDto(HymnResponseDto, await this.hymnService.search(query || ''));
+  async findAll(@Query('q') query?: string): Promise<HymnResponseDto[]> {
+    return this.hymnService.search(query || '');
   }
 
   @Get('autocomplete')
@@ -63,11 +62,8 @@ export class HymnController {
     description: 'Autocomplete suggestions',
     type: [HymnAutocompleteResponseDto],
   })
-  async autocomplete(@Query('q') query: string) {
-    return toDto(
-      HymnAutocompleteResponseDto,
-      await this.hymnService.autocomplete(query),
-    );
+  async autocomplete(@Query('q') query: string): Promise<HymnAutocompleteResponseDto[]> {
+    return this.hymnService.autocomplete(query);
   }
 
   @Get(':id')
@@ -78,11 +74,11 @@ export class HymnController {
     type: HymnResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Hymn not found' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<HymnResponseDto> {
     const hymn = await this.hymnService.findOne(id);
     if (!hymn) {
       throw new NotFoundException(`Hymn ${id} not found`);
     }
-    return toDto(HymnResponseDto, hymn);
+    return hymn;
   }
 }

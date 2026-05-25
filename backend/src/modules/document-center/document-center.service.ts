@@ -8,6 +8,8 @@ import { Repository } from 'typeorm';
 import { ChurchDocument, DocumentCategory } from './entities/church-document.entity';
 import { Period } from './entities/period.entity';
 import { Department } from '@/modules/departments/entities/department.entity';
+import { ChurchDocumentResponseDto } from './dto/church-document-response.dto';
+import { toDto } from '@/modules/common';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -31,7 +33,7 @@ export class DocumentCenterService {
     periodId?: string | null,
     originalName?: string,
     departmentId?: string | null,
-  ): Promise<ChurchDocument> {
+  ): Promise<ChurchDocumentResponseDto> {
     if (!file) {
       throw new BadRequestException('Archivo no proporcionado');
     }
@@ -76,7 +78,7 @@ export class DocumentCenterService {
 
     const savedOriginalName = originalName
       ? `${originalName}${ext}`
-      : file.originalname
+      : file.originalname;
 
     const document = this.documentRepository.create({
       year,
@@ -90,50 +92,59 @@ export class DocumentCenterService {
       departmentId: departmentId || null,
     });
 
-    return this.documentRepository.save(document);
+    const saved = await this.documentRepository.save(document);
+    return toDto(ChurchDocumentResponseDto, await this.cargarDocumento(saved.id));
   }
 
-  async findByYear(year: number): Promise<ChurchDocument[]> {
-    return this.documentRepository.find({
+  async findByYear(year: number): Promise<ChurchDocumentResponseDto[]> {
+    const items = await this.documentRepository.find({
       where: { year },
-      relations: ['period', 'period.pastor', 'period.elderShifts', 'period.elderShifts.elder', 'uploadedBy', 'department'],
+      relations: ['uploadedBy', 'period', 'department'],
       order: { month: 'ASC', category: 'ASC' },
     });
+    return toDto(ChurchDocumentResponseDto, items);
   }
 
-  async findByPeriod(periodId: string): Promise<ChurchDocument[]> {
-    return this.documentRepository.find({
+  async findByPeriod(periodId: string): Promise<ChurchDocumentResponseDto[]> {
+    const items = await this.documentRepository.find({
       where: { periodId },
-      relations: ['period', 'period.pastor', 'period.elderShifts', 'period.elderShifts.elder', 'uploadedBy', 'department'],
+      relations: ['uploadedBy', 'period', 'department'],
       order: { month: 'ASC', category: 'ASC' },
     });
+    return toDto(ChurchDocumentResponseDto, items);
   }
 
-  async findOne(id: string): Promise<ChurchDocument> {
-    const document = await this.documentRepository.findOne({
-      where: { id },
-      relations: ['period', 'period.pastor', 'period.elderShifts', 'period.elderShifts.elder', 'uploadedBy'],
-    });
-
-    if (!document) {
-      throw new NotFoundException(`Documento con ID ${id} no encontrado`);
-    }
-
-    return document;
+  async findOne(id: string): Promise<ChurchDocumentResponseDto> {
+    const document = await this.cargarDocumento(id);
+    return toDto(ChurchDocumentResponseDto, document);
   }
 
-  getFilePath(document: ChurchDocument): string {
-    return path.join(process.cwd(), 'uploads', 'documents', document.filePath);
+  /** Obtiene la ruta física del archivo en disco */
+  getFilePath(filePath: string): string {
+    return path.join(process.cwd(), 'uploads', 'documents', filePath);
   }
 
   async delete(id: string): Promise<void> {
-    const document = await this.findOne(id);
+    // Cargamos la entidad cruda para obtener filePath y eliminar
+    const document = await this.cargarDocumento(id);
 
-    const filePath = this.getFilePath(document);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    const physicalPath = this.getFilePath(document.filePath);
+    if (fs.existsSync(physicalPath)) {
+      fs.unlinkSync(physicalPath);
     }
 
     await this.documentRepository.remove(document);
+  }
+
+  /** Carga un documento con sus relaciones (uso interno) */
+  private async cargarDocumento(id: string): Promise<ChurchDocument> {
+    const document = await this.documentRepository.findOne({
+      where: { id },
+      relations: ['uploadedBy', 'period', 'department'],
+    });
+    if (!document) {
+      throw new NotFoundException(`Documento con ID ${id} no encontrado`);
+    }
+    return document;
   }
 }

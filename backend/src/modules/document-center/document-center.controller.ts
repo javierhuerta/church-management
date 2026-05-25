@@ -27,6 +27,7 @@ import { Roles } from '@/modules/auth/decorators/roles.decorator';
 import { UserRole } from '@/modules/common/entities/user-role.enum';
 import { DocumentCategory } from './entities/church-document.entity';
 import { CreateDocumentDto } from './dto/create-document.dto';
+import { ChurchDocumentResponseDto } from './dto/church-document-response.dto';
 
 const EDITOR_ROLES = [UserRole.Admin, UserRole.Pastor, UserRole.Secretaria];
 const VIEWER_ROLES = [UserRole.Anciano, UserRole.DirectorDepartamento, UserRole.CoordinadorMisionero];
@@ -50,8 +51,8 @@ export class DocumentCenterController {
   async upload(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: { year: number; month: number; category: DocumentCategory; periodId?: string; originalName?: string; departmentId?: string },
-  ) {
-    const document = await this.documentCenterService.uploadDocument(
+  ): Promise<ChurchDocumentResponseDto> {
+    return this.documentCenterService.uploadDocument(
       file,
       body.year,
       body.month,
@@ -60,21 +61,13 @@ export class DocumentCenterController {
       body.originalName,
       body.departmentId,
     );
-    return {
-      id: document.id,
-      originalName: document.originalName,
-      year: document.year,
-      month: document.month,
-      category: document.category,
-      message: 'Documento subido exitosamente',
-    };
   }
 
   @Get('year/:year')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(...EDITOR_ROLES, ...VIEWER_ROLES)
   @ApiOperation({ summary: 'List all documents for a specific year' })
-  async findByYear(@Param('year', ParseIntPipe) year: number) {
+  async findByYear(@Param('year', ParseIntPipe) year: number): Promise<ChurchDocumentResponseDto[]> {
     return this.documentCenterService.findByYear(year);
   }
 
@@ -82,7 +75,7 @@ export class DocumentCenterController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(...EDITOR_ROLES, ...VIEWER_ROLES)
   @ApiOperation({ summary: 'List all documents for a specific period' })
-  async findByPeriod(@Param('periodId') periodId: string) {
+  async findByPeriod(@Param('periodId') periodId: string): Promise<ChurchDocumentResponseDto[]> {
     return this.documentCenterService.findByPeriod(periodId);
   }
 
@@ -92,7 +85,7 @@ export class DocumentCenterController {
   @ApiOperation({ summary: 'Download a document' })
   async download(@Param('id') id: string): Promise<StreamableFile> {
     const document = await this.documentCenterService.findOne(id);
-    const filePath = this.documentCenterService.getFilePath(document);
+    const filePath = this.documentCenterService.getFilePath(document.filePath);
     const stream = createReadStream(filePath);
     return new StreamableFile(stream, {
       type: document.mimeType,

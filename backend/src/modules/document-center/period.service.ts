@@ -7,6 +7,9 @@ import { ElderRotationService } from './elder-rotation.service';
 import { User } from '@/modules/auth/entities/user.entity';
 import { UserRole } from '@/modules/common/entities/user-role.enum';
 import { CreatePeriodDto } from './dto/create-period.dto';
+import { PeriodResponseDto } from './dto/period-response.dto';
+import { ElderShiftResponseDto } from './dto/elder-shift-response.dto';
+import { toDto } from '@/modules/common';
 
 @Injectable()
 export class PeriodService {
@@ -20,21 +23,24 @@ export class PeriodService {
     private elderRotationService: ElderRotationService,
   ) {}
 
-  async createPeriod(dto: CreatePeriodDto): Promise<Period> {
+  async createPeriod(dto: CreatePeriodDto): Promise<PeriodResponseDto> {
     const existingPeriod = await this.periodRepository.findOne({ where: { year: dto.year } });
     if (existingPeriod) {
       throw new BadRequestException(`Ya existe un período para el año ${dto.year}`);
     }
 
-    // Start date: use provided value or default to Jan 1 of the year.
-    // Stored as a plain YYYY-MM-DD string to avoid timezone drift on `date` columns.
+    // Fecha inicio: usar valor provisto o por defecto 1 de enero del año.
+    // Se almacena como string YYYY-MM-DD para evitar drift de zona horaria en columnas `date`.
     const startDate = dto.startDate ?? `${dto.year}-01-01`;
     const endDate = `${dto.year}-12-31`;
 
     const period = this.periodRepository.create({
       year: dto.year,
-      startDate: startDate as any,
-      endDate: endDate as any,
+      // TypeORM `date` columns accept ISO strings (YYYY-MM-DD) at runtime even
+      // though the TypeScript type is `Date`. We cast via `unknown` to preserve
+      // type safety without silencing the compiler with `any`.
+      startDate: startDate as unknown as Date,
+      endDate: endDate as unknown as Date,
       pastorId: dto.pastorId,
       rotationMode: dto.rotationMode ?? RotationMode.AUTOMATIC,
       shiftWeeks: dto.shiftWeeks ?? 2,
@@ -48,12 +54,12 @@ export class PeriodService {
       await this.generateAutomaticRotation(savedPeriod.id);
     }
 
-    return this.findOne(savedPeriod.id);
+    return this.serializarPeriodo(await this.cargarPeriodo(savedPeriod.id));
   }
 
   /**
-   * Generates shifts from period.rotationGroups (or falls back to individuals).
-   * Always reads from the saved period — no parameter needed.
+   * Genera turnos desde period.rotationGroups (o fallback a individuos).
+   * Siempre lee desde el período guardado — no necesita parámetro.
    */
   private async generateAutomaticRotation(periodId: string): Promise<void> {
     const period = await this.periodRepository.findOne({ where: { id: periodId } });
@@ -64,7 +70,7 @@ export class PeriodService {
     if (period.rotationGroups && period.rotationGroups.length > 0) {
       groups = period.rotationGroups.filter((g) => g.length > 0);
     } else {
-      // No groups defined — fallback: rotate every eligible user individually
+      // Sin grupos definidos — fallback: rotar cada usuario elegible individualmente
       const eligible = await this.userRepository.find({
         where: [
           { role: UserRole.Anciano },
@@ -98,7 +104,7 @@ export class PeriodService {
     }
   }
 
-  async addElderShift(periodId: string, elderId: string, weekStart: Date, weekEnd: Date): Promise<ElderShift> {
+  async addElderShift(periodId: string, elderId: string, weekStart: Date, weekEnd: Date): Promise<ElderShiftResponseDto> {
     const period = await this.periodRepository.findOne({ where: { id: periodId } });
     if (!period) throw new NotFoundException('Período no encontrado');
 
@@ -108,7 +114,13 @@ export class PeriodService {
     const shift = this.elderShiftRepository.create({
       periodId, elderId, weekStart, weekEnd,
     });
-    return this.elderShiftRepository.save(shift);
+    const saved = await this.elderShiftRepository.save(shift);
+    // Asignamos la relación elder directamente para evitar una consulta adicional.
+    // ElderShift.elder es una relación TypeORM declarada en la entidad — la
+    // asignamos post-save para que toDto() pueda serializar el campo sin hacer
+    // una query adicional.
+    saved.elder = elder;
+    return toDto(ElderShiftResponseDto, saved);
   }
 
   async removeElderShift(shiftId: string): Promise<void> {
@@ -117,24 +129,23 @@ export class PeriodService {
     await this.elderShiftRepository.remove(shift);
   }
 
-  async findAll(): Promise<Period[]> {
-    return this.periodRepository.find({ order: { year: 'DESC' } });
+  async findAll(): Promise<PeriodResponseDto[]> {
+    const items = await this.periodRepository.find({ order: { year: 'DESC' } });
+    return toDto(PeriodResponseDto, items);
   }
 
-  async findByYear(year: number): Promise<Period | null> {
-    return this.periodRepository.findOne({
+  async findByYear(year: number): Promise<PeriodResponseDto | null> {
+    const period = await this.periodRepository.findOne({
       where: { year },
       relations: ['pastor', 'elderShifts', 'elderShifts.elder'],
     });
+    if (!period) return null;
+    return this.serializarPeriodo(period);
   }
 
-  async findOne(id: string): Promise<Period> {
-    const period = await this.periodRepository.findOne({
-      where: { id },
-      relations: ['pastor', 'elderShifts', 'elderShifts.elder'],
-    });
-    if (!period) throw new NotFoundException(`Período con ID ${id} no encontrado`);
-    return period;
+  async findOne(id: string): Promise<PeriodResponseDto> {
+    const period = await this.cargarPeriodo(id);
+    return this.serializarPeriodo(period);
   }
 
   async updatePeriod(
@@ -145,8 +156,9 @@ export class PeriodService {
     notes?: string,
     rotationGroups?: string[][],
     startDate?: string,
-  ): Promise<Period> {
-    const period = await this.findOne(id);
+  ): Promise<PeriodResponseDto> {
+    // Cargamos la entidad cruda para modificar y guardar
+    const period = await this.cargarPeriodo(id);
     const previousMode = period.rotationMode;
     const previousShiftWeeks = period.shiftWeeks;
     const previousGroups = JSON.stringify(period.rotationGroups ?? []);
@@ -158,11 +170,11 @@ export class PeriodService {
     if (shiftWeeks !== undefined) period.shiftWeeks = shiftWeeks;
     if (notes !== undefined) period.notes = notes;
     if (rotationGroups !== undefined) period.rotationGroups = rotationGroups.length > 0 ? rotationGroups : null;
-    if (startDate !== undefined) period.startDate = startDate as any;
+    if (startDate !== undefined) period.startDate = startDate as unknown as Date;
 
     await this.periodRepository.save(period);
 
-    // Regenerate when AUTOMATIC and something relevant changed
+    // Regenerar cuando AUTOMATIC y algo relevante cambió
     const newGroups = JSON.stringify(period.rotationGroups ?? []);
     const newStart = this.toDateString(period.startDate);
     const shouldRegenerate =
@@ -177,7 +189,7 @@ export class PeriodService {
       await this.elderShiftRepository.delete({ periodId: id });
       await this.generateAutomaticRotation(id);
     } else if (
-      // groups set for the first time but no shifts exist yet
+      // Grupos definidos por primera vez pero sin turnos existentes
       period.rotationMode === RotationMode.AUTOMATIC &&
       rotationGroups !== undefined &&
       rotationGroups.length > 0
@@ -188,7 +200,7 @@ export class PeriodService {
       }
     }
 
-    return this.findOne(id);
+    return this.serializarPeriodo(await this.cargarPeriodo(id));
   }
 
   async regenerateRotation(
@@ -196,23 +208,38 @@ export class PeriodService {
     shiftWeeks: number,
     rotationGroups?: string[][],
     startDate?: string,
-  ): Promise<Period> {
-    const period = await this.findOne(id);
+  ): Promise<PeriodResponseDto> {
+    const period = await this.cargarPeriodo(id);
 
     if (shiftWeeks !== period.shiftWeeks) period.shiftWeeks = shiftWeeks;
     if (rotationGroups !== undefined) {
       period.rotationGroups = rotationGroups.length > 0 ? rotationGroups : null;
     }
-    if (startDate !== undefined) period.startDate = startDate as any;
+    if (startDate !== undefined) period.startDate = startDate as unknown as Date;
     await this.periodRepository.save(period);
 
     await this.elderShiftRepository.delete({ periodId: id });
     await this.generateAutomaticRotation(id);
 
-    return this.findOne(id);
+    return this.serializarPeriodo(await this.cargarPeriodo(id));
   }
 
-  /** Normalizes a date value (Date or string) to a YYYY-MM-DD string. */
+  /** Carga un período con todas sus relaciones (uso interno) */
+  private async cargarPeriodo(id: string): Promise<Period> {
+    const period = await this.periodRepository.findOne({
+      where: { id },
+      relations: ['pastor', 'elderShifts', 'elderShifts.elder'],
+    });
+    if (!period) throw new NotFoundException(`Período con ID ${id} no encontrado`);
+    return period;
+  }
+
+  /** Serializa un período a DTO usando toDto() */
+  private serializarPeriodo(period: Period): PeriodResponseDto {
+    return toDto(PeriodResponseDto, period);
+  }
+
+  /** Normaliza un valor de fecha (Date o string) a string YYYY-MM-DD */
   private toDateString(d: Date | string): string {
     if (typeof d === 'string') return d.split('T')[0];
     return d.toISOString().split('T')[0];

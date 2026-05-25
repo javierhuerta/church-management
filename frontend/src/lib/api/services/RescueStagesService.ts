@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CreateCatalogDto } from '../models/CreateCatalogDto';
+import type { RescueStageResponseDto } from '../models/RescueStageResponseDto';
 import type { UpdateCatalogDto } from '../models/UpdateCatalogDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -10,10 +11,10 @@ import { request as __request } from '../core/request';
 export class RescueStagesService {
     /**
      * Listar todas las etapas de rescate
-     * @returns any
+     * @returns RescueStageResponseDto
      * @throws ApiError
      */
-    public static rescueStagesControllerFindAll(): CancelablePromise<any> {
+    public static rescueStagesControllerFindAll(): CancelablePromise<Array<RescueStageResponseDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/rescue-stages',
@@ -22,12 +23,12 @@ export class RescueStagesService {
     /**
      * Crear etapa de rescate
      * @param requestBody
-     * @returns any
+     * @returns RescueStageResponseDto
      * @throws ApiError
      */
     public static rescueStagesControllerCreate(
         requestBody: CreateCatalogDto,
-    ): CancelablePromise<any> {
+    ): CancelablePromise<RescueStageResponseDto> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/rescue-stages',
@@ -37,10 +38,10 @@ export class RescueStagesService {
     }
     /**
      * Listar etapas activas
-     * @returns any
+     * @returns RescueStageResponseDto
      * @throws ApiError
      */
-    public static rescueStagesControllerFindAllActive(): CancelablePromise<any> {
+    public static rescueStagesControllerFindAllActive(): CancelablePromise<Array<RescueStageResponseDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/rescue-stages/active',
@@ -49,12 +50,12 @@ export class RescueStagesService {
     /**
      * Obtener etapa por ID
      * @param id
-     * @returns any
+     * @returns RescueStageResponseDto
      * @throws ApiError
      */
     public static rescueStagesControllerFindOne(
         id: string,
-    ): CancelablePromise<any> {
+    ): CancelablePromise<RescueStageResponseDto> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/rescue-stages/{id}',
@@ -67,13 +68,13 @@ export class RescueStagesService {
      * Actualizar etapa de rescate
      * @param id
      * @param requestBody
-     * @returns any
+     * @returns RescueStageResponseDto
      * @throws ApiError
      */
     public static rescueStagesControllerUpdate(
         id: string,
         requestBody: UpdateCatalogDto,
-    ): CancelablePromise<any> {
+    ): CancelablePromise<RescueStageResponseDto> {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/api/rescue-stages/{id}',

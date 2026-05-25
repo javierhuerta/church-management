@@ -17,6 +17,8 @@ import {
 import { PeriodService } from './period.service';
 import { CreatePeriodDto } from './dto/create-period.dto';
 import { UpdatePeriodDto } from './dto/update-period.dto';
+import { PeriodResponseDto } from './dto/period-response.dto';
+import { ElderShiftResponseDto } from './dto/elder-shift-response.dto';
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { Roles } from '@/modules/auth/decorators/roles.decorator';
@@ -34,36 +36,36 @@ export class PeriodController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(...EDITOR_ROLES)
   @ApiOperation({ summary: 'Create a new annual period with pastor and elder rotation' })
-  async create(@Body() createPeriodDto: CreatePeriodDto) {
+  async create(@Body() createPeriodDto: CreatePeriodDto): Promise<PeriodResponseDto> {
     return this.periodService.createPeriod(createPeriodDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'List all periods' })
-  async findAll() {
+  async findAll(): Promise<PeriodResponseDto[]> {
     return this.periodService.findAll();
   }
 
   @Get('year/:year')
   @ApiOperation({ summary: 'Get period by year' })
-  async findByYear(@Param('year', ParseIntPipe) year: number) {
+  async findByYear(@Param('year', ParseIntPipe) year: number): Promise<PeriodResponseDto | null> {
     return this.periodService.findByYear(year);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a period with pastor and elder shifts' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<PeriodResponseDto> {
     return this.periodService.findOne(id);
   }
 
-@Put(':id')
+  @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(...EDITOR_ROLES)
   @ApiOperation({ summary: 'Update a period (change pastor, rotation mode, etc.)' })
   async update(
     @Param('id') id: string,
     @Body() updatePeriodDto: UpdatePeriodDto,
-  ) {
+  ): Promise<PeriodResponseDto> {
     return this.periodService.updatePeriod(
       id,
       updatePeriodDto.pastorId ?? null,
@@ -82,7 +84,7 @@ export class PeriodController {
   async regenerateRotation(
     @Param('id') id: string,
     @Body() body: { shiftWeeks: number; rotationGroups?: string[][]; startDate?: string },
-  ) {
+  ): Promise<PeriodResponseDto> {
     return this.periodService.regenerateRotation(id, body.shiftWeeks, body.rotationGroups, body.startDate);
   }
 
@@ -92,8 +94,8 @@ export class PeriodController {
   @ApiOperation({ summary: 'Add a manual elder shift' })
   async addElderShift(
     @Body() body: { periodId: string; elderIds: string[]; weekStart: string; weekEnd: string },
-  ) {
-    const shifts = [];
+  ): Promise<ElderShiftResponseDto[]> {
+    const shifts: ElderShiftResponseDto[] = [];
     for (const elderId of body.elderIds) {
       const shift = await this.periodService.addElderShift(
         body.periodId,

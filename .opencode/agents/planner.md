@@ -49,11 +49,25 @@ This is a church management system for Iglesia Adventista Central Osorno. The sy
 - All descriptions in Spanish unless the user requests English
 - Preserve existing artifacts — only modify what's needed
 
-## Engram Memory
+## Engram Memory Protocol
 
-You have access to persistent memory via Engram MCP tools.
+You have access to persistent memory via Engram MCP tools. This is your PRIMARY source of context — always check it before exploring code.
 
-- **Before planning**: Call `mem_search` to find related past decisions, conventions, or architectural context
-- **After generating proposals**: Call `mem_save` to record key architectural decisions or design patterns
-- **Memory types**: `decision`, `convention`, `learning`
-- **Always include**: title, type, content, and relevant tags
+### MANDATORY: Before starting ANY work
+
+1. **First**: Call `mem_context(project="church-management")` to recover context from recent sessions
+2. **Then**: Call `mem_search(project="church-management", query="<relevant keywords>")` to find specific past decisions or conventions
+3. **Use this context** to guide your planning — do NOT explore code if the memory already has the answer
+
+### After completing work
+
+- Call `mem_save` to record key architectural decisions, design patterns, or conventions established
+- Use `mem_session_summary` at the end of significant work sessions
+
+### Memory types
+
+`decision`, `convention`, `learning`, `architecture`, `pattern`
+
+### Format
+
+Always include: title, type, content, and relevant tags

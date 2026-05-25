@@ -29,6 +29,8 @@ import {
   ReorderDto,
   PublishWithEventDto,
 } from '../dto/program.dto';
+import { ServiceProgramResponseDto } from '../dto/program-response.dto';
+import { toDto } from '../../common';
 import { CalendarService } from '../../calendar/calendar.service';
 import { CreateEventDto } from '../../calendar/dto/create-event.dto';
 import { EventType } from '../../calendar/entities/event-type.enum';
@@ -65,8 +67,9 @@ export class ProgramService {
       dateTo?: string;
       status?: ProgramStatus;
     } = {},
-  ): Promise<ServiceProgram[]> {
-    return this.programRepository.findWithFilters(filters);
+  ): Promise<ServiceProgramResponseDto[]> {
+    const programs = await this.programRepository.findWithFilters(filters);
+    return toDto(ServiceProgramResponseDto, programs);
   }
 
   async findOne(id: string): Promise<ServiceProgram> {

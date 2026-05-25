@@ -5,6 +5,8 @@ import { PersonRepository } from './repositories/person.repository';
 import { RescueMemberRepository } from './repositories/rescue-member.repository';
 import { VisitRepository } from './repositories/visit.repository';
 import { SmallGroupRepository } from './repositories/small-group.repository';
+import { MissionaryTeamRepository } from './repositories/missionary-team.repository';
+import { BibleStudyRepository } from './repositories/bible-study.repository';
 import { Person } from './entities/person.entity';
 
 function makePerson(overrides: Partial<Person> = {}): Person {
@@ -29,6 +31,8 @@ describe('MissionService', () => {
   let mockRescueMemberRepo: any;
   let mockVisitRepo: any;
   let mockSmallGroupRepo: any;
+  let mockMissionaryTeamRepo: any;
+  let mockBibleStudyRepo: any;
 
   beforeEach(async () => {
     mockPersonRepo = {
@@ -55,6 +59,16 @@ describe('MissionService', () => {
       existsByPromoterPersonId: jest.fn(),
     };
 
+    mockMissionaryTeamRepo = {
+      findAll: jest.fn().mockResolvedValue([]),
+      isPersonActiveMember: jest.fn().mockResolvedValue(false),
+    };
+
+    mockBibleStudyRepo = {
+      countByStudentId: jest.fn().mockResolvedValue(0),
+      countByInstructorId: jest.fn().mockResolvedValue(0),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MissionService,
@@ -62,6 +76,8 @@ describe('MissionService', () => {
         { provide: RescueMemberRepository, useValue: mockRescueMemberRepo },
         { provide: VisitRepository, useValue: mockVisitRepo },
         { provide: SmallGroupRepository, useValue: mockSmallGroupRepo },
+        { provide: MissionaryTeamRepository, useValue: mockMissionaryTeamRepo },
+        { provide: BibleStudyRepository, useValue: mockBibleStudyRepo },
       ],
     }).compile();
 

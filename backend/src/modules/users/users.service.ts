@@ -31,11 +31,11 @@ export class UsersService {
       relations: ['departments', 'person'],
       order: { name: 'ASC' },
     });
-    return users.map((u) => this.mapToDto(u));
+    return users.map((u) => this.serializarUsuario(u));
   }
 
   async findOne(id: string): Promise<UserResponseDto> {
-    return this.mapToDto(await this.loadOne(id));
+    return this.serializarUsuario(await this.loadOne(id));
   }
 
   async create(dto: CreateUserDto): Promise<UserResponseDto> {
@@ -61,7 +61,7 @@ export class UsersService {
     });
 
     const saved = await this.userRepo.save(user);
-    return this.mapToDto(await this.loadOne(saved.id));
+    return this.serializarUsuario(await this.loadOne(saved.id));
   }
 
   async update(id: string, dto: UpdateUserDto): Promise<UserResponseDto> {
@@ -107,7 +107,7 @@ export class UsersService {
     }
 
     await this.userRepo.save(user);
-    return this.mapToDto(await this.loadOne(id));
+    return this.serializarUsuario(await this.loadOne(id));
   }
 
   async remove(id: string): Promise<void> {
@@ -126,13 +126,15 @@ export class UsersService {
     await this.userRepo.remove(user);
   }
 
-  private mapToDto(user: User): UserResponseDto {
-    const base = toDto(UserResponseDto, user);
-    base.personId = user.personId ?? null;
-    base.personName = user.person
+  /** Serializa un usuario a DTO, calculando campos derivados post-toDto */
+  private serializarUsuario(user: User): UserResponseDto {
+    const dto = toDto(UserResponseDto, user);
+    // personId y personName son campos calculados que no vienen directamente de @Expose
+    dto.personId = user.personId ?? null;
+    dto.personName = user.person
       ? `${user.person.firstName} ${user.person.lastName ?? ''}`.trim()
       : null;
-    return base;
+    return dto;
   }
 
   private async loadOne(id: string): Promise<User> {

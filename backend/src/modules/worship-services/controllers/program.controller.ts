@@ -17,6 +17,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { RequestWithUser, toDto } from '../../common';
+// Note: toDto is still used for findOne and other methods that return raw entities
 import { ProgramService } from '../services/program.service';
 import {
   CreateProgramDto,
@@ -57,11 +58,8 @@ export class ProgramController {
     description: 'List of programs',
     type: [ServiceProgramResponseDto],
   })
-  async findAll(@Query() filters: GetProgramsFilterDto) {
-    return toDto(
-      ServiceProgramResponseDto,
-      await this.programService.findAll(filters),
-    );
+  async findAll(@Query() filters: GetProgramsFilterDto): Promise<ServiceProgramResponseDto[]> {
+    return this.programService.findAll(filters);
   }
 
   @Get(':id')

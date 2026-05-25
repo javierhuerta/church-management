@@ -1,10 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 
-export class SabbathClassResponseDto {
+export class RescueStageResponseDto {
   @ApiProperty({ type: String })
   @Expose()
   id: string;
+
+  @ApiProperty({ type: String })
+  @Expose()
+  code: string;
 
   @ApiProperty({ type: String })
   @Expose()
@@ -18,9 +22,13 @@ export class SabbathClassResponseDto {
   @Expose()
   displayOrder: number;
 
+  @ApiPropertyOptional({ type: String, nullable: true })
+  @Expose()
+  color: string | null;
+
   @ApiProperty({ type: Boolean })
   @Expose()
-  isActive: boolean;
+  active: boolean;
 
   @ApiProperty({ type: Date })
   @Expose()

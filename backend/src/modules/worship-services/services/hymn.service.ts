@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Hymn } from '../entities';
+import { HymnResponseDto, HymnAutocompleteResponseDto } from '../dto';
+import { toDto } from '@/modules/common';
 
 @Injectable()
 export class HymnService {
@@ -10,34 +12,38 @@ export class HymnService {
     private readonly hymnRepo: Repository<Hymn>,
   ) {}
 
-  async findAll(): Promise<Hymn[]> {
-    return this.hymnRepo.find({
+  async findAll(): Promise<HymnResponseDto[]> {
+    const hymns = await this.hymnRepo.find({
       where: { isActive: true },
       order: { number: 'ASC' },
     });
+    return toDto(HymnResponseDto, hymns);
   }
 
-  async findOne(id: string): Promise<Hymn | null> {
-    return this.hymnRepo.findOne({ where: { id } });
+  async findOne(id: string): Promise<HymnResponseDto | null> {
+    const hymn = await this.hymnRepo.findOne({ where: { id } });
+    if (!hymn) return null;
+    return toDto(HymnResponseDto, hymn);
   }
 
-  async search(query: string): Promise<Hymn[]> {
+  async search(query: string): Promise<HymnResponseDto[]> {
     if (!query) {
       return this.findAll();
     }
 
     const numericQuery = parseInt(query, 10);
     if (!isNaN(numericQuery)) {
-      return this.hymnRepo.find({
+      const hymns = await this.hymnRepo.find({
         where: [
           { number: numericQuery, isActive: true },
           { number: numericQuery, isActive: false },
         ],
         order: { number: 'ASC' },
       });
+      return toDto(HymnResponseDto, hymns);
     }
 
-    return this.hymnRepo
+    const hymns = await this.hymnRepo
       .createQueryBuilder('hymn')
       .where('hymn.isActive = :isActive', { isActive: true })
       .andWhere('unaccent(lower(hymn.name)) LIKE unaccent(lower(:query))', {
@@ -45,11 +51,12 @@ export class HymnService {
       })
       .orderBy('hymn.number', 'ASC')
       .getMany();
+    return toDto(HymnResponseDto, hymns);
   }
 
   async autocomplete(
     query: string,
-  ): Promise<{ number: number; name: string }[]> {
+  ): Promise<HymnAutocompleteResponseDto[]> {
     if (!query || query.length < 1) {
       return [];
     }
@@ -62,10 +69,10 @@ export class HymnService {
         order: { number: 'ASC' },
         take: 10,
       });
-      return results.map((h) => ({ number: h.number, name: h.name }));
+      return toDto(HymnAutocompleteResponseDto, results);
     }
 
-    return this.hymnRepo
+    const results = await this.hymnRepo
       .createQueryBuilder('hymn')
       .where('hymn.isActive = :isActive', { isActive: true })
       .andWhere('unaccent(lower(hymn.name)) LIKE unaccent(lower(:query))', {
@@ -73,7 +80,7 @@ export class HymnService {
       })
       .orderBy('hymn.number', 'ASC')
       .take(10)
-      .getMany()
-      .then((results) => results.map((h) => ({ number: h.number, name: h.name })));
+      .getMany();
+    return toDto(HymnAutocompleteResponseDto, results);
   }
 }

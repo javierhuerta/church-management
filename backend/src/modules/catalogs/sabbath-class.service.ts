@@ -8,6 +8,8 @@ import { Repository } from 'typeorm';
 import { SabbathClassEntity } from './entities/sabbath-class.entity';
 import { CreateSabbathClassDto } from './dto/create-sabbath-class.dto';
 import { UpdateSabbathClassDto } from './dto/update-sabbath-class.dto';
+import { SabbathClassResponseDto } from './dto/sabbath-class-response.dto';
+import { toDto } from '../common';
 
 @Injectable()
 export class SabbathClassService {
@@ -16,24 +18,26 @@ export class SabbathClassService {
     private readonly repository: Repository<SabbathClassEntity>,
   ) {}
 
-  async findAll(): Promise<SabbathClassEntity[]> {
-    return this.repository.find({ order: { displayOrder: 'ASC' } });
+  async findAll(): Promise<SabbathClassResponseDto[]> {
+    const items = await this.repository.find({ order: { displayOrder: 'ASC' } });
+    return toDto(SabbathClassResponseDto, items);
   }
 
-  async findAllActive(): Promise<SabbathClassEntity[]> {
-    return this.repository.find({
+  async findAllActive(): Promise<SabbathClassResponseDto[]> {
+    const items = await this.repository.find({
       where: { isActive: true },
       order: { displayOrder: 'ASC' },
     });
+    return toDto(SabbathClassResponseDto, items);
   }
 
-  async findOne(id: string): Promise<SabbathClassEntity> {
+  async findOne(id: string): Promise<SabbathClassResponseDto> {
     const item = await this.repository.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`SabbathClass "${id}" not found`);
-    return item;
+    return toDto(SabbathClassResponseDto, item);
   }
 
-  async create(dto: CreateSabbathClassDto): Promise<SabbathClassEntity> {
+  async create(dto: CreateSabbathClassDto): Promise<SabbathClassResponseDto> {
     const exists = await this.repository.findOne({ where: { name: dto.name } });
     if (exists) {
       throw new ConflictException(`El nombre "${dto.name}" ya está en uso`);
@@ -44,14 +48,17 @@ export class SabbathClassService {
       displayOrder: dto.displayOrder ?? 0,
       isActive: dto.isActive ?? true,
     });
-    return this.repository.save(entity);
+    const saved = await this.repository.save(entity);
+    return toDto(SabbathClassResponseDto, saved);
   }
 
   async update(
     id: string,
     dto: UpdateSabbathClassDto,
-  ): Promise<SabbathClassEntity> {
-    const item = await this.findOne(id);
+  ): Promise<SabbathClassResponseDto> {
+    // Cargamos la entidad cruda para validar y actualizar
+    const item = await this.repository.findOne({ where: { id } });
+    if (!item) throw new NotFoundException(`SabbathClass "${id}" not found`);
 
     if (dto.name !== undefined && dto.name !== item.name) {
       const exists = await this.repository.findOne({

@@ -136,3 +136,26 @@ Focus on:
 - Use descriptive test names: `it('rejects unauthorized roles with ForbiddenException')` not `it('fails')`
 - Test ALL roles for permission-gated methods using `it.each()`
 - Always create factory functions for test entities
+
+## Engram Memory Protocol
+
+You have access to persistent memory via Engram MCP tools. This is your PRIMARY source of context — always check it before exploring code.
+
+### MANDATORY: Before starting ANY work
+
+1. **First**: Call `mem_context(project="church-management")` to recover context from recent sessions
+2. **Then**: Call `mem_search(project="church-management", query="<relevant keywords>")` to find specific past test patterns or conventions
+3. **Use this context** to guide your test generation — do NOT explore code if the memory already has the answer
+
+### After completing work
+
+- Call `mem_save` to record new test patterns or testing conventions established
+- Use `mem_session_summary` at the end of significant work sessions
+
+### Memory types
+
+`convention`, `pattern`, `learning`
+
+### Format
+
+Always include: title, type, content, and relevant tags (testing, jest, vitest, etc.)

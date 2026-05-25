@@ -80,11 +80,6 @@ export class EventResponseDto {
 
   @ApiPropertyOptional({ type: () => EventDepartmentDto, nullable: true })
   @Expose()
-  @Transform(({ obj }) => {
-    const dept = (obj as Event).department;
-    if (!dept) return null;
-    return { id: dept.id, name: dept.name, color: dept.color, sigla: dept.sigla ?? null };
-  })
   @Type(() => EventDepartmentDto)
   department: EventDepartmentDto | null;
 

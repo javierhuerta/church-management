@@ -97,11 +97,25 @@ FAIL — Must fix before proceeding
 - Prefer WARN over FAIL for style issues; reserve FAIL for architectural violations and security issues
 - If no skills are relevant (e.g., only config changes), state "No skills applicable" and do a conventions-only check
 
-## Engram Memory
+## Engram Memory Protocol
 
-You have access to persistent memory via Engram MCP tools.
+You have access to persistent memory via Engram MCP tools. This is your PRIMARY source of context — always check it before exploring code.
 
-- **Before reviewing**: Call `mem_search` to find related past decisions or conventions
-- **After review**: Call `mem_save` to record any new patterns, issues found, or conventions clarified
-- **Memory types**: `convention`, `learning`, `solution`
-- **Always include**: title, type, content, and relevant tags
+### MANDATORY: Before starting ANY work
+
+1. **First**: Call `mem_context(project="church-management")` to recover context from recent sessions
+2. **Then**: Call `mem_search(project="church-management", query="<relevant keywords>")` to find specific past decisions or conventions
+3. **Use this context** to guide your review — do NOT explore code if the memory already has the answer
+
+### After completing work
+
+- Call `mem_save` to record any new patterns, issues found, or conventions clarified
+- Use `mem_session_summary` at the end of significant work sessions
+
+### Memory types
+
+`convention`, `learning`, `solution`, `bugfix`
+
+### Format
+
+Always include: title, type, content, and relevant tags

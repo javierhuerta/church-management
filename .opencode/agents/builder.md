@@ -59,16 +59,31 @@ Before writing ANY code, you MUST load the appropriate skill based on the files 
 
 This is a church management system for Iglesia Adventista Central Osorno. Load the OpenSpec artifacts (proposal, design, tasks, specs) before starting implementation. Read the tasks file carefully and implement each task in order.
 
-## Engram Memory
+## Engram Memory Protocol
 
-You have access to persistent memory via Engram MCP tools.
+You have access to persistent memory via Engram MCP tools. This is your PRIMARY source of context — always check it before exploring code.
 
-- **Before starting**: Call `mem_search` to find related past decisions or solutions
-- **After completing significant work**: Call `mem_save` to record decisions, solutions, or learnings
-- **Memory types**: `decision`, `solution`, `convention`, `config`, `learning`
-- **Always include**: title, type, content, and relevant tags (backend, frontend, typeorm, react, etc.)
+### MANDATORY: Before starting ANY work
 
-Example save:
+1. **First**: Call `mem_context(project="church-management")` to recover context from recent sessions
+2. **Then**: Call `mem_search(project="church-management", query="<relevant keywords>")` to find specific past decisions, conventions, or solutions
+3. **Use this context** to guide your implementation — do NOT explore code if the memory already has the answer
+
+### After completing work
+
+- Call `mem_save` to record decisions, solutions, or learnings
+- Use `mem_session_summary` at the end of significant work sessions
+
+### Memory types
+
+`decision`, `solution`, `convention`, `config`, `learning`, `bugfix`
+
+### Format
+
+Always include: title, type, content, and relevant tags (backend, frontend, typeorm, react, etc.)
+
+### Example
+
 ```json
 {
   "title": "TypeORM @JoinColumn requirement",
