@@ -213,29 +213,27 @@ describe('SabbathClassService', () => {
   describe('remove', () => {
     it('removes the sabbath class when no associated groups or teams', async () => {
       const item = makeSabbathClass();
-      // findOne is called via this.findOne(id) which calls toDto internally
       repository.findOne.mockResolvedValue(item);
-      // manager.getRepository().count returns 0 (no small groups)
-      repository.manager.getRepository.mockReturnValue({
-        count: jest.fn().mockResolvedValue(0),
-      });
-      // manager.createQueryBuilder chain returns count 0 (no missionary teams)
+      
+      // manager.createQueryBuilder chain returns count 0
       const qb = createMockQueryBuilder();
       qb.getRawOne.mockResolvedValue({ count: '0' });
       repository.manager.createQueryBuilder.mockReturnValue(qb);
 
       await service.remove('sc-1');
 
-      expect(repository.remove).toHaveBeenCalled();
+      expect(repository.findOne).toHaveBeenCalledWith({ where: { id: 'sc-1' } });
+      expect(repository.remove).toHaveBeenCalledWith(item);
     });
 
     it('throws ConflictException when sabbath class has associated small groups', async () => {
       const item = makeSabbathClass();
       repository.findOne.mockResolvedValue(item);
+      
       // Simulate small groups count > 0
-      repository.manager.getRepository.mockReturnValue({
-        count: jest.fn().mockResolvedValue(2),
-      });
+      const qb = createMockQueryBuilder();
+      qb.getRawOne.mockResolvedValueOnce({ count: '2' }); // first call for small groups
+      repository.manager.createQueryBuilder.mockReturnValue(qb);
 
       await expect(service.remove('sc-1')).rejects.toBeInstanceOf(
         ConflictException,

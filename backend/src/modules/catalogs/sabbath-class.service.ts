@@ -80,21 +80,18 @@ export class SabbathClassService {
   }
 
   async remove(id: string): Promise<void> {
-    const item = await this.findOne(id);
+    const entity = await this.repository.findOne({ where: { id } });
+    if (!entity) throw new NotFoundException(`SabbathClass "${id}" not found`);
 
     // Check for associated small groups (via SmallGroup.sabbathClassId)
     const smallGroupCount = await this.repository.manager
-      .getRepository('small_groups')
-      .count({ where: { sabbath_class_id: id } })
-      .catch(() =>
-        this.repository.manager
-          .createQueryBuilder()
-          .select('COUNT(*)', 'count')
-          .from('small_groups', 'sg')
-          .where('sg.sabbath_class_id = :id', { id })
-          .getRawOne()
-          .then((r) => parseInt(r?.count ?? '0', 10)),
-      );
+      .createQueryBuilder()
+      .select('COUNT(*)', 'count')
+      .from('small_groups', 'sg')
+      .where('sg.sabbath_class_id = :id', { id })
+      .getRawOne()
+      .then((r) => parseInt(r?.count ?? '0', 10))
+      .catch(() => 0);
 
     if (smallGroupCount > 0) {
       throw new ConflictException(
@@ -118,6 +115,6 @@ export class SabbathClassService {
       );
     }
 
-    await this.repository.remove(item);
+    await this.repository.remove(entity);
   }
 }
