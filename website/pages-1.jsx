@@ -376,15 +376,14 @@ function Arrow() {
 // LIDERAZGO (antes Nosotros) — junta directiva + ministerios
 // ═════════════════════════════════════════════════════════
 function PageNosotros({ setPage }) {
-  // Junta directiva — roles principales
-  const board = [
-    { role: 'Pastor',     name: 'Israel Jaramillo', slot: 'lid-pastor' },
-    { role: 'Tesorero',   name: 'Jaime Leal',       slot: 'lid-tesorero' },
-    { role: 'Secretaria', name: 'Ruth García',      slot: 'lid-secretaria' },
+  // Datos por defecto (fallback si la API falla)
+  const DEFAULT_BOARD = [
+    { role: 'Pastor',     name: 'Israel Jaramillo', photoUrl: null },
+    { role: 'Tesorero',   name: 'Jaime Leal',       photoUrl: null },
+    { role: 'Secretaria', name: 'Ruth García',      photoUrl: null },
   ];
 
-  // Líderes de ministerios
-  const ministries = [
+  const DEFAULT_MINISTRIES = [
     { role: 'Diáconos',          name: 'Beergreen Lafontant' },
     { role: 'Diaconisas',        name: 'Yessica Díaz' },
     { role: 'Jóvenes',           name: 'Ignacio Matamala' },
@@ -402,6 +401,26 @@ function PageNosotros({ setPage }) {
     { role: 'ASA',               name: 'Luis Contreras' },
     { role: 'Escuela Sabática',  name: 'Alejandra Navarro' },
   ];
+
+  // Estado dinámico desde la API
+  const [boardPhotoUrl, setBoardPhotoUrl] = React.useState(null);
+  const [board, setBoard] = React.useState(DEFAULT_BOARD);
+  const [ministries, setMinistries] = React.useState(DEFAULT_MINISTRIES);
+
+  // Cargar datos desde la API al montar
+  React.useEffect(() => {
+    if (window.IASD_API && window.IASD_API.fetchLeadership) {
+      window.IASD_API.fetchLeadership()
+        .then(data => {
+          if (data.boardPhotoUrl) setBoardPhotoUrl(data.boardPhotoUrl);
+          if (data.board && data.board.length > 0) setBoard(data.board);
+          if (data.ministries && data.ministries.length > 0) setMinistries(data.ministries);
+        })
+        .catch(err => {
+          console.warn('Error cargando liderazgo desde API, usando datos por defecto:', err);
+        });
+    }
+  }, []);
 
   return (
     <main className="page-enter" data-screen-label="Liderazgo">
@@ -428,11 +447,24 @@ function PageNosotros({ setPage }) {
       {/* Foto grupal */}
       <section className="section-tight" style={{ paddingTop: 0 }}>
         <div className="container">
-          <PhotoSlot
-            id="liderazgo-grupal"
-            label="Foto grupal · junta de iglesia"
-            height="clamp(280px, 42vw, 560px)"
-            radius={18} />
+          {boardPhotoUrl ? (
+            <img
+              src={boardPhotoUrl}
+              alt="Foto grupal · junta de iglesia"
+              style={{
+                width: '100%',
+                height: 'clamp(280px, 42vw, 560px)',
+                objectFit: 'cover',
+                borderRadius: 18,
+              }}
+            />
+          ) : (
+            <PhotoSlot
+              id="liderazgo-grupal"
+              label="Foto grupal · junta de iglesia"
+              height="clamp(280px, 42vw, 560px)"
+              radius={18} />
+          )}
         </div>
       </section>
 
@@ -467,8 +499,21 @@ function PageNosotros({ setPage }) {
                 <div style={{
                   width: 120, height: 120, margin: '0 auto 18px',
                 }}>
-                  <PhotoSlot id={p.slot} label="Retrato"
-                    height={120} shape="circle" radius={60} />
+                  {p.photoUrl ? (
+                    <img
+                      src={p.photoUrl}
+                      alt={p.name}
+                      style={{
+                        width: 120,
+                        height: 120,
+                        borderRadius: 60,
+                        objectFit: 'cover',
+                      }}
+                    />
+                  ) : (
+                    <PhotoSlot id={p.slot || 'leader-' + p.role} label="Retrato"
+                      height={120} shape="circle" radius={60} />
+                  )}
                 </div>
                 <div className="mono" style={{
                   fontSize: 11, color: 'var(--gold)', letterSpacing: '.14em',

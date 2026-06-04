@@ -182,6 +182,51 @@ const ShowcaseEditPage = lazy(() =>
     default: m.ShowcaseEditPage,
   })),
 )
+const ConfiguracionesLayout = lazy(() =>
+  import('./features/site-config/layouts/configuraciones-layout').then((m) => ({
+    default: m.ConfiguracionesLayout,
+  })),
+)
+const ConfiguracionesIndexPage = lazy(() =>
+  import('./features/site-config/pages/configuraciones-index-page').then((m) => ({
+    default: m.ConfiguracionesIndexPage,
+  })),
+)
+const InicioConfigPage = lazy(() =>
+  import('./features/site-config/pages/inicio-config-page').then((m) => ({
+    default: m.InicioConfigPage,
+  })),
+)
+const LiderazgoConfigPage = lazy(() =>
+  import('./features/site-config/pages/liderazgo-config-page').then((m) => ({
+    default: m.LiderazgoConfigPage,
+  })),
+)
+const HorariosConfigPage = lazy(() =>
+  import('./features/site-config/pages/horarios-config-page').then((m) => ({
+    default: m.HorariosConfigPage,
+  })),
+)
+const CalendarioConfigPage = lazy(() =>
+  import('./features/site-config/pages/calendario-config-page').then((m) => ({
+    default: m.CalendarioConfigPage,
+  })),
+)
+const CultosConfigPage = lazy(() =>
+  import('./features/site-config/pages/cultos-config-page').then((m) => ({
+    default: m.CultosConfigPage,
+  })),
+)
+const GaleriaConfigPage = lazy(() =>
+  import('./features/site-config/pages/galeria-config-page').then((m) => ({
+    default: m.GaleriaConfigPage,
+  })),
+)
+const TransmisionesConfigPage = lazy(() =>
+  import('./features/site-config/pages/transmisiones-config-page').then((m) => ({
+    default: m.TransmisionesConfigPage,
+  })),
+)
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token')
@@ -285,6 +330,17 @@ function App() {
                 <Route path="plantillas/:id/editar" element={<TemplateFormPage />} />
                 <Route path="catalogos" element={<CatalogsListPage />} />
                 <Route path="catalogos/:id" element={<CatalogFormPage />} />
+              </Route>
+
+              <Route path="configuraciones" element={<ConfiguracionesLayout />}>
+                <Route index element={<ConfiguracionesIndexPage />} />
+                <Route path="inicio" element={<InicioConfigPage />} />
+                <Route path="liderazgo" element={<LiderazgoConfigPage />} />
+                <Route path="horarios" element={<HorariosConfigPage />} />
+                <Route path="calendario" element={<CalendarioConfigPage />} />
+                <Route path="cultos" element={<CultosConfigPage />} />
+                <Route path="galeria" element={<GaleriaConfigPage />} />
+                <Route path="transmisiones" element={<TransmisionesConfigPage />} />
               </Route>
             </Route>
 

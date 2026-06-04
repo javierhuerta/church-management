@@ -113,20 +113,6 @@ function Nav({ page, setPage, isLive }) {
               {p.label}
             </button>
           )}
-          {session && (
-            <button
-              className={'nav-link ' + (page === 'documentos' ? 'active' : '')}
-              onClick={() => setPage('documentos')}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-              }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <rect x="2.5" y="1.5" width="7" height="9" rx="1" stroke="currentColor" strokeWidth="1.2" />
-                <path d="M4.5 4h3M4.5 6h3M4.5 8h2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-              </svg>
-              Documentos
-            </button>
-          )}
           <button
             className={'nav-live ' + (page === 'envivo' ? 'active' : '')}
             onClick={() => setPage('envivo')}>

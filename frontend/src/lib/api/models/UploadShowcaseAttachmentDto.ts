@@ -3,6 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type UploadShowcaseAttachmentDto = {
-    file: Blob;
+    file: ;
 };
 

@@ -17,6 +17,7 @@ import { MissionModule } from './modules/mission/mission.module';
 import { CatalogsModule } from './modules/catalogs/catalogs.module';
 import { HealthModule } from './modules/health/health.module';
 import { DocumentCenterModule } from './modules/document-center/document-center.module';
+import { SiteConfigModule } from './modules/site-config/site-config.module';
 import { AllExceptionsFilter } from './modules/common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './modules/common/interceptors/logging.interceptor';
 
@@ -67,6 +68,8 @@ import { MissionaryTeam } from './modules/mission/entities/missionary-team.entit
 import { MissionaryTeamMember } from './modules/mission/entities/missionary-team-member.entity';
 import { BibleCourse } from './modules/mission/entities/bible-course.entity';
 import { BibleStudy } from './modules/mission/entities/bible-study.entity';
+import { SiteSetting } from './modules/site-config/entities/site-setting.entity';
+import { PrincipalLeader } from './modules/site-config/entities/principal-leader.entity';
 
 const ENTITIES = [
   User,
@@ -101,6 +104,8 @@ const ENTITIES = [
   BibleStudy,
   DepartmentShowcase,
   ShowcaseAttachment,
+  SiteSetting,
+  PrincipalLeader,
 ];
 
 @Module({
@@ -138,6 +143,7 @@ const ENTITIES = [
     CatalogsModule,
     HealthModule,
     DocumentCenterModule,
+    SiteConfigModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

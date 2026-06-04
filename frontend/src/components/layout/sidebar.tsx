@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Calendar, FileText, Church, LogOut, User, ChevronDown, ChevronLeft, Settings, Sun, Moon, Monitor, FolderOpen, Building2, BookOpen } from 'lucide-react'
+import { Calendar, FileText, Church, LogOut, User, ChevronDown, ChevronLeft, Settings, Sun, Moon, Monitor, FolderOpen, Building2, BookOpen, Sliders } from 'lucide-react'
 import logoFull from '@/assets/images/logo.png'
 import logoMark from '@/assets/images/logo-mark.png'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -39,6 +39,7 @@ const navItems: NavItem[] = [
 
 const adminNavItems: NavItem[] = [
   { id: 'mantenedores', label: 'Mantenedores', icon: Settings, path: '/mantenedores/usuarios', matchPrefix: '/mantenedores' },
+  { id: 'configuraciones', label: 'Configuraciones', icon: Sliders, path: '/configuraciones', matchPrefix: '/configuraciones' },
 ]
 
 function getUserFromStorage() {

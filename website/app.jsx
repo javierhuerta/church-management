@@ -16,7 +16,7 @@ const ACCENT_OPTIONS = [
   '#A65A4A', // terracota
 ];
 
-const VALID_PAGES = ['inicio', 'nosotros', 'horarios', 'calendario', 'programa', 'galeria', 'envivo', 'acceso', 'documentos'];
+const VALID_PAGES = ['inicio', 'nosotros', 'horarios', 'calendario', 'programa', 'galeria', 'envivo', 'acceso'];
 
 function AppInner() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
@@ -64,11 +64,10 @@ function AppInner() {
       case 'calendario': return <PageCalendarioEditable store={store} />;
       case 'programa':   return <PagePrograma store={store} />;
       case 'galeria':    return <PageGaleria />;
-      case 'documentos': return <PageDocumentos store={store} setPage={setPage} />;
       case 'acceso':     return <PageAcceso setPage={setPage} />;
       default:           return <PageInicio setPage={setPage} nextService={nextService} />;
     }
-  }, [page, t.live, nextService, store.events, store.program, store.docs]);
+  }, [page, t.live, nextService, store.events, store.program]);
 
   return (
     <div className="shell">

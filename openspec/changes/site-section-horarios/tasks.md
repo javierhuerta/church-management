@@ -1,0 +1,66 @@
+## 1. Backend - Entidad ScheduleItem
+
+- [ ] 1.1 Cargar skill `nestjs-best-practices` antes de implementar
+- [ ] 1.2 Crear entidad `ScheduleItem` con los campos definidos en design.md, en `backend/src/modules/site-config/entities/schedule-item.entity.ts`
+- [ ] 1.3 Crear migración `CreateScheduleItems` para la tabla `schedule_items`
+- [ ] 1.4 Registrar `ScheduleItem` en los ENTITIES de `app.module.ts` y en `data-source.ts`
+- [ ] 1.5 Correr migración y verificar que la tabla existe
+
+## 2. Backend - DTOs y Servicio
+
+- [ ] 2.1 Crear DTOs: `CreateScheduleItemDto`, `UpdateScheduleItemDto`, `ScheduleItemResponseDto` con decoradores OpenAPI (`@ApiProperty`, `@ApiPropertyOptional({ type: String, nullable: true })`)
+- [ ] 2.2 Crear DTO `ReorderScheduleItemsDto` con array de `{ id: string, sortOrder: number }`
+- [ ] 2.3 Crear `ScheduleService` con métodos CRUD y reordenamiento (transacción para reorder)
+- [ ] 2.4 Método `findAllOrdered()`: devuelve todos los ítems ordenados por `sortOrder`
+- [ ] 2.5 Método `findActiveGrouped()`: devuelve solo activos, agrupados por `dayLabel`, ordenados por `sortOrder`
+
+## 3. Backend - Endpoints admin y público
+
+- [ ] 3.1 Crear `ScheduleController` (`/api/site-config/schedule`) con `JwtAuthGuard + RolesGuard + Roles(Admin)` — endpoints CRUD + reorder
+- [ ] 3.2 Decorar todos los endpoints admin con `@ApiTags('Site Config - Schedule')`, `@ApiOperation`, `@ApiBearerAuth`
+- [ ] 3.3 Agregar endpoint público `GET /api/public/schedule` en `PublicSiteController` (sin guard, devuelve `findActiveGrouped()` + textos de `SiteSetting`)
+- [ ] 3.4 Crear DTO `PublicScheduleResponseDto` con la estructura anidada de días e ítems
+- [ ] 3.5 Registrar `ScheduleController` en `site-config.module.ts`
+
+## 4. Backend - Seeders
+
+- [ ] 4.1 Crear `ScheduleItemSeeder` en `backend/src/seeds/site-config/` con los 5 horarios del diseño actual, idempotente
+- [ ] 4.2 Crear o extender seeder de SiteSettings para insertar las claves `horarios.page_kicker`, `horarios.page_title`, `horarios.page_paragraph` con defaults si no existen
+- [ ] 4.3 Registrar ambos seeders en `scripts/seeders/run-all.ts`
+
+## 5. Frontend - Cliente API y tab Horarios
+
+- [ ] 5.1 Cargar skill `church-ui-design` antes de implementar componentes
+- [ ] 5.2 Regenerar cliente API desde OpenAPI (`npm run generate:api`); restaurar `request.ts` con git si queda vacío
+- [ ] 5.3 Agregar tab "Horarios" al arreglo de tabs en `ConfiguracionesLayout` (`{ id: 'horarios', label: 'Horarios', path: 'horarios' }`)
+- [ ] 5.4 Crear ruta `/admin/configuraciones/horarios` en `App.tsx` apuntando al componente de la página
+
+## 6. Frontend - Página de Horarios (admin)
+
+- [ ] 6.1 Crear componente `HorariosConfigPage` con layout de dos secciones verticales
+- [ ] 6.2 Sección "Textos de la página": formulario con 3 campos (kicker, título, párrafo) usando `SiteSetting`; guardar con el endpoint genérico
+- [ ] 6.3 Sección "Horarios": tabla con columnas Día, Hora, Servicio, Activo, Acciones
+- [ ] 6.4 Renderizar `dayLabel` con badge; si `dayAccent = true`, aplicar color gold de la paleta
+- [ ] 6.5 Toggle activo/inactivo con switch shadcn en cada fila, llamada inmediata al endpoint de actualización
+- [ ] 6.6 Botones subir/bajar en cada fila para reordenar; llamada al endpoint `reorder`
+- [ ] 6.7 Botón "+ Nuevo horario" que abre modal con formulario de creación
+- [ ] 6.8 Formulario de creación/edición (modal): campos dayLabel (input con sugerencias), dayAccent (checkbox), time (input HH:MM), title, description
+- [ ] 6.9 Implementar patrón mobile/desktop: tabla en desktop, tarjetas en mobile
+- [ ] 6.10 Estados de carga (Skeleton shadcn) y error (toast) para todas las operaciones
+
+## 7. Sitio público - Cableado
+
+- [ ] 7.1 Agregar helper `fetchSchedule()` en `website/integration.js` que consuma `GET /api/public/schedule`
+- [ ] 7.2 Modificar `PageHorarios` en `website/pages-2.jsx`: reemplazar array `week` hardcodeado por llamado a `window.IASD_API.fetchSchedule()` con fallback al contenido actual
+- [ ] 7.3 Asegurar que el componente maneja estados: loading (skeleton o spinner), error (contenido hardcodeado), datos (contenido de la API)
+- [ ] 7.4 Actualizar `website/INTEGRATION.md` documentando el parche de la sección Horarios
+
+## 8. Verificación
+
+- [ ] 8.1 La migración `schedule_items` corre limpio
+- [ ] 8.2 `GET /api/public/schedule` devuelve los 5 horarios del seeder sin token
+- [ ] 8.3 CRUD admin de horarios funciona vía API (`POST`, `PATCH`, `DELETE`, `reorder`)
+- [ ] 8.4 Al desactivar un ítem, `GET /api/public/schedule` ya no lo incluye
+- [ ] 8.5 La pestaña "Horarios" aparece en Configuraciones y carga los datos
+- [ ] 8.6 El sitio público en `/#horarios` muestra los horarios desde la API
+- [ ] 8.7 Verificar que `integration.js` se carga y `fetchSchedule()` es accesible desde la consola del navegador

@@ -25,6 +25,7 @@ import { SiteConfigService } from './site-config.service';
 import { CreatePrincipalLeaderDto } from './dto/create-principal-leader.dto';
 import { UpdatePrincipalLeaderDto } from './dto/update-principal-leader.dto';
 import { PrincipalLeaderResponseDto } from './dto/principal-leader-response.dto';
+import { MinistryLeadershipDto } from './dto/public-leadership.dto';
 import { UploadImageDto } from './dto/upload-image.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -114,5 +115,14 @@ export class SiteConfigController {
   ): Promise<{ boardPhotoUrl: string | null }> {
     if (!file) throw new BadRequestException('Imagen requerida');
     return this.service.setBoardPhoto(file);
+  }
+
+  // ─── Ministerios (solo lectura, derivados de departamentos) ────────────────
+
+  @Get('ministries')
+  @ApiOperation({ summary: 'List ministries with leaders (admin, read-only)' })
+  @ApiResponse({ status: 200, type: [MinistryLeadershipDto] })
+  listMinistries(): Promise<MinistryLeadershipDto[]> {
+    return this.service.listMinistries();
   }
 }
