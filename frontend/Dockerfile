@@ -14,7 +14,9 @@ RUN npm run build
 # pero los workers corren como nginx por configuracion interna.
 FROM nginx:alpine
 
-COPY --from=builder /app/dist /usr/share/nginx/html
+# El admin vive bajo /admin/ (Vite base=/admin/). Se coloca el build en la
+# subcarpeta admin/ para que nginx resuelva /admin/... contra los archivos.
+COPY --from=builder /app/dist /usr/share/nginx/html/admin
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Permisos correctos sobre los archivos del sitio

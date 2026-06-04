@@ -1,6 +1,6 @@
 version: '3.8'
 
-# Produccion: Postgres + Backend + Frontend (Nginx).
+# Produccion: Postgres + Backend + Frontend (admin) + Website (entrada publica, Nginx).
 #
 # OPCION A — Usar imagenes pre-construidas de GHCR (recomendado para producción):
 #   docker compose -f docker-compose.prod.yml --env-file .env.prod pull
@@ -20,7 +20,7 @@ version: '3.8'
 #   UPLOAD_MAX_BYTES, COVER_MAX_BYTES, MAX_ATTACHMENTS_PER_EVENT
 #   CACHE_TTL_DEFAULT, CACHE_MAX, UNSPLASH_ACCESS_KEY
 #   # Si usas imagenes de GHCR:
-#   BACKEND_IMAGE, FRONTEND_IMAGE (ej: ghcr.io/user/repo/backend:development)
+#   BACKEND_IMAGE, FRONTEND_IMAGE, WEBSITE_IMAGE (ej: ghcr.io/user/repo/backend:development)
 
 services:
   postgres:
@@ -73,6 +73,7 @@ services:
     expose:
       - '${PORT:-3000}'
 
+  # Admin (React+Vite) servido bajo /admin. Interno: la entrada publica es 'website'.
   frontend:
     image: ${FRONTEND_IMAGE:-church-management-frontend:local}
     build:
@@ -80,6 +81,20 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - backend
+    expose:
+      - '80'
+    restart: unless-stopped
+
+  # Sitio publico (diseno) + reverse proxy: / -> sitio, /admin -> frontend,
+  # /api y /uploads -> backend. Es el unico servicio expuesto en :80.
+  website:
+    image: ${WEBSITE_IMAGE:-church-management-website:local}
+    build:
+      context: ./website
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+      - frontend
     ports:
       - '80:80'
     restart: unless-stopped

@@ -201,7 +201,7 @@ function PageFallback() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/admin">
       <TextSizeProvider>
         <Suspense fallback={<PageFallback />}>
           <Routes>

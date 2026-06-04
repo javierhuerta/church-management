@@ -241,12 +241,12 @@ export function PersonFormPage() {
                     {(existingPerson as { missionaryTeam?: { id: string; label: string | null; periodYear: number; audience: string; isActive: boolean } | null })?.missionaryTeam?.audience} · Período {(existingPerson as { missionaryTeam?: { id: string; label: string | null; periodYear: number; audience: string; isActive: boolean } | null })?.missionaryTeam?.periodYear}
                   </p>
                 </div>
-                <a
-                  href={`/misionero/equipos/${(existingPerson as { missionaryTeam?: { id: string; label: string | null; periodYear: number; audience: string; isActive: boolean } | null })?.missionaryTeam?.id}`}
+                <Link
+                  to={`/misionero/equipos/${(existingPerson as { missionaryTeam?: { id: string; label: string | null; periodYear: number; audience: string; isActive: boolean } | null })?.missionaryTeam?.id}`}
                   className="text-xs font-semibold text-primary hover:underline"
                 >
                   Ver equipo
-                </a>
+                </Link>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground italic">No pertenece a ningún equipo misionero activo</p>

@@ -1,0 +1,9 @@
+# No servir artefactos que no forman parte del sitio en runtime.
+export/
+screenshots/
+.thumbnail
+.DS_Store
+Dockerfile
+.dockerignore
+README.md
+INTEGRATION.md
