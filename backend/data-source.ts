@@ -24,6 +24,9 @@ import { VisitStatusEntity } from './src/modules/catalogs/entities/visit-status.
 import { Period } from './src/modules/document-center/entities/period.entity';
 import { ElderShift } from './src/modules/document-center/entities/elder-shift.entity';
 import { ChurchDocument } from './src/modules/document-center/entities/church-document.entity';
+import { SiteSetting } from './src/modules/site-config/entities/site-setting.entity';
+import { PrincipalLeader } from './src/modules/site-config/entities/principal-leader.entity';
+import { ScheduleItem } from './src/modules/site-config/entities/schedule-item.entity';
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -57,6 +60,9 @@ export const AppDataSource = new DataSource({
     Period,
     ElderShift,
     ChurchDocument,
+    SiteSetting,
+    PrincipalLeader,
+    ScheduleItem,
   ],
   migrations: [isProd ? 'dist/src/migrations/*.js' : 'src/migrations/*.ts', 'src/modules/document-center/migrations/*.ts'],
   synchronize: false,

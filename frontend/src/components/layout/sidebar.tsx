@@ -108,13 +108,13 @@ export function Sidebar() {
     : null
 
   const handleLogout = async () => {
+    localStorage.removeItem('token')
+    navigate('/login', { replace: true })
     try {
       await AuthService.authControllerLogout()
     } catch {
       // ignore errors on logout
     }
-    localStorage.removeItem('token')
-    navigate('/login')
   }
 
   function handleNavClick(item: NavItem) {

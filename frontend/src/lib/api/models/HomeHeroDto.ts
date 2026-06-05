@@ -4,6 +4,7 @@
 /* eslint-disable */
 export type HomeHeroDto = {
     title?: string | null;
+    titleAccent: string | null;
     subtitle?: string | null;
     mainImageUrl?: string | null;
     smallImageUrl?: string | null;

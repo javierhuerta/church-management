@@ -5,7 +5,7 @@ const sections = [
   {
     id: 'inicio',
     label: 'Inicio',
-    path: '/configuraciones/inicio',
+    path: 'inicio',
     icon: Settings,
     description: 'Textos e imágenes del hero, versículo destacado y horarios resumidos',
     type: 'editor' as const,
@@ -13,7 +13,7 @@ const sections = [
   {
     id: 'liderazgo',
     label: 'Liderazgo',
-    path: '/configuraciones/liderazgo',
+    path: 'liderazgo',
     icon: Users,
     description: 'Junta directiva, foto grupal y ministerios',
     type: 'editor' as const,
@@ -21,7 +21,7 @@ const sections = [
   {
     id: 'horarios',
     label: 'Horarios',
-    path: '/configuraciones/horarios',
+    path: 'horarios',
     icon: Clock,
     description: 'Lista de horarios de actividades públicas',
     type: 'editor' as const,
@@ -29,7 +29,7 @@ const sections = [
   {
     id: 'calendario',
     label: 'Calendario',
-    path: '/configuraciones/calendario',
+    path: 'calendario',
     icon: Calendar,
     description: 'Los eventos publicados en el módulo Calendario aparecen automáticamente',
     type: 'redirect' as const,
@@ -39,7 +39,7 @@ const sections = [
   {
     id: 'cultos',
     label: 'Cultos',
-    path: '/configuraciones/cultos',
+    path: 'cultos',
     icon: BookOpen,
     description: 'El programa publicado marcado para el sitio aparece automáticamente',
     type: 'redirect' as const,
@@ -49,7 +49,7 @@ const sections = [
   {
     id: 'galeria',
     label: 'Galería',
-    path: '/configuraciones/galeria',
+    path: 'galeria',
     icon: Image,
     description: 'Álbumes e imágenes de la galería pública',
     type: 'editor' as const,
@@ -57,7 +57,7 @@ const sections = [
   {
     id: 'transmisiones',
     label: 'Transmisiones',
-    path: '/configuraciones/transmisiones',
+    path: 'transmisiones',
     icon: Radio,
     description: 'Videos de YouTube y configuraciones de transmisiones',
     type: 'editor' as const,

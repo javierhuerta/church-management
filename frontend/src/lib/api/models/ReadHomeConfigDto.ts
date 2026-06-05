@@ -4,6 +4,7 @@
 /* eslint-disable */
 export type ReadHomeConfigDto = {
     heroTitle?: string;
+    heroTitleAccent?: string;
     heroSubtitle?: string;
     verseText?: string;
     verseReference?: string;
@@ -15,6 +16,10 @@ export type ReadHomeConfigDto = {
     footerCtaTitle?: string;
     footerCtaSubtitle?: string;
     footerCtaButtonText?: string;
+    contactAddress?: string;
+    contactCity?: string;
+    contactEmail?: string;
+    contactPhone?: string;
     heroMainImageUrl?: string | null;
     heroSmallImageUrl?: string | null;
     nextServiceImageUrl?: string | null;

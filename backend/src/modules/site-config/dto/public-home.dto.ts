@@ -4,6 +4,9 @@ export class HomeHeroDto {
   @ApiPropertyOptional({ type: String, nullable: true })
   title: string | null;
 
+  @ApiProperty({ type: String, nullable: true })
+  titleAccent: string | null;
+
   @ApiPropertyOptional({ type: String, nullable: true })
   subtitle: string | null;
 
@@ -52,6 +55,20 @@ export class HomeFooterCtaDto {
   buttonText: string | null;
 }
 
+export class HomeContactDto {
+  @ApiProperty({ type: String, nullable: true })
+  address: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  city: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  email: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  phone: string | null;
+}
+
 export class HomeNextServiceDto {
   @ApiPropertyOptional({ type: String, nullable: true })
   title: string | null;
@@ -81,6 +98,9 @@ export class PublicHomeDto {
 
   @ApiProperty({ type: HomeFooterCtaDto })
   footerCta: HomeFooterCtaDto;
+
+  @ApiProperty({ type: HomeContactDto })
+  contact: HomeContactDto;
 
   @ApiPropertyOptional({ type: HomeNextServiceDto, nullable: true })
   nextService: HomeNextServiceDto | null;

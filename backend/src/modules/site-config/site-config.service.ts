@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, MoreThanOrEqual } from 'typeorm';
+import { Repository, DataSource, MoreThanOrEqual, Like } from 'typeorm';
 import { join } from 'path';
 import { unlink } from 'fs/promises';
 import { PrincipalLeader } from './entities/principal-leader.entity';
@@ -26,6 +26,7 @@ const BOARD_PHOTO_KEY = 'leadership.board_photo';
 
 const HOME_KEYS = {
   HERO_TITLE: 'inicio.hero_title',
+  HERO_TITLE_ACCENT: 'inicio.hero_title_accent',
   HERO_SUBTITLE: 'inicio.hero_subtitle',
   HERO_MAIN_IMAGE: 'inicio.hero_main_image',
   HERO_SMALL_IMAGE: 'inicio.hero_small_image',
@@ -40,6 +41,10 @@ const HOME_KEYS = {
   FOOTER_CTA_SUBTITLE: 'inicio.footer_cta_subtitle',
   FOOTER_CTA_BUTTON: 'inicio.footer_cta_button',
   NEXT_SERVICE_IMAGE: 'inicio.next_service_image',
+  CONTACT_ADDRESS: 'inicio.contact_address',
+  CONTACT_CITY: 'inicio.contact_city',
+  CONTACT_EMAIL: 'inicio.contact_email',
+  CONTACT_PHONE: 'inicio.contact_phone',
 };
 
 @Injectable()
@@ -227,9 +232,7 @@ export class SiteConfigService {
   async getPublicHome(): Promise<PublicHomeDto> {
     const [settings, nextEvent] = await Promise.all([
       this.settingRepo.find({
-        where: [
-          { key: MoreThanOrEqual('inicio.') }, // Simplificado para buscar por prefijo
-        ],
+        where: { key: Like('inicio.%') },
       }),
       this.eventRepo.findOne({
         where: {
@@ -245,6 +248,7 @@ export class SiteConfigService {
     return {
       hero: {
         title: s(HOME_KEYS.HERO_TITLE),
+        titleAccent: s(HOME_KEYS.HERO_TITLE_ACCENT),
         subtitle: s(HOME_KEYS.HERO_SUBTITLE),
         mainImageUrl: this.toUrl(s(HOME_KEYS.HERO_MAIN_IMAGE)),
         smallImageUrl: this.toUrl(s(HOME_KEYS.HERO_SMALL_IMAGE)),
@@ -267,6 +271,12 @@ export class SiteConfigService {
         subtitle: s(HOME_KEYS.FOOTER_CTA_SUBTITLE),
         buttonText: s(HOME_KEYS.FOOTER_CTA_BUTTON),
       },
+      contact: {
+        address: s(HOME_KEYS.CONTACT_ADDRESS),
+        city: s(HOME_KEYS.CONTACT_CITY),
+        email: s(HOME_KEYS.CONTACT_EMAIL),
+        phone: s(HOME_KEYS.CONTACT_PHONE),
+      },
       nextService: nextEvent
         ? {
             title: nextEvent.title,
@@ -279,11 +289,14 @@ export class SiteConfigService {
   }
 
   async getHomeConfig(): Promise<ReadHomeConfigDto> {
-    const settings = await this.settingRepo.find();
+    const settings = await this.settingRepo.find({
+      where: { key: Like('inicio.%') },
+    });
     const s = (key: string) => settings.find((r) => r.key === key)?.value ?? null;
 
     return {
       heroTitle: s(HOME_KEYS.HERO_TITLE) ?? '',
+      heroTitleAccent: s(HOME_KEYS.HERO_TITLE_ACCENT) ?? '',
       heroSubtitle: s(HOME_KEYS.HERO_SUBTITLE) ?? '',
       verseText: s(HOME_KEYS.VERSE_TEXT) ?? '',
       verseReference: s(HOME_KEYS.VERSE_REFERENCE) ?? '',
@@ -295,6 +308,10 @@ export class SiteConfigService {
       footerCtaTitle: s(HOME_KEYS.FOOTER_CTA_TITLE) ?? '',
       footerCtaSubtitle: s(HOME_KEYS.FOOTER_CTA_SUBTITLE) ?? '',
       footerCtaButtonText: s(HOME_KEYS.FOOTER_CTA_BUTTON) ?? '',
+      contactAddress: s(HOME_KEYS.CONTACT_ADDRESS) ?? '',
+      contactCity: s(HOME_KEYS.CONTACT_CITY) ?? '',
+      contactEmail: s(HOME_KEYS.CONTACT_EMAIL) ?? '',
+      contactPhone: s(HOME_KEYS.CONTACT_PHONE) ?? '',
       heroMainImageUrl: this.toUrl(s(HOME_KEYS.HERO_MAIN_IMAGE)),
       heroSmallImageUrl: this.toUrl(s(HOME_KEYS.HERO_SMALL_IMAGE)),
       nextServiceImageUrl: this.toUrl(s(HOME_KEYS.NEXT_SERVICE_IMAGE)),
@@ -305,6 +322,7 @@ export class SiteConfigService {
     const updates: Promise<void>[] = [];
 
     if (dto.heroTitle !== undefined) updates.push(this.setSetting(HOME_KEYS.HERO_TITLE, dto.heroTitle));
+    if (dto.heroTitleAccent !== undefined) updates.push(this.setSetting(HOME_KEYS.HERO_TITLE_ACCENT, dto.heroTitleAccent));
     if (dto.heroSubtitle !== undefined) updates.push(this.setSetting(HOME_KEYS.HERO_SUBTITLE, dto.heroSubtitle));
     if (dto.verseText !== undefined) updates.push(this.setSetting(HOME_KEYS.VERSE_TEXT, dto.verseText));
     if (dto.verseReference !== undefined) updates.push(this.setSetting(HOME_KEYS.VERSE_REFERENCE, dto.verseReference));
@@ -316,6 +334,10 @@ export class SiteConfigService {
     if (dto.footerCtaTitle !== undefined) updates.push(this.setSetting(HOME_KEYS.FOOTER_CTA_TITLE, dto.footerCtaTitle));
     if (dto.footerCtaSubtitle !== undefined) updates.push(this.setSetting(HOME_KEYS.FOOTER_CTA_SUBTITLE, dto.footerCtaSubtitle));
     if (dto.footerCtaButtonText !== undefined) updates.push(this.setSetting(HOME_KEYS.FOOTER_CTA_BUTTON, dto.footerCtaButtonText));
+    if (dto.contactAddress !== undefined) updates.push(this.setSetting(HOME_KEYS.CONTACT_ADDRESS, dto.contactAddress));
+    if (dto.contactCity !== undefined) updates.push(this.setSetting(HOME_KEYS.CONTACT_CITY, dto.contactCity));
+    if (dto.contactEmail !== undefined) updates.push(this.setSetting(HOME_KEYS.CONTACT_EMAIL, dto.contactEmail));
+    if (dto.contactPhone !== undefined) updates.push(this.setSetting(HOME_KEYS.CONTACT_PHONE, dto.contactPhone));
 
     await Promise.all(updates);
   }

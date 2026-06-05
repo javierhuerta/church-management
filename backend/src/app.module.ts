@@ -70,6 +70,7 @@ import { BibleCourse } from './modules/mission/entities/bible-course.entity';
 import { BibleStudy } from './modules/mission/entities/bible-study.entity';
 import { SiteSetting } from './modules/site-config/entities/site-setting.entity';
 import { PrincipalLeader } from './modules/site-config/entities/principal-leader.entity';
+import { ScheduleItem } from './modules/site-config/entities/schedule-item.entity';
 
 const ENTITIES = [
   User,
@@ -106,6 +107,7 @@ const ENTITIES = [
   ShowcaseAttachment,
   SiteSetting,
   PrincipalLeader,
+  ScheduleItem,
 ];
 
 @Module({

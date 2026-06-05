@@ -1,39 +1,97 @@
 // pages-2.jsx — Horarios + Calendario (simplified)
-const { useState: useS2, useMemo: useM2 } = React;
+const { useState: useS2, useMemo: useM2, useEffect: useE2 } = React;
 
 // ═════════════════════════════════════════════════════════
 // HORARIOS
 // ═════════════════════════════════════════════════════════
+
+// Datos por defecto (fallback si la API falla)
+const DEFAULT_WEEK = [
+  { d: 'Sábado', accent: true, items: [
+    ['09:45', 'Escuela Sabática', 'Estudio bíblico por grupos. Para niños, jóvenes y adultos.'],
+    ['11:00', 'Culto Divino', 'Adoración con cantos, oración y predicación. Transmisión en vivo.'],
+    ['17:00', 'Culto Joven', 'Espacio de adoración y compañerismo para jóvenes y adolescentes.'],
+  ]},
+  { d: 'Miércoles', items: [
+    ['06:00', 'Culto de Oración Matutino', 'Encuentro de oración temprano. Vía Zoom.'],
+    ['19:30', 'Culto de Oración', 'Estudio breve y oración en el templo.'],
+  ]},
+];
+
+const DEFAULT_TEXTS = {
+  kicker: 'Horarios',
+  title: 'Cada semana, un lugar para ti.',
+  paragraph: 'Todas las visitas son bienvenidas. No es necesario registrarse.',
+};
+
 function PageHorarios() {
-  const week = [
-    { d: 'Sábado', accent: true, items: [
-      ['09:45', 'Escuela Sabática', 'Estudio bíblico por grupos. Para niños, jóvenes y adultos.'],
-      ['11:00', 'Culto Divino', 'Adoración con cantos, oración y predicación. Transmisión en vivo.'],
-      ['17:00', 'Culto Joven', 'Espacio de adoración y compañerismo para jóvenes y adolescentes.'],
-    ]},
-    { d: 'Miércoles', items: [
-      ['06:00', 'Culto de Oración Matutino', 'Encuentro de oración temprano. Vía Zoom.'],
-      ['19:30', 'Culto de Oración', 'Estudio breve y oración en el templo.'],
-    ]},
-  ];
+  const [week, setWeek] = useS2(DEFAULT_WEEK);
+  const [texts, setTexts] = useS2(DEFAULT_TEXTS);
+  const [loading, setLoading] = useS2(true);
+  const [sunsetTimes, setSunsetTimes] = useS2([
+    ['22 may', '17:38'],
+    ['29 may', '17:32'],
+    ['05 jun', '17:28'],
+    ['12 jun', '17:27'],
+  ]);
+
+  useE2(() => {
+    if (window.IASD_API && window.IASD_API.getSunsetTimes) {
+      setSunsetTimes(window.IASD_API.getSunsetTimes());
+    }
+
+    if (!window.IASD_API || !window.IASD_API.fetchSchedule) {
+      setLoading(false);
+      return;
+    }
+    window.IASD_API.fetchSchedule()
+      .then(function(data) {
+        // Map API response to the shape used by the template
+        if (data && Array.isArray(data.days) && data.days.length > 0) {
+          var mapped = data.days.map(function(day) {
+            return {
+              d: day.label,
+              accent: day.accent,
+              items: (day.items || []).map(function(item) {
+                return [item.time, item.title, item.description || ''];
+              }),
+            };
+          });
+          setWeek(mapped);
+        }
+        // Update page texts if provided
+        if (data) {
+          setTexts({
+            kicker: data.kicker || DEFAULT_TEXTS.kicker,
+            title: data.title || DEFAULT_TEXTS.title,
+            paragraph: data.paragraph || DEFAULT_TEXTS.paragraph,
+          });
+        }
+      })
+      .catch(function() {
+        // Silently fall back to default content
+      })
+      .finally(function() {
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <main className="page-enter" data-screen-label="Horarios">
       <section className="section">
         <div className="container">
           <div style={{ textAlign: 'center' }}>
-            <div className="kicker">Horarios</div>
+            <div className="kicker">{texts.kicker}</div>
             <h1 className="serif" style={{
               fontSize: 'clamp(44px, 6vw, 80px)', marginTop: 18, lineHeight: 1,
               maxWidth: 820, margin: '18px auto 0'
             }}>
-              Cada semana,
-              <span style={{ fontStyle: 'italic', color: 'var(--gold)' }}> un lugar</span> para ti.
+              {texts.title}
             </h1>
             <p className="muted" style={{
               marginTop: 24, fontSize: 17, maxWidth: 560, margin: '24px auto 0'
             }}>
-              Todas las visitas son bienvenidas. No es necesario registrarse.
+              {texts.paragraph}
             </p>
           </div>
 
@@ -103,12 +161,7 @@ function PageHorarios() {
             display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0,
             maxWidth: 880, margin: '0 auto'
           }}>
-            {[
-              ['22 may', '17:38'],
-              ['29 may', '17:32'],
-              ['05 jun', '17:28'],
-              ['12 jun', '17:27'],
-            ].map(([w, t], i) => (
+            {sunsetTimes.map(([w, t], i) => (
               <div key={w} style={{
                 padding: 24,
                 textAlign: 'center',

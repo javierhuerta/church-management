@@ -4,6 +4,7 @@
 /* eslint-disable */
 export type UpdateHomeConfigDto = {
     heroTitle?: string;
+    heroTitleAccent?: string;
     heroSubtitle?: string;
     verseText?: string;
     verseReference?: string;
@@ -15,5 +16,9 @@ export type UpdateHomeConfigDto = {
     footerCtaTitle?: string;
     footerCtaSubtitle?: string;
     footerCtaButtonText?: string;
+    contactAddress?: string;
+    contactCity?: string;
+    contactEmail?: string;
+    contactPhone?: string;
 };
 

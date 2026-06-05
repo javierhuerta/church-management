@@ -1,4 +1,6 @@
 import { DataSource } from 'typeorm';
+import { SiteSetting } from '../modules/site-config/entities/site-setting.entity';
+import { ScheduleItem } from '../modules/site-config/entities/schedule-item.entity';
 import { User } from '../modules/auth/entities/user.entity';
 import { Department } from '../modules/departments/entities/department.entity';
 import { Person } from '../modules/mission/entities/person.entity';
@@ -24,6 +26,9 @@ import { Hymn } from '../modules/worship-services/entities/hymn.entity';
 import { RescueStageEntity } from '../modules/catalogs/entities/rescue-stage.entity';
 import { VisitStatusEntity } from '../modules/catalogs/entities/visit-status.entity';
 import { SabbathClassEntity } from '../modules/catalogs/entities/sabbath-class.entity';
+import { ScheduleItemSeeder } from './site-config/schedule-item.seeder';
+import { ScheduleSettingsSeeder } from './site-config/schedule-settings.seeder';
+import { HomeSettingsSeeder } from './site-config/home-settings.seeder';
 import { UserSeeder } from './auth/user.seeder';
 import { DepartmentSeeder } from './departments/department.seeder';
 import { PersonSeeder } from './mission/person.seeder';
@@ -68,6 +73,9 @@ const SEEDER_REGISTRY: SeederEntry[] = [
   { name: 'users',            category: 'catalog', instance: new UserSeeder() },
   { name: 'templates',        category: 'catalog', instance: new TemplateSeeder() },
   { name: 'hymns',            category: 'catalog', instance: new HymnSeeder() },
+  { name: 'home-settings',     category: 'catalog', instance: new HomeSettingsSeeder() },
+  { name: 'schedule-settings', category: 'catalog', instance: new ScheduleSettingsSeeder() },
+  { name: 'schedule-items',    category: 'catalog', instance: new ScheduleItemSeeder() },
 
   // demo — requieren que los seeders de catalog se hayan ejecutado antes
   { name: 'persons',         category: 'demo',    instance: new PersonSeeder() },
@@ -114,6 +122,8 @@ function createDataSource(): DataSource {
       BibleStudy,
       Period,
       ElderShift,
+      SiteSetting,
+      ScheduleItem,
     ],
   });
 }

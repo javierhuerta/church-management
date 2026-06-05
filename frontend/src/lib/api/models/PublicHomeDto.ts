@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { HomeContactDto } from './HomeContactDto';
 import type { HomeFooterCtaDto } from './HomeFooterCtaDto';
 import type { HomeHeroDto } from './HomeHeroDto';
 import type { HomeNextServiceDto } from './HomeNextServiceDto';
@@ -14,6 +15,7 @@ export type PublicHomeDto = {
     schedule: HomeScheduleDto;
     social: HomeSocialDto;
     footerCta: HomeFooterCtaDto;
+    contact: HomeContactDto;
     nextService?: HomeNextServiceDto | null;
 };
 

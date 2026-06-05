@@ -47,7 +47,7 @@ const SOCIALS = [
   },
 ];
 
-function SocialLinks({ tone = 'navy', size = 'md', layout = 'row' }) {
+function SocialLinks({ tone = 'navy', size = 'md', layout = 'row', socials = SOCIALS }) {
   const isLight = tone === 'light';
   const sz = size === 'lg' ? 44 : size === 'sm' ? 32 : 36;
   return (
@@ -56,7 +56,7 @@ function SocialLinks({ tone = 'navy', size = 'md', layout = 'row' }) {
       flexDirection: layout === 'col' ? 'column' : 'row',
       alignItems: layout === 'col' ? 'flex-start' : 'center',
     }}>
-      {SOCIALS.map(s => (
+      {socials.map(s => (
         <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer"
           title={s.name + ' · ' + s.handle}
           style={{
@@ -130,6 +130,56 @@ function Nav({ page, setPage, isLive }) {
 // ─────────────────────────────────────────────────────────
 // Footer
 function Footer({ setPage }) {
+  // Fallback hardcoded values (used while loading or if API fails)
+  const DEFAULT_CONTACT = {
+    address: 'Andrés Bello 748',
+    city: 'Osorno, Los Lagos',
+    email: 'contacto@iasdcentralosorno.cl',
+    phone: '+56 64 222 0000',
+  };
+  const DEFAULT_SOCIAL = {
+    facebookUrl: SOCIALS.find(s => s.name === 'Facebook')?.url || '',
+    instagramUrl: SOCIALS.find(s => s.name === 'Instagram')?.url || '',
+    youtubeUrl: SOCIALS.find(s => s.name === 'YouTube')?.url || '',
+  };
+
+  const [contact, setContact] = React.useState(DEFAULT_CONTACT);
+  const [socialUrls, setSocialUrls] = React.useState(DEFAULT_SOCIAL);
+
+  React.useEffect(() => {
+    if (window.IASD_API && window.IASD_API.fetchHome) {
+      window.IASD_API.fetchHome()
+        .then(data => {
+          if (data.contact) {
+            setContact({
+              address: data.contact.address || DEFAULT_CONTACT.address,
+              city: data.contact.city || DEFAULT_CONTACT.city,
+              email: data.contact.email || DEFAULT_CONTACT.email,
+              phone: data.contact.phone || DEFAULT_CONTACT.phone,
+            });
+          }
+          if (data.social) {
+            setSocialUrls({
+              facebookUrl: data.social.facebookUrl || DEFAULT_SOCIAL.facebookUrl,
+              instagramUrl: data.social.instagramUrl || DEFAULT_SOCIAL.instagramUrl,
+              youtubeUrl: data.social.youtubeUrl || DEFAULT_SOCIAL.youtubeUrl,
+            });
+          }
+        })
+        .catch(err => {
+          console.warn('Footer: error cargando datos desde API:', err);
+        });
+    }
+  }, []);
+
+  // Build dynamic SOCIALS array with live URLs but keeping original icons/handles
+  const dynamicSocials = SOCIALS.map(s => {
+    if (s.name === 'Instagram') return { ...s, url: socialUrls.instagramUrl };
+    if (s.name === 'Facebook') return { ...s, url: socialUrls.facebookUrl };
+    if (s.name === 'YouTube') return { ...s, url: socialUrls.youtubeUrl };
+    return s;
+  });
+
   return (
     <footer className="footer">
       <div className="container">
@@ -145,25 +195,25 @@ function Footer({ setPage }) {
               Una comunidad que espera el pronto regreso de Cristo.
             </p>
             <div style={{ marginTop: 22 }}>
-              <SocialLinks tone="light" size="md" />
+              <SocialLinks tone="light" size="md" socials={dynamicSocials} />
             </div>
           </div>
           <div style={{ fontSize: 14 }}>
             <div className="eyebrow" style={{ color: 'var(--gold-2)', marginBottom: 14 }}>Visítanos</div>
             <div style={{ opacity: .82, lineHeight: 1.7 }}>
-              Andrés Bello 748<br />
-              Osorno, Los Lagos<br />
+              {contact.address}<br />
+              {contact.city}<br />
               Sábados · 09:45
             </div>
           </div>
           <div style={{ fontSize: 14 }}>
             <div className="eyebrow" style={{ color: 'var(--gold-2)', marginBottom: 14 }}>Contacto</div>
             <div style={{ opacity: .82, lineHeight: 1.7 }}>
-              contacto@iasdcentralosorno.cl<br />
-              +56 64 222 0000
+              {contact.email}<br />
+              {contact.phone}
             </div>
             <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {SOCIALS.map(s => (
+              {dynamicSocials.map(s => (
                 <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer"
                   style={{ opacity: .82, fontSize: 13, display: 'inline-flex',
                     alignItems: 'center', gap: 8, width: 'fit-content' }}>
@@ -211,7 +261,25 @@ function SectionHead({ kicker, title, lead, align = 'left' }) {
 
 // ─────────────────────────────────────────────────────────
 // Photo slot — wraps <image-slot> web component (drag-and-drop image)
-function PhotoSlot({ id, label, height = 320, shape = 'rect', radius = 14, style = {} }) {
+function PhotoSlot({ id, label, height = 320, shape = 'rect', radius = 14, src = null, style = {} }) {
+  // Si el backend entrega una URL de imagen, se muestra directamente (fuente de
+  // verdad). El web component <image-slot> queda solo como placeholder editable
+  // cuando no hay imagen configurada en el backend.
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={label}
+        style={{
+          display: 'block',
+          width: '100%',
+          height: typeof height === 'number' ? height + 'px' : height,
+          objectFit: 'cover',
+          borderRadius: shape === 'circle' ? '50%' : radius,
+          ...style,
+        }} />
+    );
+  }
   return (
     <image-slot
       id={id}

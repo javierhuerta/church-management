@@ -87,10 +87,33 @@ Ejemplos de cambios ya implementados:
 - **Liderazgo**: pendiente (`site-section-liderazgo`). Agregar
   `fetchLeadership()` y parchear `PageNosotros`.
 
+8. **`pages-2.jsx`** — `PageHorarios` consume datos vivos:
+   - Se agregaron `useState` y `useEffect` al inicio de la función.
+   - Los arrays hardcodeados `week` y textos se conservan como `DEFAULT_WEEK` y
+     `DEFAULT_TEXTS` (fallback).
+   - Al montar, se llama `window.IASD_API.fetchSchedule()` y se reemplazan los
+     datos si la API responde con días activos.
+   - La respuesta de la API (`{ kicker, title, paragraph, days }`) se mapea al
+     shape del diseño `{ d, accent, items: [[time, title, description]] }`.
+   - Si la API falla, se muestra el contenido hardcodeado sin error visible.
+
+## Sección Calendario
+
+El Calendario del sitio público se alimenta directamente del módulo Calendario
+del admin. Solo los eventos con estado `published` son visibles para usuarios
+anónimos (sin token).
+
+- **Endpoint**: `GET /api/calendar?startDate=YYYY-MM-DD&limit=100`
+- **Integración**: `fetchEvents()` en `integration.js` + `useStore()` en `auth.jsx`
+- **Zona horaria**: las fechas se convierten con `new Date(ev.startDate)` en hora
+  local del navegador. El backend almacena en UTC.
+- **Fallback**: si la API falla, `useStore()` mantiene los eventos demo del diseño.
+- **Admin**: crear/publicar un evento en `/admin/calendario` lo refleja
+  automáticamente en el sitio público (sin configuración adicional).
+
 ## Pendiente (próximas etapas)
 
 - Programa del día (`store.program`) sigue en modo demo (localStorage). Conectar
   a `/api/worship-services`.
-- Liderazgo (`PageNosotros`) y ministerios: mapear a `GET /api/public/leadership`.
 - La pantalla demo `#acceso` (`PageAcceso` en `auth.jsx`) quedó sin enlaces; se
   puede eliminar cuando se confirme que no se usa.

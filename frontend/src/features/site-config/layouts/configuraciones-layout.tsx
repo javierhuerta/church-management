@@ -22,13 +22,13 @@ export type ConfigTab = {
 }
 
 const BASE_TABS: ConfigTab[] = [
-  { id: 'inicio', label: 'Inicio', path: '/configuraciones/inicio' },
-  { id: 'liderazgo', label: 'Liderazgo', path: '/configuraciones/liderazgo' },
-  { id: 'horarios', label: 'Horarios', path: '/configuraciones/horarios' },
-  { id: 'calendario', label: 'Calendario', path: '/configuraciones/calendario' },
-  { id: 'cultos', label: 'Cultos', path: '/configuraciones/cultos' },
-  { id: 'galeria', label: 'Galería', path: '/configuraciones/galeria' },
-  { id: 'transmisiones', label: 'Transmisiones', path: '/configuraciones/transmisiones' },
+  { id: 'inicio', label: 'Inicio', path: 'inicio' },
+  { id: 'liderazgo', label: 'Liderazgo', path: 'liderazgo' },
+  { id: 'horarios', label: 'Horarios', path: 'horarios' },
+  { id: 'calendario', label: 'Calendario', path: 'calendario' },
+  { id: 'cultos', label: 'Cultos', path: 'cultos' },
+  { id: 'galeria', label: 'Galería', path: 'galeria' },
+  { id: 'transmisiones', label: 'Transmisiones', path: 'transmisiones' },
 ]
 
 export function ConfiguracionesLayout() {
@@ -68,7 +68,7 @@ export function ConfiguracionesLayout() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-muted-foreground">Configuraciones</h2>
+        <p className="text-3xl font-bold tracking-tight text-muted-foreground">Configuraciones</p>
         <p className="text-muted-foreground mt-1">Personaliza el contenido del sitio público</p>
       </div>
 

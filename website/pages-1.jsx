@@ -9,6 +9,7 @@ function PageInicio({ setPage, nextService: propNextService }) {
   const DEFAULT_HOME = {
     hero: {
       title: 'Central',
+      titleAccent: 'Osorno',
       subtitle: 'Una comunidad que adora cada sábado al pie de la cordillera. Las puertas están abiertas para ti.',
       mainImageUrl: null,
       smallImageUrl: null,
@@ -32,6 +33,11 @@ function PageInicio({ setPage, nextService: propNextService }) {
       buttonText: 'Ver Ubicación',
     },
     nextService: propNextService,
+    scheduleItems: [
+      ['Sábado',    '09:45', 'Escuela Sabática'],
+      ['Sábado',    '11:00', 'Culto Divino'],
+      ['Sábado',    '17:00', 'Culto Joven'],
+    ],
   };
 
   const [homeData, setHomeData] = React.useState(DEFAULT_HOME);
@@ -43,8 +49,10 @@ function PageInicio({ setPage, nextService: propNextService }) {
         .then(data => {
           // Merge con defaults para campos null
           setHomeData(prev => ({
+            ...prev,
             hero: {
               title: data.hero.title || prev.hero.title,
+              titleAccent: data.hero.titleAccent || prev.hero.titleAccent,
               subtitle: data.hero.subtitle || prev.hero.subtitle,
               mainImageUrl: data.hero.mainImageUrl,
               smallImageUrl: data.hero.smallImageUrl,
@@ -73,6 +81,27 @@ function PageInicio({ setPage, nextService: propNextService }) {
         .catch(err => {
           console.warn('Error cargando inicio desde API:', err);
         });
+    }
+
+    if (window.IASD_API && window.IASD_API.fetchSchedule) {
+      window.IASD_API.fetchSchedule()
+        .then(data => {
+          if (data && Array.isArray(data.days)) {
+            // Tomar los primeros 3 items activos de cualquier día
+            var items = [];
+            data.days.forEach(day => {
+              (day.items || []).forEach(item => {
+                if (items.length < 3) {
+                  items.push([day.label, item.time, item.title]);
+                }
+              });
+            });
+            if (items.length > 0) {
+              setHomeData(prev => ({ ...prev, scheduleItems: items }));
+            }
+          }
+        })
+        .catch(() => {});
     }
   }, []);
 
@@ -124,13 +153,13 @@ function PageInicio({ setPage, nextService: propNextService }) {
                 margin: 0,
               }}>
                 {homeData.hero.title}
-                {homeData.hero.title === 'Central' && (
+                {homeData.hero.titleAccent && (
                   <span style={{
                     display: 'block',
                     fontStyle: 'italic',
                     color: 'var(--gold)',
                     marginLeft: 'clamp(20px, 4vw, 60px)',
-                  }}>Osorno</span>
+                  }}>{homeData.hero.titleAccent}</span>
                 )}
               </h1>
 
@@ -163,9 +192,9 @@ function PageInicio({ setPage, nextService: propNextService }) {
                 borderTop: '1px solid var(--line)',
               }}>
                 <MiniInfo label="Visítanos" value="Andrés Bello 748" sub="Osorno · Los Lagos" />
-                <MiniInfo label="Sábado"    value="09:45" sub="Escuela Sabática" gold />
-                <MiniInfo label="Sábado"    value="11:00" sub="Culto Divino" gold />
-                <MiniInfo label="Sábado"    value="17:00" sub="Culto Joven" gold />
+                {homeData.scheduleItems.map(([d, h, t], i) => (
+                  <MiniInfo key={i} label={d} value={h} sub={t} gold />
+                ))}
               </div>
             </div>
 
@@ -304,14 +333,10 @@ function PageInicio({ setPage, nextService: propNextService }) {
             display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0,
             borderTop: '1px solid var(--line)'
           }}>
-            {[
-              ['Sábado',    '09:45', 'Escuela Sabática'],
-              ['Sábado',    '11:00', 'Culto Divino'],
-              ['Sábado',    '17:00', 'Culto Joven'],
-            ].map(([d, h, t], i) => (
-              <div key={d + h} style={{
+            {homeData.scheduleItems.map(([d, h, t], i) => (
+              <div key={d + h + i} style={{
                 padding: '32px 28px',
-                borderRight: i < 2 ? '1px solid var(--line)' : 0,
+                borderRight: i < homeData.scheduleItems.length - 1 ? '1px solid var(--line)' : 0,
                 borderBottom: '1px solid var(--line)'
               }}>
                 <div className="mono" style={{

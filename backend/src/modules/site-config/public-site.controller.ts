@@ -1,8 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { SiteConfigService } from './site-config.service';
+import { ScheduleService } from './schedule.service';
 import { PublicLeadershipDto } from './dto/public-leadership.dto';
 import { PublicHomeDto } from './dto/public-home.dto';
+import { PublicScheduleResponseDto } from './dto/public-schedule.dto';
 
 /**
  * Endpoints públicos (sin autenticación) que alimentan el sitio público
@@ -11,7 +13,10 @@ import { PublicHomeDto } from './dto/public-home.dto';
 @ApiTags('public-site')
 @Controller('public')
 export class PublicSiteController {
-  constructor(private readonly service: SiteConfigService) {}
+  constructor(
+    private readonly service: SiteConfigService,
+    private readonly scheduleService: ScheduleService,
+  ) {}
 
   @Get('home')
   @ApiOperation({
@@ -29,5 +34,14 @@ export class PublicSiteController {
   @ApiResponse({ status: 200, type: PublicLeadershipDto })
   getLeadership(): Promise<PublicLeadershipDto> {
     return this.service.getPublicLeadership();
+  }
+
+  @Get('schedule')
+  @ApiOperation({
+    summary: 'Schedule section data for the public site (PageHorarios)',
+  })
+  @ApiResponse({ status: 200, type: PublicScheduleResponseDto })
+  getSchedule(): Promise<PublicScheduleResponseDto> {
+    return this.scheduleService.getPublicSchedule();
   }
 }

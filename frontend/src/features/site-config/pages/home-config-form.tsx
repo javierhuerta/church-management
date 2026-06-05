@@ -11,11 +11,13 @@ import {
   Type, 
   Hash, 
   Calendar, 
-  Facebook, 
-  Instagram, 
-  Youtube, 
   MousePointerClick,
-  Loader2
+  Loader2,
+  Link,
+  Share2,
+  MapPin,
+  Phone,
+  Mail
 } from 'lucide-react'
 import { SiteConfigService, PublicSiteService } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -33,6 +35,7 @@ const NAVY = '#1B3A6B'
 // ─── Schema ──────────────────────────────────────────────────────────────────
 const homeSchema = z.object({
   heroTitle: z.string().min(1, 'Requerido'),
+  heroTitleAccent: z.string(),
   heroSubtitle: z.string().min(1, 'Requerido'),
   verseText: z.string().min(1, 'Requerido'),
   verseReference: z.string().min(1, 'Requerido'),
@@ -44,13 +47,17 @@ const homeSchema = z.object({
   footerCtaTitle: z.string().min(1, 'Requerido'),
   footerCtaSubtitle: z.string().min(1, 'Requerido'),
   footerCtaButtonText: z.string().min(1, 'Requerido'),
+  contactAddress: z.string(),
+  contactCity: z.string(),
+  contactEmail: z.string().email('Email inválido').or(z.literal('')),
+  contactPhone: z.string(),
 })
 
 type HomeFormValues = z.infer<typeof homeSchema>
 
 // ─── Components ──────────────────────────────────────────────────────────────
 
-function SectionHeader({ title, icon: Icon }: { title: string; icon: any }) {
+function SectionHeader({ title, icon: Icon }: { title: string; icon: React.ComponentType<{ className?: string }> }) {
   return (
     <div className="flex items-center gap-2 pb-2 border-b border-border mb-4">
       <Icon className="h-4 w-4 text-primary" />
@@ -63,12 +70,14 @@ function ImageSlot({
   label, 
   slot, 
   currentUrl, 
-  onUpload 
+  onUpload,
+  compact = false,
 }: { 
   label: string; 
   slot: 'main' | 'small' | 'next-service'; 
   currentUrl: string | null;
   onUpload: (slot: 'main' | 'small' | 'next-service', file: File) => void;
+  compact?: boolean;
 }) {
   const [uploading, setUploading] = useState(false)
 
@@ -86,7 +95,7 @@ function ImageSlot({
   return (
     <div className="space-y-2">
       <Label className="text-xs font-semibold text-muted-foreground uppercase">{label}</Label>
-      <div className="relative aspect-video rounded-lg border-2 border-dashed border-border bg-muted/30 overflow-hidden group">
+      <div className={`relative aspect-video rounded-lg border-2 border-dashed border-border bg-muted/30 overflow-hidden group ${compact ? 'max-w-[220px]' : ''}`}>
         {currentUrl ? (
           <img src={currentUrl} alt={label} className="w-full h-full object-cover" />
         ) : (
@@ -128,6 +137,7 @@ export function HomeConfigForm() {
     resolver: zodResolver(homeSchema),
     defaultValues: {
       heroTitle: '',
+      heroTitleAccent: '',
       heroSubtitle: '',
       verseText: '',
       verseReference: '',
@@ -139,6 +149,10 @@ export function HomeConfigForm() {
       footerCtaTitle: '',
       footerCtaSubtitle: '',
       footerCtaButtonText: '',
+      contactAddress: '',
+      contactCity: '',
+      contactEmail: '',
+      contactPhone: '',
     }
   })
 
@@ -146,6 +160,7 @@ export function HomeConfigForm() {
     if (config) {
       form.reset({
         heroTitle: config.heroTitle,
+        heroTitleAccent: config.heroTitleAccent ?? '',
         heroSubtitle: config.heroSubtitle,
         verseText: config.verseText,
         verseReference: config.verseReference,
@@ -157,6 +172,10 @@ export function HomeConfigForm() {
         footerCtaTitle: config.footerCtaTitle,
         footerCtaSubtitle: config.footerCtaSubtitle,
         footerCtaButtonText: config.footerCtaButtonText,
+        contactAddress: config.contactAddress ?? '',
+        contactCity: config.contactCity ?? '',
+        contactEmail: config.contactEmail ?? '',
+        contactPhone: config.contactPhone ?? '',
       })
     }
   }, [config, form])
@@ -172,8 +191,8 @@ export function HomeConfigForm() {
   })
 
   const uploadMutation = useMutation({
-    mutationFn: ({ slot, file }: { slot: any; file: File }) => 
-      SiteConfigService.siteConfigControllerSetHomeImage(slot, { file: file as any }),
+    mutationFn: ({ slot, file }: { slot: 'main' | 'small' | 'next-service'; file: File }) =>
+      SiteConfigService.siteConfigControllerSetHomeImage(slot, { file: file as Blob }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['site-config', 'home'] })
       queryClient.invalidateQueries({ queryKey: ['public-home'] })
@@ -194,20 +213,25 @@ export function HomeConfigForm() {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-20">
+    <form data-testid="home-config-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-20">
       {/* ─── Hero Section ─── */}
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <SectionHeader title="Sección Hero (Principal)" icon={Globe} />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-4">
+            <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="heroTitle">Título Principal</Label>
-              <Input id="heroTitle" {...form.register('heroTitle')} placeholder="Ej: Iglesia Adventista del Séptimo Día" />
+              <Label htmlFor="heroTitle">Título Principal (línea 1)</Label>
+              <Input id="heroTitle" data-testid="hero-title-input" {...form.register('heroTitle')} placeholder="Ej: Central" />
               {form.formState.errors.heroTitle && <p className="text-xs text-destructive">{form.formState.errors.heroTitle.message}</p>}
             </div>
             <div className="space-y-2">
+              <Label htmlFor="heroTitleAccent">Título secundario (línea 2)</Label>
+              <Input id="heroTitleAccent" data-testid="hero-title-accent-input" {...form.register('heroTitleAccent')} placeholder="Ej: Osorno" />
+              <p className="text-[10px] text-muted-foreground">Se muestra en cursiva dorada bajo el título principal. Dejar vacío para ocultar.</p>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="heroSubtitle">Subtítulo / Eslogan</Label>
-              <Textarea id="heroSubtitle" {...form.register('heroSubtitle')} placeholder="Ej: Osorno Central: Una casa de oración para todos los pueblos" rows={3} />
+              <Textarea id="heroSubtitle" data-testid="hero-subtitle-input" {...form.register('heroSubtitle')} placeholder="Ej: Osorno Central: Una casa de oración para todos los pueblos" rows={3} />
               {form.formState.errors.heroSubtitle && <p className="text-xs text-destructive">{form.formState.errors.heroSubtitle.message}</p>}
             </div>
           </div>
@@ -275,6 +299,7 @@ export function HomeConfigForm() {
               slot="next-service" 
               currentUrl={config?.nextServiceImageUrl ?? null} 
               onUpload={(slot, file) => uploadMutation.mutate({ slot, file })}
+              compact
             />
           </div>
         </div>
@@ -300,29 +325,100 @@ export function HomeConfigForm() {
         </div>
 
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <SectionHeader title="Redes Sociales" icon={Facebook} />
+          <SectionHeader title="Redes Sociales" icon={Globe} />
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Facebook className="h-4 w-4 text-[#1877F2]" />
+                <Globe className="h-4 w-4 text-[#1877F2]" />
                 <Label htmlFor="facebookUrl">Facebook</Label>
               </div>
               <Input id="facebookUrl" {...form.register('facebookUrl')} placeholder="https://facebook.com/..." />
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Instagram className="h-4 w-4 text-[#E4405F]" />
+                <Link className="h-4 w-4 text-[#E4405F]" />
                 <Label htmlFor="instagramUrl">Instagram</Label>
               </div>
               <Input id="instagramUrl" {...form.register('instagramUrl')} placeholder="https://instagram.com/..." />
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Youtube className="h-4 w-4 text-[#FF0000]" />
+                <Share2 className="h-4 w-4 text-[#FF0000]" />
                 <Label htmlFor="youtubeUrl">YouTube</Label>
               </div>
               <Input id="youtubeUrl" {...form.register('youtubeUrl')} placeholder="https://youtube.com/..." />
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Contacto ─── */}
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm" data-testid="contacto-section">
+        <SectionHeader title="Contacto (Footer Global)" icon={MapPin} />
+        <p className="text-[10px] text-muted-foreground italic bg-muted p-2 rounded border border-border mb-4">
+          Estos datos aparecen en el footer de todas las páginas del sitio público.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="contactAddress">Dirección</Label>
+            </div>
+            <Input
+              id="contactAddress"
+              data-testid="contact-address-input"
+              {...form.register('contactAddress')}
+              placeholder="Ej: Andrés Bello 748"
+            />
+            {form.formState.errors.contactAddress && (
+              <p className="text-xs text-destructive">{form.formState.errors.contactAddress.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="contactCity">Ciudad / Región</Label>
+            </div>
+            <Input
+              id="contactCity"
+              data-testid="contact-city-input"
+              {...form.register('contactCity')}
+              placeholder="Ej: Osorno, Los Lagos"
+            />
+            {form.formState.errors.contactCity && (
+              <p className="text-xs text-destructive">{form.formState.errors.contactCity.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="contactEmail">Correo Electrónico</Label>
+            </div>
+            <Input
+              id="contactEmail"
+              data-testid="contact-email-input"
+              type="email"
+              {...form.register('contactEmail')}
+              placeholder="Ej: contacto@iasdcentralosorno.cl"
+            />
+            {form.formState.errors.contactEmail && (
+              <p className="text-xs text-destructive">{form.formState.errors.contactEmail.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="contactPhone">Teléfono</Label>
+            </div>
+            <Input
+              id="contactPhone"
+              data-testid="contact-phone-input"
+              {...form.register('contactPhone')}
+              placeholder="Ej: +56 64 222 0000"
+            />
+            {form.formState.errors.contactPhone && (
+              <p className="text-xs text-destructive">{form.formState.errors.contactPhone.message}</p>
+            )}
           </div>
         </div>
       </div>
@@ -349,7 +445,8 @@ export function HomeConfigForm() {
       {/* ─── Floating Save Button ─── */}
       <div className="fixed bottom-6 right-6 z-50">
         <Button 
-          type="submit" 
+          type="submit"
+          data-testid="home-config-save-button"
           size="lg" 
           className="shadow-xl h-12 px-8 gap-2"
           disabled={saveMutation.isPending}
