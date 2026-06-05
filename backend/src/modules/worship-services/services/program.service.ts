@@ -108,6 +108,10 @@ export class ProgramService {
         templateId: dto.templateId,
         status: ProgramStatus.DRAFT,
         createdById: userId,
+        title: dto.title ?? null,
+        preacher: dto.preacher ?? null,
+        theme: dto.theme ?? null,
+        scripture: dto.scripture ?? null,
       });
       const persistedProgram = await manager.save(program);
 
@@ -436,7 +440,13 @@ export class ProgramService {
 
   async updateProgram(
     programId: string,
-    dto: { date: string },
+    dto: {
+      date?: string;
+      title?: string | null;
+      preacher?: string | null;
+      theme?: string | null;
+      scripture?: string | null;
+    },
     userId: string,
     userRole: UserRole,
   ) {
@@ -451,18 +461,33 @@ export class ProgramService {
       throw new ForbiddenException('Not authorized to edit this program');
     }
 
-    const oldDate = program.date;
-    program.date = dto.date;
-    await this.programRepo.save(program);
+    if (dto.date !== undefined && dto.date !== program.date) {
+      const oldDate = program.date;
+      program.date = dto.date;
+      await this.createLog(
+        program.id,
+        userId,
+        null,
+        'cambió fecha del programa',
+        oldDate,
+        dto.date,
+      );
+    }
 
-    await this.createLog(
-      program.id,
-      userId,
-      null,
-      'cambió fecha del programa',
-      oldDate,
-      dto.date,
-    );
+    if (dto.title !== undefined) {
+      program.title = dto.title ?? null;
+    }
+    if (dto.preacher !== undefined) {
+      program.preacher = dto.preacher ?? null;
+    }
+    if (dto.theme !== undefined) {
+      program.theme = dto.theme ?? null;
+    }
+    if (dto.scripture !== undefined) {
+      program.scripture = dto.scripture ?? null;
+    }
+
+    await this.programRepo.save(program);
 
     return this.findOne(programId);
   }

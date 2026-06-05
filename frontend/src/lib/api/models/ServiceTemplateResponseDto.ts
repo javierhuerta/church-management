@@ -10,6 +10,7 @@ export type ServiceTemplateResponseDto = {
     description?: string | null;
     type: ServiceTemplateResponseDto.type;
     isActive: boolean;
+    showOnWebsite: boolean;
     createdAt: string;
     updatedAt?: string | null;
     groups: Array<TemplateGroupResponseDto>;

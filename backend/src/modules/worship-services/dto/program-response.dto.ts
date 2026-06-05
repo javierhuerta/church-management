@@ -131,6 +131,22 @@ export class ServiceProgramResponseDto {
 
   @ApiProperty({ enum: ProgramStatus }) @Expose() status: ProgramStatus;
 
+  @ApiPropertyOptional({ type: String, nullable: true })
+  @Expose()
+  title: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  @Expose()
+  preacher: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  @Expose()
+  theme: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  @Expose()
+  scripture: string | null;
+
   @ApiProperty({ type: String }) @Expose() templateId: string;
   @ApiProperty({ type: String }) @Expose() createdById: string;
 

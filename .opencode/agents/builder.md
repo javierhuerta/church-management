@@ -3,7 +3,7 @@ description: Implementation agent for building OpenSpec tasks. Uses Claude Sonne
 mode: subagent
 temperature: 0.2
 hidden: true
-model: anthropic/claude-sonnet-4-6
+model: opencode-go/qwen3.7-plus
 permission:
   edit: "allow"
   bash: "allow"

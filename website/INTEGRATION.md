@@ -14,6 +14,8 @@ re-aplicar solo estos parches:
   - `apiGet(path)` → helper genérico para GET requests a `/api/*`. Devuelve JSON.
   - `fetchEvents()` → eventos publicados (`GET /api/calendar`) mapeados al shape
     del diseño `{ id, date, start, title, loc, featured }`.
+  - `fetchWorship()` → culto público (`GET /api/public/worship`) para Programa e Inicio,
+    incluyendo fallback de plantilla cuando no hay programa publicado.
   - `mapEvent(ev)` → mapea un evento del backend al shape del diseño.
 - `Dockerfile`, `nginx.conf`, `.dockerignore` — empaquetado/serving.
 
@@ -56,8 +58,18 @@ re-aplicar solo estos parches:
    - Se agregaron `useState` y `useEffect` al inicio de la función.
    - Los textos e imágenes hardcodeados se conservan como `DEFAULT_HOME` (fallback).
    - Al montar, se llama `window.IASD_API.fetchHome()` y se reemplazan los datos si la API responde.
-   - Se agregaron props `src` a los `PhotoSlot` del hero para mostrar las imágenes subidas desde el admin.
-   - Los enlaces de redes sociales y el CTA final ahora son dinámicos.
+    - Se agregaron props `src` a los `PhotoSlot` del hero para mostrar las imágenes subidas desde el admin.
+    - Los enlaces de redes sociales y el CTA final ahora son dinámicos.
+    - La tarjeta "Próximo culto" ahora consume `window.IASD_API.fetchWorship()`.
+      - Muestra siempre fecha + título.
+      - Muestra predicador + tema solo cuando `upcoming: true`.
+      - Si `upcoming: false`, muestra indicador sutil de "programa aún no publicado".
+
+8. **`pages-4.jsx`** — `PagePrograma` consume datos vivos de culto:
+   - Se eliminó edición inline en la vista pública (no `EditBanner`, no add/remove/move).
+   - Al montar, llama `window.IASD_API.fetchWorship()` y renderiza el programa desde API.
+   - Si no hay programa publicado, renderiza fallback de plantilla (estructura de partes) en vez de pantalla vacía.
+   - Se conserva `ToolbarBar` y la generación de PDF.
 
 ## Secciones removidas del sitio público
 
@@ -87,7 +99,7 @@ Ejemplos de cambios ya implementados:
 - **Liderazgo**: pendiente (`site-section-liderazgo`). Agregar
   `fetchLeadership()` y parchear `PageNosotros`.
 
-8. **`pages-2.jsx`** — `PageHorarios` consume datos vivos:
+9. **`pages-2.jsx`** — `PageHorarios` consume datos vivos:
    - Se agregaron `useState` y `useEffect` al inicio de la función.
    - Los arrays hardcodeados `week` y textos se conservan como `DEFAULT_WEEK` y
      `DEFAULT_TEXTS` (fallback).
@@ -113,7 +125,5 @@ anónimos (sin token).
 
 ## Pendiente (próximas etapas)
 
-- Programa del día (`store.program`) sigue en modo demo (localStorage). Conectar
-  a `/api/worship-services`.
 - La pantalla demo `#acceso` (`PageAcceso` en `auth.jsx`) quedó sin enlaces; se
   puede eliminar cuando se confirme que no se usa.

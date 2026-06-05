@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Clock, User, Music, FileText, Send, CheckCircle, Trash2, Calendar, Plus, Archive, Download, GripVertical } from 'lucide-react'
+import { ArrowLeft, Clock, User, Music, FileText, Send, CheckCircle, Trash2, Calendar, Plus, Archive, Download, GripVertical, Eye, EyeOff } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -69,15 +69,33 @@ export function ProgramDetailPage() {
   const [addingSectionToGroup, setAddingSectionToGroup] = useState<string | null>(null)
 
   const [isDownloading, setIsDownloading] = useState(false)
+  const [showSectionTimeFields, setShowSectionTimeFields] = useState(false)
   const [publishDialogOpen, setPublishDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false)
   const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null)
   const [deleteSectionId, setDeleteSectionId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'program' | 'history'>('program')
+  const [programMeta, setProgramMeta] = useState({
+    title: '',
+    preacher: '',
+    theme: '',
+    scripture: '',
+  })
+  const [isSavingProgramMeta, setIsSavingProgramMeta] = useState(false)
 
   const { data: program, isLoading } = useProgram(id || '')
   const { data: logs } = useProgramLogs(id || '')
+
+  useEffect(() => {
+    if (!program) return
+    setProgramMeta({
+      title: program.title ?? '',
+      preacher: program.preacher ?? '',
+      theme: program.theme ?? '',
+      scripture: program.scripture ?? '',
+    })
+  }, [program])
 
   const groupToDelete = useMemo(
     () => program?.groups?.find((g) => g.id === deleteGroupId) ?? null,
@@ -131,6 +149,25 @@ export function ProgramDetailPage() {
   }
 
   const formattedDate = format(parseDateString(program.date) ?? new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })
+
+  async function saveProgramMeta() {
+    if (!canEdit) return
+    setIsSavingProgramMeta(true)
+    try {
+      await WorshipServicesProgramsService.programControllerUpdateProgram(id || '', {
+        title: programMeta.title.trim() || null,
+        preacher: programMeta.preacher.trim() || null,
+        theme: programMeta.theme.trim() || null,
+        scripture: programMeta.scripture.trim() || null,
+      })
+      await invalidateProgram()
+      toast.success('Datos del culto actualizados')
+    } catch {
+      toast.error('No se pudieron guardar los datos del culto')
+    } finally {
+      setIsSavingProgramMeta(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -338,6 +375,82 @@ export function ProgramDetailPage() {
         </div>
       </div>
 
+      <div className="rounded-2xl border border-border bg-card p-4 md:p-5 shadow-sm">
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+          <p className="text-sm font-semibold text-foreground">Datos del culto para sitio público</p>
+          {canEdit && (
+            <Button size="sm" onClick={saveProgramMeta} disabled={isSavingProgramMeta}>
+              {isSavingProgramMeta ? 'Guardando...' : 'Guardar datos'}
+            </Button>
+          )}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Título</p>
+            <Input
+              value={programMeta.title}
+              onChange={(e) => setProgramMeta((prev) => ({ ...prev, title: e.target.value }))}
+              disabled={!canEdit}
+              placeholder="Culto Divino"
+            />
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Predicador</p>
+            <Input
+              value={programMeta.preacher}
+              onChange={(e) => setProgramMeta((prev) => ({ ...prev, preacher: e.target.value }))}
+              disabled={!canEdit}
+              placeholder="Pr. Nombre Apellido"
+            />
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Tema</p>
+            <Input
+              value={programMeta.theme}
+              onChange={(e) => setProgramMeta((prev) => ({ ...prev, theme: e.target.value }))}
+              disabled={!canEdit}
+              placeholder="Tema del sermón"
+            />
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Pasaje bíblico</p>
+            <Input
+              value={programMeta.scripture}
+              onChange={(e) => setProgramMeta((prev) => ({ ...prev, scripture: e.target.value }))}
+              disabled={!canEdit}
+              placeholder="Mateo 6:25-34"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-foreground">Campos de tiempo en secciones</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Ocultos por defecto para priorizar los campos importantes del programa.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant={showSectionTimeFields ? 'secondary' : 'outline'}
+            onClick={() => setShowSectionTimeFields((prev) => !prev)}
+          >
+            {showSectionTimeFields ? (
+              <>
+                <EyeOff className="h-4 w-4 mr-1" /> Ocultar tiempos
+              </>
+            ) : (
+              <>
+                <Eye className="h-4 w-4 mr-1" /> Mostrar tiempos
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
       <div className="lg:hidden mb-4">
         <div className="flex gap-1 bg-muted rounded-lg p-1 w-fit">
           <button
@@ -400,6 +513,7 @@ export function ProgramDetailPage() {
                     onDeleteGroup={() => setDeleteGroupId(group.id)}
                     programId={id || ''}
                     invalidateProgram={invalidateProgram}
+                    showSectionTimeFields={showSectionTimeFields}
                     reorderSections={reorderSections}
                     sensors={sensors}
                   />
@@ -458,6 +572,7 @@ export function ProgramDetailPage() {
                 onDeleteGroup={() => setDeleteGroupId(group.id)}
                 programId={id || ''}
                 invalidateProgram={invalidateProgram}
+                showSectionTimeFields={showSectionTimeFields}
                 reorderSections={reorderSections}
                 sensors={sensors}
               />
@@ -577,6 +692,7 @@ interface Section {
 interface SectionRowProps {
   section: Section
   canEdit: boolean
+  showSectionTimeFields: boolean
   isEditing: boolean
   onEdit: () => void
   onCancel: () => void
@@ -585,7 +701,7 @@ interface SectionRowProps {
   sectionName?: string
 }
 
-function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, onDelete, onSaved, sectionName }: SectionRowProps) {
+function SectionRow({ section, canEdit, showSectionTimeFields, isEditing, onEdit, onCancel, onDelete, onSaved, sectionName }: SectionRowProps) {
   const displayName = section.name ?? sectionName ?? ''
   const [formData, setFormData] = useState({
     name: displayName,
@@ -633,21 +749,23 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, onDelete, o
               className="h-8 text-sm"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Input
-              type="time"
-              value={formData.startTime}
-              onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-              className="h-8 text-sm flex-1"
-            />
-            <Input
-              type="number"
-              value={formData.duration}
-              onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-              placeholder="Min"
-              className="h-8 text-sm w-16"
-            />
-          </div>
+          {showSectionTimeFields && (
+            <div className="flex items-center gap-2">
+              <Input
+                type="time"
+                value={formData.startTime}
+                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                className="h-8 text-sm flex-1"
+              />
+              <Input
+                type="number"
+                value={formData.duration}
+                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                placeholder="Min"
+                className="h-8 text-sm w-16"
+              />
+            </div>
+          )}
           <div className="relative">
             <Input
               value={formData.responsible}
@@ -718,7 +836,7 @@ function SectionRow({ section, canEdit, isEditing, onEdit, onCancel, onDelete, o
           <p className="text-xs font-semibold text-foreground uppercase tracking-wide">{displayName}</p>
         )}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          {section.startTime && (
+          {showSectionTimeFields && section.startTime && (
             <div className="flex items-center gap-1 text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />
               {section.startTime}
@@ -885,6 +1003,7 @@ interface SortableGroupCardProps {
   onDeleteSection: (id: string) => void
   onDeleteGroup: () => void
   programId: string
+  showSectionTimeFields: boolean
   invalidateProgram: () => void
   reorderSections: { mutate: (orderedIds: string[]) => void }
   sensors: ReturnType<typeof useSensors>
@@ -894,7 +1013,7 @@ function SortableGroupCard({
   group, canEdit, isEditingGroup, onEditGroup, onCancelEditGroup,
   isAddingSection, onToggleAddSection, onCancelAddSection,
   editingSection, onEditSection, onCancelEditSection, onDeleteSection,
-  onDeleteGroup, invalidateProgram, reorderSections, sensors,
+  onDeleteGroup, showSectionTimeFields, invalidateProgram, reorderSections, sensors,
 }: SortableGroupCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: group.id,
@@ -999,6 +1118,7 @@ function SortableGroupCard({
                 onCancel={onCancelEditSection}
                 onDelete={() => onDeleteSection(section.id)}
                 sectionName={section.name ?? section.templateSection?.name}
+                showSectionTimeFields={showSectionTimeFields}
                 onSaved={invalidateProgram}
               />
             ))}

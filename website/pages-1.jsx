@@ -41,6 +41,7 @@ function PageInicio({ setPage, nextService: propNextService }) {
   };
 
   const [homeData, setHomeData] = React.useState(DEFAULT_HOME);
+  const [worshipData, setWorshipData] = React.useState(null);
 
   // Cargar datos desde la API al montar
   React.useEffect(() => {
@@ -103,9 +104,37 @@ function PageInicio({ setPage, nextService: propNextService }) {
         })
         .catch(() => {});
     }
+
+    if (window.IASD_API && window.IASD_API.fetchWorship) {
+      window.IASD_API.fetchWorship()
+        .then(data => {
+          if (!data) return;
+          setWorshipData(data);
+        })
+        .catch(() => {
+          setWorshipData(null);
+        });
+    }
   }, []);
 
-  const nextService = homeData.nextService;
+  const nextService = React.useMemo(() => {
+    if (worshipData && worshipData.date && worshipData.title) {
+      return {
+        title: worshipData.title,
+        date: worshipData.date,
+        where: 'Andrés Bello 748',
+        location: 'Andrés Bello 748',
+        imageUrl: homeData.nextService?.imageUrl || null,
+        upcoming: !!worshipData.upcoming,
+        preacher: worshipData.preacher || null,
+        theme: worshipData.theme || null,
+      };
+    }
+    return homeData.nextService;
+  }, [worshipData, homeData.nextService]);
+
+  const showPublishedDetails = !!(worshipData && worshipData.upcoming);
+  const showUnpublishedHint = !!(worshipData && !worshipData.upcoming);
 
   return (
     <main className="page-enter" data-screen-label="Inicio">
@@ -287,7 +316,9 @@ function PageInicio({ setPage, nextService: propNextService }) {
                     textTransform: 'uppercase', fontWeight: 600,
                   }}>Cuándo</div>
                   <div style={{ fontSize: 15, fontWeight: 500, marginTop: 4 }}>
-                    {nextService.date ? new Date(nextService.date).toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : nextService.when}
+                    {nextService.date
+                      ? formatNextWorshipDate(nextService.date)
+                      : nextService.when}
                   </div>
                 </div>
                 <div>
@@ -299,6 +330,42 @@ function PageInicio({ setPage, nextService: propNextService }) {
                     {nextService.location || nextService.where}
                   </div>
                 </div>
+                {showPublishedDetails ? (
+                  <>
+                    {nextService.preacher && (
+                      <div>
+                        <div className="mono" style={{
+                          fontSize: 10.5, color: 'var(--muted)', letterSpacing: '.14em',
+                          textTransform: 'uppercase', fontWeight: 600,
+                        }}>Predicador</div>
+                        <div style={{ fontSize: 15, fontWeight: 500, marginTop: 4 }}>
+                          {nextService.preacher}
+                        </div>
+                      </div>
+                    )}
+                    {nextService.theme && (
+                      <div>
+                        <div className="mono" style={{
+                          fontSize: 10.5, color: 'var(--muted)', letterSpacing: '.14em',
+                          textTransform: 'uppercase', fontWeight: 600,
+                        }}>Tema</div>
+                        <div style={{ fontSize: 15, fontWeight: 500, marginTop: 4 }}>
+                          {nextService.theme}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : showUnpublishedHint ? (
+                  <div>
+                    <div className="mono" style={{
+                      fontSize: 10.5, color: 'var(--muted)', letterSpacing: '.14em',
+                      textTransform: 'uppercase', fontWeight: 600,
+                    }}>Estado</div>
+                    <div style={{ fontSize: 14, fontWeight: 500, marginTop: 4, color: 'var(--muted)' }}>
+                      Programa aun no publicado
+                    </div>
+                  </div>
+                ) : null}
               </div>
               <div style={{ marginTop: 28, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button className="btn btn-primary" onClick={() => setPage('programa')}>
@@ -486,6 +553,19 @@ function Arrow() {
       <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>);
 
+}
+
+function formatNextWorshipDate(dateStr) {
+  var date = dateStr && dateStr.indexOf('T') !== -1
+    ? new Date(dateStr)
+    : new Date(dateStr + 'T11:00:00');
+  if (Number.isNaN(date.getTime())) return dateStr;
+  var label = date.toLocaleDateString('es-CL', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+  return label + ' · 11:00 h';
 }
 
 // ═════════════════════════════════════════════════════════

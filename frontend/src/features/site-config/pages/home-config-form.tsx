@@ -19,7 +19,7 @@ import {
   Phone,
   Mail
 } from 'lucide-react'
-import { SiteConfigService, PublicSiteService } from '@/lib/api'
+import { SiteConfigService, PublicService } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -128,9 +128,9 @@ export function HomeConfigForm() {
     queryFn: () => SiteConfigService.siteConfigControllerGetHomeConfig(),
   })
 
-  const { data: publicHome } = useQuery({
-    queryKey: ['public-home'],
-    queryFn: () => PublicSiteService.publicSiteControllerGetHome(),
+  const { data: publicWorship } = useQuery({
+    queryKey: ['public-worship'],
+    queryFn: () => PublicService.publicWorshipControllerGetWorship(),
   })
 
   const form = useForm<HomeFormValues>({
@@ -192,7 +192,7 @@ export function HomeConfigForm() {
 
   const uploadMutation = useMutation({
     mutationFn: ({ slot, file }: { slot: 'main' | 'small' | 'next-service'; file: File }) =>
-      SiteConfigService.siteConfigControllerSetHomeImage(slot, { file: file as Blob }),
+      SiteConfigService.siteConfigControllerSetHomeImage(slot, { file: file as unknown as string }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['site-config', 'home'] })
       queryClient.invalidateQueries({ queryKey: ['public-home'] })
@@ -273,25 +273,30 @@ export function HomeConfigForm() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <SectionHeader title="Próximo Culto (Auto-detectado)" icon={Calendar} />
           <div className="space-y-4">
-            {publicHome?.nextService ? (
+            {publicWorship?.date && publicWorship?.title ? (
               <div className="p-4 rounded-lg bg-muted/50 border border-border space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-xs font-bold text-primary uppercase tracking-tighter">Siguiente Actividad</p>
-                    <p className="text-base font-bold text-foreground">{publicHome.nextService.title}</p>
+                    <p className="text-xs font-bold text-primary uppercase tracking-tighter">Próximo Culto</p>
+                    <p className="text-base font-bold text-foreground">{publicWorship.title}</p>
                   </div>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                    EN VIVO PRONTO
+                    {publicWorship.upcoming ? 'PROGRAMA PUBLICADO' : 'FALLBACK PLANTILLA'}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                  <p>📅 {new Date(publicHome.nextService.date!).toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-                  <p>📍 {publicHome.nextService.location ?? 'Templo Central'}</p>
+                  <p>📅 {formatWorshipDate(publicWorship.date)}</p>
+                  <p>📍 Templo Central</p>
                 </div>
+                {!publicWorship.upcoming && (
+                  <p className="text-[11px] text-muted-foreground italic">
+                    Aún no hay programa publicado para ese sábado. Se mostrará la plantilla marcada para sitio web.
+                  </p>
+                )}
               </div>
             ) : (
               <div className="p-8 text-center border border-dashed border-border rounded-lg">
-                <p className="text-sm text-muted-foreground italic">No hay eventos próximos publicados en el calendario.</p>
+                <p className="text-sm text-muted-foreground italic">No hay plantilla de culto marcada para sitio web o no hay datos disponibles.</p>
               </div>
             )}
             <ImageSlot 
@@ -461,4 +466,12 @@ export function HomeConfigForm() {
       </div>
     </form>
   )
+}
+
+function formatWorshipDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return 'Sin fecha';
+  const match = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return dateStr;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12, 0, 0);
+  return date.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
 }

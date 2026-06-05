@@ -3,6 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type UploadImageDto = {
-    file: ;
+    /**
+     * Binary file upload (multipart/form-data)
+     */
+    file: string;
 };
 

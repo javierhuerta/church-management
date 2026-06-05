@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -67,11 +68,24 @@ export class TemplateCrudService {
       );
     }
 
+    // Validate uniqueness of showOnWebsite
+    if (dto.showOnWebsite) {
+      const existing = await this.templateRepo.findOne({
+        where: { showOnWebsite: true },
+      });
+      if (existing) {
+        throw new BadRequestException(
+          `La plantilla "${existing.name}" ya está marcada para el sitio web. Desmárcala primero.`,
+        );
+      }
+    }
+
     const template = this.templateRepo.create({
       name: dto.name,
       description: dto.description,
       type: dto.type,
       isActive: dto.isActive ?? true,
+      showOnWebsite: dto.showOnWebsite ?? false,
     });
 
     const savedTemplate = await this.templateRepo.save(template);
@@ -148,6 +162,19 @@ export class TemplateCrudService {
     if (dto.description !== undefined) template.description = dto.description;
     if (dto.type !== undefined) template.type = dto.type;
     if (dto.isActive !== undefined) template.isActive = dto.isActive;
+
+    // Validate uniqueness of showOnWebsite when enabling it
+    if (dto.showOnWebsite === true && !template.showOnWebsite) {
+      const existing = await this.templateRepo.findOne({
+        where: { showOnWebsite: true },
+      });
+      if (existing && existing.id !== id) {
+        throw new BadRequestException(
+          `La plantilla "${existing.name}" ya está marcada para el sitio web. Desmárcala primero.`,
+        );
+      }
+    }
+    if (dto.showOnWebsite !== undefined) template.showOnWebsite = dto.showOnWebsite;
 
     await this.templateRepo.save(template);
 

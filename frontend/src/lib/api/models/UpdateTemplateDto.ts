@@ -9,6 +9,10 @@ export type UpdateTemplateDto = {
     description?: string;
     type?: UpdateTemplateDto.type;
     isActive?: boolean;
+    /**
+     * Si true, esta plantilla alimenta la sección Programa del sitio público
+     */
+    showOnWebsite?: boolean;
     groups?: Array<GroupWithSectionsDto>;
     sections?: Array<SectionDto>;
 };

@@ -9,6 +9,10 @@ export type ServiceProgramResponseDto = {
     id: string;
     date: string;
     status: ServiceProgramResponseDto.status;
+    title?: string | null;
+    preacher?: string | null;
+    theme?: string | null;
+    scripture?: string | null;
     templateId: string;
     createdById: string;
     publishedById?: string | null;

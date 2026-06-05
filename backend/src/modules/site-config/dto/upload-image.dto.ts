@@ -6,6 +6,6 @@ import { ApiProperty } from '@nestjs/swagger';
  * frontend genere el tipo correcto (no `Record<string, any>`).
  */
 export class UploadImageDto {
-  @ApiProperty({ type: 'string', format: 'binary' })
+  @ApiProperty({ type: 'string', description: 'Binary file upload (multipart/form-data)' })
   file: unknown;
 }

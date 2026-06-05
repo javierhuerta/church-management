@@ -4,9 +4,9 @@ export function CultosConfigPage() {
   return (
     <ConfigRedirectCard
       title="Cultos"
-      description="El programa publicado marcado para el sitio aparece automáticamente en la sección de Cultos."
-      explanation="Crea una plantilla de tipo 'Culto Sabático' en el módulo de Cultos y marca la bandera 'Mostrar en sitio web'. Luego publica el programa del sábado con los datos del predicador, tema y texto bíblico. Ese programa aparecerá automáticamente en el sitio público."
-      redirectTo="/cultos"
+      description="Programa e Inicio del sitio público muestran el próximo culto desde la plantilla marcada para web."
+      explanation="Flujo recomendado: 1) Crea una plantilla 'solo culto' de sábado 11:00. 2) Marca 'Mostrar en sitio web'. 3) Crea/publica el programa del sábado con título, predicador, tema y pasaje bíblico. Si aún no hay programa publicado, el sitio mostrará automáticamente el fallback de la plantilla marcada."
+      redirectTo="/cultos/programas"
       redirectLabel="Ir a Cultos"
     />
   )

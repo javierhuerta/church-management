@@ -36,19 +36,40 @@ El sistema SHALL exponer `GET /api/public/worship` (sin autenticación) que devu
 programa `Published` del próximo sábado (o del sábado actual) cuya plantilla tiene
 `showOnWebsite = true`. La respuesta SHALL incluir `upcoming` (booleano), `date`,
 `title`, `preacher`, `theme`, `scripture` e `items` (`id`, `a`, `n`, `d`, `accent`).
-Las secciones de un eventual grupo "Escuela Sabática" SHALL excluirse.
+Las secciones de un eventual grupo "Escuela Sabática" SHALL excluirse. Cuando no exista
+programa publicado pero sí una plantilla marcada, el endpoint SHALL devolver los datos
+de esa plantilla predeterminada con `upcoming: false`.
 
 #### Scenario: Hay programa publicado
 - **WHEN** existe un programa PUBLISHED para el sábado en la plantilla marcada
 - **THEN** el endpoint devuelve `upcoming: true` con encabezado e items del culto, sin Escuela Sabática
 
-#### Scenario: No hay programa publicado
-- **WHEN** no existe programa PUBLISHED para el sábado en la plantilla marcada
-- **THEN** el endpoint devuelve `{ upcoming: false }`
+#### Scenario: No hay programa publicado pero hay plantilla marcada (fallback)
+- **WHEN** no existe programa PUBLISHED para el sábado pero sí una plantilla con `showOnWebsite = true`
+- **THEN** el endpoint devuelve `upcoming: false` con `date` del próximo sábado, `title` por defecto de la plantilla, `preacher`/`theme`/`scripture` en null e `items` de las secciones de la plantilla (sin Escuela Sabática)
+
+#### Scenario: No hay plantilla marcada
+- **WHEN** no existe ninguna plantilla con `showOnWebsite = true`
+- **THEN** el endpoint devuelve `{ upcoming: false }` sin items
 
 #### Scenario: Salvaguarda Escuela Sabática
-- **WHEN** el programa incluye un grupo "Escuela Sabática"
+- **WHEN** el programa o la plantilla incluye un grupo "Escuela Sabática"
 - **THEN** el endpoint excluye sus secciones de la respuesta
+
+### Requirement: Sección "Próximo culto" en Inicio
+
+La pantalla de Inicio del sitio público SHALL mostrar una sección "Próximo culto"
+alimentada por `GET /api/public/worship`, con la fecha del próximo sábado y el título
+del culto siempre, y el predicador y el tema cuando exista programa publicado
+(`upcoming: true`).
+
+#### Scenario: Próximo culto con programa publicado
+- **WHEN** un visitante abre la pantalla de Inicio y hay un programa publicado del próximo sábado
+- **THEN** la sección "Próximo culto" muestra fecha, título, predicador y tema
+
+#### Scenario: Próximo culto sin programa publicado
+- **WHEN** un visitante abre Inicio y no hay programa publicado del próximo sábado
+- **THEN** la sección muestra la fecha y el título del culto (datos de plantilla) con una indicación sutil de que el programa aún no está publicado
 
 ### Requirement: Tab explicativa de Cultos en Configuraciones
 

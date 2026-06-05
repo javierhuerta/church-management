@@ -22,6 +22,10 @@ import { EventOrganizer } from '../modules/calendar/entities/event-organizer.ent
 import { ServiceTemplate } from '../modules/worship-services/entities/service-template.entity';
 import { ServiceTemplateGroup } from '../modules/worship-services/entities/service-template-group.entity';
 import { ServiceTemplateSection } from '../modules/worship-services/entities/service-template-section.entity';
+import { ServiceProgram } from '../modules/worship-services/entities/service-program.entity';
+import { ServiceProgramGroup } from '../modules/worship-services/entities/service-program-group.entity';
+import { ServiceProgramSection } from '../modules/worship-services/entities/service-program-section.entity';
+import { ServiceProgramLog } from '../modules/worship-services/entities/service-program-log.entity';
 import { Hymn } from '../modules/worship-services/entities/hymn.entity';
 import { RescueStageEntity } from '../modules/catalogs/entities/rescue-stage.entity';
 import { VisitStatusEntity } from '../modules/catalogs/entities/visit-status.entity';
@@ -41,6 +45,7 @@ import { BibleStudySeeder } from './mission/bible-study.seeder';
 import { EventSeeder } from './calendar/event.seeder';
 import { TemplateSeeder } from './worship-services/template.seeder';
 import { HymnSeeder } from './worship-services/hymn.seeder';
+import { WorshipPublicSeeder } from './worship-services/worship-public.seeder';
 import { RescueStageSeeder } from './catalogs/rescue-stage.seeder';
 import { VisitStatusSeeder } from './catalogs/visit-status.seeder';
 import { SabbathClassSeeder } from './catalogs/sabbath-class.seeder';
@@ -73,6 +78,7 @@ const SEEDER_REGISTRY: SeederEntry[] = [
   { name: 'users',            category: 'catalog', instance: new UserSeeder() },
   { name: 'templates',        category: 'catalog', instance: new TemplateSeeder() },
   { name: 'hymns',            category: 'catalog', instance: new HymnSeeder() },
+  { name: 'worship-public',   category: 'catalog', instance: new WorshipPublicSeeder() },
   { name: 'home-settings',     category: 'catalog', instance: new HomeSettingsSeeder() },
   { name: 'schedule-settings', category: 'catalog', instance: new ScheduleSettingsSeeder() },
   { name: 'schedule-items',    category: 'catalog', instance: new ScheduleItemSeeder() },
@@ -112,6 +118,10 @@ function createDataSource(): DataSource {
       ServiceTemplate,
       ServiceTemplateGroup,
       ServiceTemplateSection,
+      ServiceProgram,
+      ServiceProgramGroup,
+      ServiceProgramSection,
+      ServiceProgramLog,
       Hymn,
       RescueStageEntity,
       VisitStatusEntity,

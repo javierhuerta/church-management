@@ -2,12 +2,15 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type CreateProgramDto = {
-    templateId: string;
-    date: string;
+import type { UpdateGroupDto } from './UpdateGroupDto';
+import type { UpdateSectionDto } from './UpdateSectionDto';
+export type UpdateProgramDto = {
+    date?: string;
     title?: string | null;
     preacher?: string | null;
     theme?: string | null;
     scripture?: string | null;
+    groups?: Array<UpdateGroupDto>;
+    sections?: Array<UpdateSectionDto>;
 };
 

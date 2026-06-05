@@ -1,110 +1,135 @@
-// pages-4.jsx — Programa del día (público + editable) y Calendario editable
-const { useState: useS4, useMemo: useM4, useCallback: useC4 } = React;
-
-// ─────────────────────────────────────────────────────────
-// Inline edit input — minimal text editor with auto-resize
-function InlineInput({ value, onChange, multiline, placeholder, style }) {
-  const Tag = multiline ? 'textarea' : 'input';
-  return (
-    <Tag
-      value={value || ''}
-      onChange={e => onChange(e.target.value)}
-      placeholder={placeholder}
-      rows={multiline ? 2 : undefined}
-      style={{
-        width: '100%',
-        padding: '8px 10px',
-        background: 'var(--bg)',
-        border: '1px dashed color-mix(in oklab, var(--gold) 50%, var(--line))',
-        borderRadius: 6,
-        font: 'inherit',
-        color: 'var(--fg)',
-        outline: 'none',
-        resize: multiline ? 'vertical' : 'none',
-        ...style,
-      }} />
-  );
-}
+// pages-4.jsx — Programa del día (público solo lectura) y Calendario editable
+const { useState: useS4, useMemo: useM4, useEffect: useE4 } = React;
 
 // ═════════════════════════════════════════════════════════
-// PROGRAMA DEL DÍA — pública, editable con sesión
+// PROGRAMA DEL DÍA — público solo lectura
 // ═════════════════════════════════════════════════════════
-function PagePrograma({ store }) {
-  const { session, can } = useAuth();
-  const { program, setProgram, resetProgram } = store;
-  const isEditor = can && can('edit');
-
-  const updateField = (key, value) => setProgram({ ...program, [key]: value });
-
-  const updateItem = (id, patch) => setProgram({
-    ...program,
-    items: program.items.map(it => it.id === id ? { ...it, ...patch } : it),
-  });
-
-  const removeItem = (id) => setProgram({
-    ...program,
-    items: program.items.filter(it => it.id !== id),
-  });
-
-  const addItem = () => setProgram({
-    ...program,
-    items: [...program.items, {
-      id: 'p-' + Date.now(),
-      a: '', n: 'Nueva parte', d: '',
-    }],
-  });
-
-  const moveItem = (id, dir) => {
-    const idx = program.items.findIndex(i => i.id === id);
-    const newIdx = idx + dir;
-    if (newIdx < 0 || newIdx >= program.items.length) return;
-    const arr = [...program.items];
-    [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
-    setProgram({ ...program, items: arr });
+function PagePrograma() {
+  const DEFAULT_PROGRAM = {
+    date: null,
+    upcoming: false,
+    title: 'Culto Divino',
+    preacher: null,
+    theme: null,
+    scripture: null,
+    items: [
+      { id: 'fallback-1', a: '', n: 'Doxología', d: 'Himno N° 61 — Santo, Santo, Santo', accent: false },
+      { id: 'fallback-2', a: 'Predicador (a)', n: 'Oración de invocación', d: 'Predicador (a)', accent: false },
+      { id: 'fallback-3', a: '', n: 'Himno', d: 'Himno N° 341 — Más cerca del hogar', accent: false },
+      { id: 'fallback-4', a: '', n: 'Parte musical', d: '', accent: false },
+      { id: 'fallback-5', a: '', n: 'Adoración infantil', d: '', accent: false },
+      { id: 'fallback-6', a: '', n: 'Diezmos y ofrendas', d: 'Video «Probad y Ved» · Himno N° 55 — Grande Señor es Tu misericordia', accent: false },
+      { id: 'fallback-7', a: '', n: 'Himno tema 1', d: '', accent: false },
+      { id: 'fallback-8', a: '', n: 'Lectura bíblica', d: '', accent: false },
+      { id: 'fallback-9', a: '', n: 'Oración intercesora', d: 'Himno N° 431 — A Él mis problemas le doy', accent: false },
+      { id: 'fallback-10', a: '', n: 'Sermón', d: 'Predicador', accent: true },
+      { id: 'fallback-11', a: '', n: 'Himno tema 2', d: '', accent: false },
+      { id: 'fallback-12', a: 'Predicador (a)', n: 'Oración final', d: 'Predicador (a)', accent: false },
+      { id: 'fallback-13', a: '', n: 'Himno de salida', d: 'Himno N° 181 — Oh qué esperanza', accent: false },
+    ],
   };
+
+  const [program, setProgram] = useS4(DEFAULT_PROGRAM);
+  const [isPrinting, setIsPrinting] = useS4(false);
+
+  function normalizeWorshipData(data) {
+    return {
+      upcoming: !!(data && data.upcoming),
+      date: (data && data.date) || null,
+      title: (data && data.title) || DEFAULT_PROGRAM.title,
+      preacher: (data && data.preacher) || null,
+      theme: (data && data.theme) || null,
+      scripture: (data && data.scripture) || null,
+      items: data && Array.isArray(data.items) && data.items.length > 0
+        ? data.items
+        : DEFAULT_PROGRAM.items,
+    };
+  }
+
+  useE4(() => {
+    if (!(window.IASD_API && window.IASD_API.fetchWorship)) return;
+    var cancelled = false;
+    window.IASD_API.fetchWorship()
+      .then(function (data) {
+        if (cancelled || !data) return;
+        setProgram(normalizeWorshipData(data));
+      })
+      .catch(function () {
+        if (!cancelled) setProgram(DEFAULT_PROGRAM);
+      });
+    return function () { cancelled = true; };
+  }, []);
+
+  var hasPublishedHeader = !!program.upcoming;
+  var displayTitle = buildProgramDisplayTitle(program.title, program.date);
+
+  async function handlePrintProgram() {
+    if (isPrinting) return;
+    setIsPrinting(true);
+    try {
+      if (window.IASD_API && window.IASD_API.fetchWorship) {
+        var fresh = await window.IASD_API.fetchWorship();
+        if (fresh) {
+          var snapshot = normalizeWorshipData(fresh);
+          setProgram(snapshot);
+          printProgram(snapshot);
+          return;
+        }
+      }
+      printProgram(program);
+    } catch (_e) {
+      printProgram(program);
+    } finally {
+      setIsPrinting(false);
+    }
+  }
 
   return (
     <main className="page-enter" data-screen-label="Programa del día">
       <section className="section">
         <div className="container">
-          <EditBanner
-            scope="el programa del día"
-            onAdd={addItem}
-            onReset={() => { if (confirm('¿Restaurar el programa por defecto?')) resetProgram(); }} />
+          <ToolbarBar onPrint={handlePrintProgram} printing={isPrinting} />
 
-          <ToolbarBar onPrint={() => printProgram(program)} />
+          {!program.upcoming && (
+            <div className="card" style={{
+              marginBottom: 20,
+              padding: '12px 16px',
+              border: '1px solid color-mix(in oklab, var(--gold) 35%, var(--line))',
+              background: 'color-mix(in oklab, var(--gold) 10%, var(--surface))',
+            }}>
+              <div className="mono" style={{
+                fontSize: 10,
+                letterSpacing: '.14em',
+                textTransform: 'uppercase',
+                color: 'var(--gold)',
+                fontWeight: 700,
+              }}>
+                Programa aún no publicado
+              </div>
+              <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--muted)' }}>
+                Te mostramos la plantilla base del culto de sábado a las 11:00.
+              </p>
+            </div>
+          )}
 
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
             <div className="kicker">Programa del día</div>
-            {isEditor ? (
-              <div style={{ maxWidth: 720, margin: '18px auto 0' }}>
-                <InlineInput
-                  value={program.title}
-                  onChange={v => updateField('title', v)}
-                  style={{
-                    fontSize: 'clamp(36px, 5.4vw, 68px)', fontFamily: 'var(--serif)',
-                    fontWeight: 500, lineHeight: 1.02, textAlign: 'center',
-                    letterSpacing: '-0.02em', padding: '14px 18px',
-                  }} />
-              </div>
-            ) : (
-              <h1 className="serif" style={{
-                fontSize: 'clamp(40px, 6vw, 76px)', marginTop: 18, lineHeight: 1.02,
-                maxWidth: 820, margin: '18px auto 0'
-              }}>
-                {program.title}
-              </h1>
-            )}
+            <h1 className="serif" style={{
+              fontSize: 'clamp(40px, 6vw, 76px)', marginTop: 18, lineHeight: 1.02,
+              maxWidth: 820, margin: '18px auto 0'
+            }}>
+              {displayTitle}
+            </h1>
             <div style={{
               marginTop: 22, display: 'inline-flex', gap: 28, flexWrap: 'wrap',
               justifyContent: 'center'
             }}>
               <Meta label="Predicador" value={program.preacher}
-                editable={isEditor} onChange={v => updateField('preacher', v)} />
+                muted={!hasPublishedHeader} />
               <Meta label="Tema" value={program.theme}
-                editable={isEditor} onChange={v => updateField('theme', v)} />
+                muted={!hasPublishedHeader} />
               <Meta label="Pasaje" value={program.scripture}
-                editable={isEditor} onChange={v => updateField('scripture', v)} />
+                muted={!hasPublishedHeader} />
             </div>
           </div>
 
@@ -119,20 +144,19 @@ function PagePrograma({ store }) {
             {/* Header */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: isEditor ? '200px 1fr 1.6fr 48px' : '200px 1fr 1.6fr',
+              gridTemplateColumns: '200px 1fr 1.6fr',
               background: 'var(--navy)',
               color: 'var(--cream)',
             }}>
               <ProgHeader>Anuncia</ProgHeader>
               <ProgHeader>Programa</ProgHeader>
               <ProgHeader>Detalle</ProgHeader>
-              {isEditor && <ProgHeader />}
             </div>
             {/* Rows */}
             {program.items.map((p, i) => (
               <div key={p.id} style={{
                 display: 'grid',
-                gridTemplateColumns: isEditor ? '200px 1fr 1.6fr 48px' : '200px 1fr 1.6fr',
+                gridTemplateColumns: '200px 1fr 1.6fr',
                 borderTop: i === 0 ? 0 : '1px solid var(--line)',
                 background: p.accent
                   ? 'color-mix(in oklab, var(--gold) 12%, var(--bg))'
@@ -141,93 +165,47 @@ function PagePrograma({ store }) {
               }} className="prog-row">
                 {/* Anuncia */}
                 <ProgCell>
-                  {isEditor
-                    ? <InlineInput value={p.a || ''} onChange={v => updateItem(p.id, { a: v })}
-                        placeholder="—"
-                        style={{
-                          fontSize: 13, fontWeight: 600, fontFamily: 'var(--mono)',
-                          textTransform: 'uppercase', letterSpacing: '.06em',
-                          color: p.a ? 'var(--navy)' : 'var(--muted)',
-                        }} />
-                    : <span style={{
-                        fontSize: 12.5, fontWeight: 700, fontFamily: 'var(--mono)',
-                        textTransform: 'uppercase', letterSpacing: '.08em',
-                        color: 'var(--navy)',
-                      }}>{p.a || ''}</span>}
+                  <span style={{
+                    fontSize: 12.5, fontWeight: 700, fontFamily: 'var(--mono)',
+                    textTransform: 'uppercase', letterSpacing: '.08em',
+                    color: 'var(--navy)',
+                  }}>{p.a || ''}</span>
                 </ProgCell>
                 {/* Programa */}
                 <ProgCell>
-                  {isEditor
-                    ? <InlineInput value={p.n} onChange={v => updateItem(p.id, { n: v })}
-                        style={{
-                          fontSize: 15, fontWeight: 500,
-                          textTransform: 'uppercase', letterSpacing: '.04em',
-                          color: p.accent ? 'var(--gold)' : 'var(--fg)',
-                        }} />
-                    : <span style={{
-                        fontSize: 14.5, fontWeight: p.accent ? 700 : 500,
-                        textTransform: 'uppercase', letterSpacing: '.05em',
-                        color: p.accent ? 'var(--gold)' : 'var(--fg)',
-                      }}>{p.n}</span>}
+                  <span style={{
+                    fontSize: 14.5, fontWeight: p.accent ? 700 : 500,
+                    textTransform: 'uppercase', letterSpacing: '.05em',
+                    color: p.accent ? 'var(--gold)' : 'var(--fg)',
+                  }}>{p.n}</span>
                 </ProgCell>
                 {/* Detalle */}
                 <ProgCell>
-                  {isEditor
-                    ? <>
-                        <InlineInput value={p.d || ''} onChange={v => updateItem(p.id, { d: v })}
-                          multiline
-                          placeholder="—"
-                          style={{ fontSize: 14, lineHeight: 1.5 }} />
-                        {rowAcceptsHymn(p.n) && (
-                          <HymnInserter onInsert={(text) => updateItem(p.id, { d: text })} />
-                        )}
-                      </>
-                    : (p.d
-                        ? <span style={{ fontSize: 14, lineHeight: 1.5,
-                            color: 'var(--fg)' }}
-                            dangerouslySetInnerHTML={{ __html: formatDetail(p.d) }} />
-                        : <span style={{ color: 'var(--muted)' }}>—</span>)}
-                  {isEditor && (
-                    <label style={{
-                      marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6,
-                      fontSize: 11, color: 'var(--muted)', cursor: 'pointer'
-                    }}>
-                      <input type="checkbox"
-                        checked={!!p.accent}
-                        onChange={e => updateItem(p.id, { accent: e.target.checked })} />
-                      Destacar (sermón)
-                    </label>
-                  )}
+                  {p.d
+                    ? <span style={{ fontSize: 14, lineHeight: 1.5,
+                        color: 'var(--fg)' }}
+                        dangerouslySetInnerHTML={{ __html: formatDetail(p.d) }} />
+                    : <span style={{ color: 'var(--muted)' }}>—</span>}
                 </ProgCell>
-                {/* Editor controls */}
-                {isEditor && (
-                  <div style={{
-                    display: 'flex', flexDirection: 'column', gap: 4,
-                    padding: '14px 10px',
-                  }}>
-                    <IconBtn title="Subir" onClick={() => moveItem(p.id, -1)}>↑</IconBtn>
-                    <IconBtn title="Bajar" onClick={() => moveItem(p.id, +1)}>↓</IconBtn>
-                    <IconBtn title="Eliminar" onClick={() => {
-                      if (confirm('¿Eliminar esta parte del programa?')) removeItem(p.id);
-                    }} danger>×</IconBtn>
-                  </div>
-                )}
               </div>
             ))}
           </div>
 
-          {!isEditor && (
-            <div style={{ textAlign: 'center', marginTop: 48 }}>
-              <p className="muted" style={{ fontSize: 14, maxWidth: 480, margin: '0 auto' }}>
-                «Adorad a Jehová en la hermosura de la santidad.»
-              </p>
-              <div className="mono" style={{
-                marginTop: 12, fontSize: 11, color: 'var(--gold)', letterSpacing: '.16em'
-              }}>
-                SALMO 96:9
-              </div>
+          <div style={{ textAlign: 'center', marginTop: 48 }}>
+            <p className="muted" style={{ fontSize: 14, maxWidth: 480, margin: '0 auto' }}>
+              «Adorad a Jehová en la hermosura de la santidad.»
+            </p>
+            <div className="mono" style={{
+              marginTop: 12, fontSize: 11, color: 'var(--gold)', letterSpacing: '.16em'
+            }}>
+              SALMO 96:9
             </div>
-          )}
+            {!program.upcoming && (
+              <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>
+                Se actualizará automáticamente cuando el programa del sábado sea publicado.
+              </p>
+            )}
+          </div>
         </div>
       </section>
     </main>
@@ -257,13 +235,6 @@ function ProgCell({ children }) {
   );
 }
 
-// Decide if a program-row is one that typically references a hymn
-function rowAcceptsHymn(name) {
-  const n = (name || '').toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  return /himno|doxolog|diezmos|oracion intercesora/.test(n);
-}
-
 // Linkify "Himno N° X" references to nuevohimnario.com (with the title that follows it)
 function formatDetail(text) {
   if (!text) return '';
@@ -281,123 +252,78 @@ function formatDetail(text) {
   );
 }
 
-// ─────────────────────────────────────────────────────────
-// Inline hymn inserter — enter number, auto-fill title from the Nuevo Himnario Adventista
-function HymnInserter({ onInsert }) {
-  const [num, setNum] = useS4('');
-  const [loading, setLoading] = useS4(false);
-  const [error, setError] = useS4(null);
+function buildProgramDisplayTitle(title, dateStr) {
+  var baseTitle = title || 'Culto Divino';
+  var date = parseProgramDate(dateStr);
+  if (Number.isNaN(date.getTime())) return baseTitle;
 
-  const handleInsert = async () => {
-    setError(null);
-    const n = parseInt(num, 10);
-    if (!n || n < 1 || n > 613) {
-      setError('Número fuera de rango (1–613)');
-      return;
-    }
-    setLoading(true);
-    try {
-      const raw = await window.claude.complete(
-        `Eres una base de datos del Nuevo Himnario Adventista del Séptimo Día (himnario oficial en español, 613 himnos). ` +
-        `Dame SOLO el título exacto del himno N° ${n}. No incluyas comillas, no incluyas el número, ` +
-        `no agregues texto adicional ni punto final. Responde con el título en español, en una sola línea. ` +
-        `Si no estás completamente seguro del título, responde exactamente: DESCONOCIDO`
-      );
-      const clean = (raw || '').trim()
-        .replace(/^["'«]|["'»]$/g, '')
-        .replace(/\.$/, '')
-        .split('\n')[0]
-        .trim();
-      if (!clean || /desconocido/i.test(clean)) {
-        // Insert just the number, user can fill the title manually
-        onInsert(`Himno N° ${n}`);
-      } else {
-        onInsert(`Himno N° ${n} — ${clean}`);
-      }
-      setNum('');
-    } catch (e) {
-      // Fallback: insert the number only
-      onInsert(`Himno N° ${n}`);
-      setError('No se pudo obtener el título automáticamente. Edita manualmente si es necesario.');
-    }
-    setLoading(false);
-  };
+  var dateLabel = date.toLocaleDateString('es-CL', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
 
-  return (
-    <div style={{
-      marginTop: 8,
-      display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
-    }}>
-      <span style={{ fontSize: 11, color: 'var(--muted)',
-        display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-          <circle cx="3" cy="8.5" r="1.5" stroke="currentColor" strokeWidth="1" />
-          <path d="M4.5 8.5V2.5l4-1v6" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-          <circle cx="7" cy="7.5" r="1.5" stroke="currentColor" strokeWidth="1" />
-        </svg>
-        Insertar himno
-      </span>
-      <input
-        type="number" min="1" max="613"
-        value={num}
-        onChange={e => setNum(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleInsert(); } }}
-        placeholder="N°"
-        style={{
-          width: 64, padding: '4px 8px',
-          border: '1px solid var(--line)', borderRadius: 4,
-          background: 'var(--bg)', color: 'var(--fg)',
-          fontSize: 12, fontFamily: 'var(--mono)',
-          outline: 'none',
-        }} />
-      <button
-        type="button"
-        onClick={handleInsert}
-        disabled={loading || !num}
-        className="mono"
-        style={{
-          padding: '4px 12px', borderRadius: 4,
-          border: '1px solid var(--line)',
-          background: loading ? 'var(--surface)' : 'var(--bg)',
-          color: 'var(--fg)',
-          cursor: loading || !num ? 'default' : 'pointer',
-          fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600,
-          opacity: !num ? .5 : 1,
-        }}>
-        {loading ? 'Buscando…' : 'Insertar'}
-      </button>
-      {error && (
-        <span style={{ fontSize: 11, color: '#9c2b2b', flexBasis: '100%' }}>{error}</span>
-      )}
-    </div>
-  );
+  // Evita duplicar la fecha si el título ya la incluye.
+  var compactTitle = baseTitle.toLowerCase();
+  if (compactTitle.includes(dateLabel.toLowerCase())) return baseTitle;
+
+  var prefixedDate = 'sabado ' + dateLabel.replace(/^\w+\s*/, '').toLowerCase();
+  if (compactTitle.includes(prefixedDate)) return baseTitle;
+
+  return baseTitle + ' · ' + capitalizeFirst(dateLabel);
 }
 
-function Meta({ label, value, editable, onChange }) {
+function resolveProgramDateLabel(dateStr) {
+  var date = parseProgramDate(dateStr);
+  if (Number.isNaN(date.getTime())) return null;
+  return capitalizeFirst(date.toLocaleDateString('es-CL', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }));
+}
+
+function parseProgramDate(dateInput) {
+  if (!dateInput) return new Date('invalid');
+
+  if (dateInput instanceof Date) {
+    return new Date(dateInput.getTime());
+  }
+
+  var raw = String(dateInput).trim();
+  if (!raw) return new Date('invalid');
+
+  // Prioriza YYYY-MM-DD para evitar desplazamientos por zona horaria.
+  var isoMatch = raw.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    var y = Number(isoMatch[1]);
+    var m = Number(isoMatch[2]);
+    var d = Number(isoMatch[3]);
+    return new Date(y, m - 1, d, 12, 0, 0);
+  }
+
+  return new Date(raw);
+}
+
+function capitalizeFirst(text) {
+  if (!text) return text;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function Meta({ label, value, muted }) {
   return (
     <div style={{ textAlign: 'left', minWidth: 180 }}>
       <div className="mono" style={{
         fontSize: 10, letterSpacing: '.14em', color: 'var(--muted)',
         textTransform: 'uppercase', marginBottom: 6, fontWeight: 600
       }}>{label}</div>
-      {editable
-        ? <InlineInput value={value} onChange={onChange}
-            style={{ fontSize: 15, fontWeight: 500 }} />
-        : <div style={{ fontSize: 15, fontWeight: 500 }}>{value}</div>}
+      <div style={{
+        fontSize: 15,
+        fontWeight: 500,
+        color: muted && !value ? 'var(--muted)' : 'var(--fg)',
+      }}>{value || '—'}</div>
     </div>
-  );
-}
-
-function IconBtn({ children, onClick, danger, title }) {
-  return (
-    <button onClick={onClick} title={title} style={{
-      width: 30, height: 30, borderRadius: 6,
-      border: '1px solid var(--line)',
-      background: 'var(--bg)',
-      color: danger ? '#c14747' : 'var(--fg)',
-      cursor: 'pointer', fontSize: 14, fontWeight: 600,
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    }}>{children}</button>
   );
 }
 
@@ -878,20 +804,21 @@ const navArrowStyle = {
 
 // ─────────────────────────────────────────────────────────
 // Toolbar bar — top-of-page actions (Print, etc.)
-function ToolbarBar({ onPrint }) {
+function ToolbarBar({ onPrint, printing }) {
   return (
     <div className="no-print" style={{
       display: 'flex', justifyContent: 'flex-end',
       marginBottom: 20, gap: 8, flexWrap: 'wrap',
     }}>
       <button onClick={onPrint} className="btn btn-ghost"
+        disabled={!!printing}
         title="Generar archivo PDF imprimible"
         style={{ padding: '10px 18px', fontSize: 13 }}>
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M4 5V2h6v3M3 9h8v4H3V9zM2 6h10v3H2V6z"
             stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
         </svg>
-        Generar PDF
+        {printing ? 'Actualizando…' : 'Generar PDF'}
       </button>
     </div>
   );
@@ -903,6 +830,9 @@ function printProgram(program) {
   const today = new Date().toLocaleDateString('es-CL', {
     day: 'numeric', month: 'long', year: 'numeric'
   });
+  const worshipDate = resolveProgramDateLabel(program && program.date);
+  const printedProgramDate = worshipDate || today;
+  const headingTitle = buildProgramDisplayTitle(program && program.title, program && program.date);
   const rows = program.items.map(p => `
     <tr class="${p.accent ? 'row-accent' : ''}">
       <td class="anuncia">${escapeHtml(p.a || '')}</td>
@@ -911,9 +841,10 @@ function printProgram(program) {
     </tr>
   `).join('');
   const html = printDocument({
-    title: program.title,
-    subtitle: `Iglesia Adventista Central de Osorno · ${today}`,
+    title: headingTitle,
+    subtitle: `Iglesia Adventista Central de Osorno · ${printedProgramDate}`,
     meta: [
+      ['Fecha',      printedProgramDate],
       ['Predicador', program.preacher || '—'],
       ['Tema',       program.theme || '—'],
       ['Pasaje',     program.scripture || '—'],

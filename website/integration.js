@@ -112,6 +112,38 @@
     return apiGet('/public/schedule');
   }
 
+  function mapWorship(data) {
+    if (!data || typeof data !== 'object') return null;
+
+    var rawItems = Array.isArray(data.items) ? data.items : [];
+    var mappedItems = rawItems.map(function (item, index) {
+      return {
+        id: item && item.id ? item.id : 'w-' + index,
+        a: item && item.a ? item.a : '',
+        n: item && item.n ? item.n : 'Parte del programa',
+        d: item && item.d ? item.d : '',
+        accent: !!(item && item.accent),
+      };
+    });
+
+    return {
+      upcoming: !!data.upcoming,
+      date: data.date || null,
+      title: data.title || 'Culto Divino',
+      preacher: data.preacher || null,
+      theme: data.theme || null,
+      scripture: data.scripture || null,
+      items: mappedItems,
+    };
+  }
+
+  // Cultos públicos: programa del próximo sábado publicado, o fallback de plantilla.
+  // Endpoint: GET /api/public/worship
+  async function fetchWorship() {
+    var data = await apiGet('/public/worship');
+    return mapWorship(data);
+  }
+
   // Calcula la puesta de sol para los próximos 4 viernes en Osorno, Chile.
   // Basado en una aproximación simplificada para la latitud -40.57.
   function getSunsetTimes() {
@@ -169,6 +201,7 @@
     fetchLeadership: fetchLeadership,
     fetchHome: fetchHome,
     fetchSchedule: fetchSchedule,
+    fetchWorship: fetchWorship,
     getSunsetTimes: getSunsetTimes,
     mapLeader: mapLeader,
     mapMinistry: mapMinistry,

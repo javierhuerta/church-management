@@ -5,6 +5,11 @@ El sitio público tiene la sección "Programa del día" (`PagePrograma` en
 título, predicador, tema, texto bíblico y la lista de partes (tabla
 anuncia/programa/detalle). Hoy ese contenido está mockeado en un store local.
 
+Además, la **pantalla de Inicio** del sitio público debe mostrar una sección de
+**"Próximo culto"** con los datos del sábado siguiente (fecha, predicador, tema).
+Los cultos que se muestran en el sitio público son los que se eligen desde el
+admin/configuración de cultos (la plantilla marcada para el sitio).
+
 El sistema ya tiene el módulo de cultos (`worship-services`) con plantillas
 (`ServiceTemplate`), programas (`ServiceProgram`), grupos y secciones, y estados
 (DRAFT/PUBLISHED/ARCHIVED). Un programa típico incluye Escuela Sabática y Culto
@@ -41,8 +46,14 @@ Enfoque acordado con el usuario:
   - Items: secciones del programa (la plantilla "solo culto" ya excluye Escuela
     Sabática; como salvaguarda, si existe un grupo "Escuela Sabática" se excluye).
   - `accent` por heurística (secciones con "sermón"/"predicación"/"palabra").
-  - Si no hay programa publicado para el sábado, devuelve `null` y el sitio muestra
-    contenido por defecto.
+  - **Fallback con plantilla predeterminada**: si no hay programa `Published` para el
+    sábado, el endpoint NO devuelve vacío; devuelve los datos de la **plantilla
+    predeterminada "solo culto" (sábado 11:00)** marcada con `showOnWebsite = true`
+    (su estructura de secciones y, si existen, sus valores por defecto de
+    título/horario), con `upcoming = false` para indicar que es contenido de
+    plantilla y no un programa publicado. Así Programa e Inicio mantienen
+    continuidad visual y de contenido cuando aún no se ha publicado el próximo
+    programa.
 
 - **Frontend (admin)** — tab "Cultos" en Configuraciones (tipo explicativa):
   - Usa `ConfigRedirectCard` (de la base). Explica:
@@ -63,7 +74,8 @@ Enfoque acordado con el usuario:
 ### New Capabilities
 - `public-site-worship`: Sección "Programa/Cultos" del sitio público alimentada
   desde el módulo de cultos, vía `GET /api/public/worship`, mostrando solo el Culto
-  Divino del sábado publicado.
+  Divino del sábado publicado (con fallback a la plantilla predeterminada cuando no
+  hay programa publicado), más la sección "Próximo culto" en la pantalla de Inicio.
 
 ### Modified Capabilities
 - `worship-services`: Se agregan campos `title`, `preacher`, `theme`, `scripture` a
@@ -71,6 +83,8 @@ Enfoque acordado con el usuario:
   estos datos se hace en el flujo existente del módulo de Cultos.
 - `site-config-admin`: Se agrega la tab "Cultos" (explicativa/redirección) al shell
   de Configuraciones.
+- `public-site-inicio`: La pantalla de Inicio del sitio público incorpora la sección
+  "Próximo culto" alimentada por `GET /api/public/worship` (con fallback de plantilla).
 
 ## Impact
 
@@ -82,11 +96,16 @@ Enfoque acordado con el usuario:
 - **New DTOs**: `PublicWorshipResponseDto`, `PublicWorshipItemDto`.
 - **Migrations**: columnas `title`, `preacher`, `theme`, `scripture` en
   `service_programs`; columna `show_on_website` en `service_templates`.
+- **Seeder**: seeder con los datos reales del culto público (plantilla "solo culto"
+  sábado 11:00 marcada `showOnWebsite = true`, más un programa de ejemplo del
+  próximo sábado con predicador/tema/texto bíblico y sus secciones), de modo que el
+  sitio muestre contenido real desde el primer arranque.
 - **Frontend (admin)**: tab "Cultos" explicativa en `/admin/configuraciones/cultos`;
   en el módulo de Cultos, exponer el campo `showOnWebsite` al crear/editar plantilla
   y los campos predicador/tema/scripture al crear/editar programa.
 - **Sitio**: `website/integration.js` (+`fetchWorship`), `website/pages-4.jsx`
-  (parche), `website/INTEGRATION.md`.
+  (parche en `PagePrograma`), sección "Próximo culto" en la pantalla de Inicio
+  (`PageInicio`), `website/INTEGRATION.md`.
 - **Depende de**: `site-config-foundation` (shell + `ConfigRedirectCard` + `/api/public/*`).
 - **Permisos**: la edición de plantillas/programas y de `showOnWebsite` usa los roles
   existentes de cultos (`Admin`, `Pastor`, `Anciano`, `DirectorDepartamento`). La tab
@@ -101,3 +120,5 @@ Enfoque acordado con el usuario:
 - Cultos que no sean de sábado (vespertinos, semana de oración) en esta versión.
 - Permitir múltiples plantillas con `showOnWebsite=true` a la vez (se recomienda
   validar que sea única).
+- Rediseño completo de la pantalla de Inicio: solo se agrega/cablea la sección
+  "Próximo culto"; el resto de Inicio se mantiene como está.

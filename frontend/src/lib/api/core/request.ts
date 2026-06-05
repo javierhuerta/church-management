@@ -303,7 +303,7 @@ export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions): C
 
                 if (response.status === 401) {
                     localStorage.removeItem('token');
-                    window.location.href = '/login';
+                    window.location.href = '/admin/login';
                     reject(new Error('Unauthorized'));
                     return;
                 }

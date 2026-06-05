@@ -23,6 +23,9 @@ export class ServiceTemplate extends BaseEntity {
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
+  @Column({ name: 'show_on_website', default: false })
+  showOnWebsite: boolean;
+
   @OneToMany(() => ServiceTemplateGroup, (group) => group.template)
   groups: ServiceTemplateGroup[];
 

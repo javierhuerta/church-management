@@ -39,6 +39,7 @@ function makeTemplate(
     description: null,
     type: ServiceTemplateType.CULTO_SABATICO,
     isActive: true,
+    showOnWebsite: false,
     groups: [],
     sections: [],
     createdAt: new Date(),

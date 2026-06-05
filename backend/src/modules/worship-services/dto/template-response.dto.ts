@@ -67,6 +67,7 @@ export class ServiceTemplateResponseDto {
   type: ServiceTemplateType;
 
   @ApiProperty({ type: Boolean }) @Expose() isActive: boolean;
+  @ApiProperty({ type: Boolean }) @Expose() showOnWebsite: boolean;
   @ApiProperty({ type: Date }) @Expose() createdAt: Date;
 
   @ApiPropertyOptional({ type: Date, nullable: true })

@@ -111,6 +111,26 @@ export class UpdateProgramDto {
   @IsString()
   date?: string;
 
+  @ApiPropertyOptional({ type: String, example: 'Culto Divino', nullable: true })
+  @IsOptional()
+  @IsString()
+  title?: string | null;
+
+  @ApiPropertyOptional({ type: String, example: 'Pr. Daniel Cárcamo', nullable: true })
+  @IsOptional()
+  @IsString()
+  preacher?: string | null;
+
+  @ApiPropertyOptional({ type: String, example: 'No se preocupen por la vida', nullable: true })
+  @IsOptional()
+  @IsString()
+  theme?: string | null;
+
+  @ApiPropertyOptional({ type: String, example: 'Mateo 6:25–34', nullable: true })
+  @IsOptional()
+  @IsString()
+  scripture?: string | null;
+
   @ApiPropertyOptional({ type: [UpdateGroupDto] })
   @IsOptional()
   @Type(() => UpdateGroupDto)
@@ -165,6 +185,26 @@ export class CreateProgramDto {
   @ApiProperty({ example: '2026-05-30' })
   @IsString()
   date: string;
+
+  @ApiPropertyOptional({ type: String, example: 'Culto Divino', nullable: true })
+  @IsOptional()
+  @IsString()
+  title?: string | null;
+
+  @ApiPropertyOptional({ type: String, example: 'Pr. Daniel Cárcamo', nullable: true })
+  @IsOptional()
+  @IsString()
+  preacher?: string | null;
+
+  @ApiPropertyOptional({ type: String, example: 'No se preocupen por la vida', nullable: true })
+  @IsOptional()
+  @IsString()
+  theme?: string | null;
+
+  @ApiPropertyOptional({ type: String, example: 'Mateo 6:25-34', nullable: true })
+  @IsOptional()
+  @IsString()
+  scripture?: string | null;
 }
 
 export class PublishWithEventDto {

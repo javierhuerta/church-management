@@ -82,6 +82,15 @@ export class CreateTemplateDto {
   @IsBoolean()
   isActive?: boolean;
 
+  @ApiPropertyOptional({
+    example: false,
+    default: false,
+    description: 'Si true, esta plantilla alimenta la sección Programa del sitio público',
+  })
+  @IsOptional()
+  @IsBoolean()
+  showOnWebsite?: boolean;
+
   @ApiPropertyOptional({ type: [GroupWithSectionsDto] })
   @IsOptional()
   @IsArray()
@@ -117,6 +126,14 @@ export class UpdateTemplateDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Si true, esta plantilla alimenta la sección Programa del sitio público',
+  })
+  @IsOptional()
+  @IsBoolean()
+  showOnWebsite?: boolean;
 
   @ApiPropertyOptional({ type: [GroupWithSectionsDto] })
   @IsOptional()

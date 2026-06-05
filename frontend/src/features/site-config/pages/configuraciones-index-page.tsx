@@ -43,7 +43,7 @@ const sections = [
     icon: BookOpen,
     description: 'El programa publicado marcado para el sitio aparece automáticamente',
     type: 'redirect' as const,
-    redirectTo: '/cultos',
+    redirectTo: '/cultos/programas',
     redirectLabel: 'Ir a Cultos',
   },
   {

@@ -305,7 +305,7 @@ export function ShowcaseEditPage() {
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) =>
-      DepartmentsService.showcaseControllerUploadAttachment(id!, { file }),
+      DepartmentsService.showcaseControllerUploadAttachment(id!, { file: file as unknown as string }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['showcase-attachments', id] })
       toast.success('Archivo subido correctamente')

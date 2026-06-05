@@ -3,6 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type UploadShowcaseAttachmentDto = {
-    file: ;
+    /**
+     * File to upload (binary data)
+     */
+    file: string;
 };
 

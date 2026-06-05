@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { useAuthUser } from '@/features/calendar/hooks/use-auth-user'
 import { useTemplates, type ServiceTemplateType } from '../hooks/use-worship-services'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
 import {
@@ -23,6 +24,10 @@ import type { TemplateSectionResponseDto } from '@/lib/api/models/TemplateSectio
 const formSchema = z.object({
   templateId: z.string().min(1, 'Selecciona una plantilla'),
   date: z.string().min(1, 'La fecha es requerida'),
+  title: z.string().optional(),
+  preacher: z.string().optional(),
+  theme: z.string().optional(),
+  scripture: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -150,6 +155,7 @@ export function ProgramCreatePage() {
   const { data: templates, isLoading } = useTemplates()
 
   const {
+    register,
     handleSubmit,
     control,
     formState: { errors },
@@ -158,6 +164,10 @@ export function ProgramCreatePage() {
     defaultValues: {
       templateId: '',
       date: '',
+      title: '',
+      preacher: '',
+      theme: '',
+      scripture: '',
     },
   })
 
@@ -166,7 +176,14 @@ export function ProgramCreatePage() {
     setIsSubmitting(true)
 
     try {
-      const program = await WorshipServicesProgramsService.programControllerCreate(values)
+      const program = await WorshipServicesProgramsService.programControllerCreate({
+        templateId: values.templateId,
+        date: values.date,
+        title: values.title?.trim() || null,
+        preacher: values.preacher?.trim() || null,
+        theme: values.theme?.trim() || null,
+        scripture: values.scripture?.trim() || null,
+      })
       navigate(`/cultos/programas/${program.id}`)
     } catch (err) {
       setServerError((err as Error).message)
@@ -263,6 +280,25 @@ export function ProgramCreatePage() {
             {errors.templateId && (
               <p className="text-xs text-red-500">{errors.templateId.message}</p>
             )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Título del culto</Label>
+              <Input id="title" {...register('title')} placeholder="Culto Divino" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="preacher">Predicador</Label>
+              <Input id="preacher" {...register('preacher')} placeholder="Pr. Nombre Apellido" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="theme">Tema</Label>
+              <Input id="theme" {...register('theme')} placeholder="Tema del sermón" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="scripture">Pasaje bíblico</Label>
+              <Input id="scripture" {...register('scripture')} placeholder="Mateo 6:25-34" />
+            </div>
           </div>
 
           {selectedTemplate && <TemplatePreview template={selectedTemplate} />}

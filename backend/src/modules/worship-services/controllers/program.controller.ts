@@ -23,7 +23,7 @@ import {
   CreateProgramDto,
   UpdateSectionDto,
   UpdateGroupDto,
-  UpdateProgramDateDto,
+  UpdateProgramDto,
   CreateGroupInProgramDto,
   CreateSectionInGroupDto,
   GetProgramsFilterDto,
@@ -372,13 +372,13 @@ export class ProgramController {
     UserRole.Anciano,
     UserRole.DirectorDepartamento,
   )
-  @ApiOperation({ summary: 'Update program date' })
-  @ApiResponse({ status: 200, description: 'Program date updated' })
+  @ApiOperation({ summary: 'Update program (date, title, preacher, theme, scripture)' })
+  @ApiResponse({ status: 200, description: 'Program updated', type: ServiceProgramResponseDto })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Program not found' })
   async updateProgram(
     @Param('id') id: string,
-    @Body() dto: UpdateProgramDateDto,
+    @Body() dto: UpdateProgramDto,
     @Request() req: RequestWithUser,
   ) {
     return toDto(

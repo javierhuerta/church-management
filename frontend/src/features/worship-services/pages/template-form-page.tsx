@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Plus, Trash2, GripVertical } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, GripVertical, Eye, EyeOff } from 'lucide-react'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { useAuthUser } from '@/features/calendar/hooks/use-auth-user'
 import { useTemplate } from '../hooks/use-worship-services'
@@ -46,6 +46,7 @@ interface FormValues {
   description: string
   type: ServiceTemplateType
   isActive: boolean
+  showOnWebsite: boolean
   groups: GroupInput[]
   sections: SectionInput[]
 }
@@ -59,6 +60,7 @@ function templateToFormValues(template: ServiceTemplateResponseDto): FormValues 
     description: template.description ?? '',
     type: template.type as ServiceTemplateType,
     isActive: template.isActive,
+    showOnWebsite: (template as any).showOnWebsite ?? false,
     groups: sortByOrder(template.groups ?? []).map((group) => ({
       name: group.name,
       startTime: group.startTime ?? '',
@@ -89,6 +91,7 @@ export function TemplateFormPage() {
   const user = useAuthUser()
   const [serverError, setServerError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSectionTimeFields, setShowSectionTimeFields] = useState(false)
 
   const { data: existingTemplate, isLoading: isLoadingTemplate } = useTemplate(
     id ?? '',
@@ -106,6 +109,7 @@ export function TemplateFormPage() {
       description: '',
       type: 'CULTO_SABATICO' as ServiceTemplateType,
       isActive: true,
+      showOnWebsite: false,
       groups: [],
       sections: [],
     },
@@ -251,6 +255,56 @@ export function TemplateFormPage() {
               />
             </div>
           </div>
+
+          {/* showOnWebsite toggle */}
+          <Controller
+            control={control}
+            name="showOnWebsite"
+            render={({ field }) => (
+              <label className="flex items-start gap-3 cursor-pointer rounded-lg border border-border bg-muted/40 p-4 hover:bg-muted/60 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={field.value}
+                  onChange={(e) => field.onChange(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Mostrar en el sitio web</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Los programas publicados de esta plantilla aparecerán en la sección Programa del sitio público.
+                    Solo una plantilla puede tener esta opción activa a la vez.
+                  </p>
+                </div>
+              </label>
+            )}
+          />
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Campos de tiempo en secciones</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Ocultos por defecto para dar mas espacio a los campos principales.
+              </p>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant={showSectionTimeFields ? 'secondary' : 'outline'}
+              onClick={() => setShowSectionTimeFields((prev) => !prev)}
+            >
+              {showSectionTimeFields ? (
+                <>
+                  <EyeOff className="h-4 w-4 mr-1" /> Ocultar tiempos
+                </>
+              ) : (
+                <>
+                  <Eye className="h-4 w-4 mr-1" /> Mostrar tiempos
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-6">
@@ -300,6 +354,11 @@ export function TemplateFormPage() {
 
               <div className="ml-6 space-y-2">
                 <Label className="text-sm text-muted-foreground">Secciones del grupo</Label>
+                {!showSectionTimeFields && (
+                  <p className="text-xs text-muted-foreground">
+                    Horario y duracion ocultos. Usa "Mostrar tiempos" para verlos.
+                  </p>
+                )}
                 <Controller
                   control={control}
                   name={`groups.${groupIndex}.sections`}
@@ -326,21 +385,23 @@ export function TemplateFormPage() {
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
                           </div>
-                          <div className="grid grid-cols-2 gap-2 pl-0">
-                            <Input
-                              type="time"
-                              placeholder="Hora inicio"
-                              {...register(`groups.${groupIndex}.sections.${sectionIndex}.startTime` as any)}
-                              className="text-sm"
-                            />
-                            <Input
-                              type="number"
-                              placeholder="Duración (min)"
-                              min={1}
-                              {...register(`groups.${groupIndex}.sections.${sectionIndex}.duration` as any, { valueAsNumber: true })}
-                              className="text-sm"
-                            />
-                          </div>
+                          {showSectionTimeFields && (
+                            <div className="grid grid-cols-2 gap-2 pl-0">
+                              <Input
+                                type="time"
+                                placeholder="Hora inicio"
+                                {...register(`groups.${groupIndex}.sections.${sectionIndex}.startTime` as any)}
+                                className="text-sm"
+                              />
+                              <Input
+                                type="number"
+                                placeholder="Duración (min)"
+                                min={1}
+                                {...register(`groups.${groupIndex}.sections.${sectionIndex}.duration` as any, { valueAsNumber: true })}
+                                className="text-sm"
+                              />
+                            </div>
+                          )}
                         </div>
                       ))}
                       <Button
@@ -384,6 +445,11 @@ export function TemplateFormPage() {
           </div>
 
           <div className="space-y-3">
+            {!showSectionTimeFields && sectionFields.length > 0 && (
+              <p className="text-xs text-muted-foreground ml-6">
+                Horario y duracion ocultos. Usa "Mostrar tiempos" para verlos.
+              </p>
+            )}
             {sectionFields.map((section, index) => (
               <div key={section.id} className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -402,21 +468,23 @@ export function TemplateFormPage() {
                     <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
                 </div>
-                <div className="grid grid-cols-2 gap-2 ml-6">
-                  <Input
-                    type="time"
-                    placeholder="Hora inicio"
-                    {...register(`sections.${index}.startTime` as any)}
-                    className="text-sm"
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Duración (min)"
-                    min={1}
-                    {...register(`sections.${index}.duration` as any, { valueAsNumber: true })}
-                    className="text-sm"
-                  />
-                </div>
+                {showSectionTimeFields && (
+                  <div className="grid grid-cols-2 gap-2 ml-6">
+                    <Input
+                      type="time"
+                      placeholder="Hora inicio"
+                      {...register(`sections.${index}.startTime` as any)}
+                      className="text-sm"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Duración (min)"
+                      min={1}
+                      {...register(`sections.${index}.duration` as any, { valueAsNumber: true })}
+                      className="text-sm"
+                    />
+                  </div>
+                )}
               </div>
             ))}
 

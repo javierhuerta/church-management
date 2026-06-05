@@ -10,7 +10,7 @@ import type { PublishWithEventDto } from '../models/PublishWithEventDto';
 import type { ReorderDto } from '../models/ReorderDto';
 import type { ServiceProgramResponseDto } from '../models/ServiceProgramResponseDto';
 import type { UpdateGroupDto } from '../models/UpdateGroupDto';
-import type { UpdateProgramDateDto } from '../models/UpdateProgramDateDto';
+import type { UpdateProgramDto } from '../models/UpdateProgramDto';
 import type { UpdateSectionDto } from '../models/UpdateSectionDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -106,16 +106,16 @@ export class WorshipServicesProgramsService {
         });
     }
     /**
-     * Update program date
+     * Update program (date, title, preacher, theme, scripture)
      * @param id
      * @param requestBody
-     * @returns any Program date updated
+     * @returns ServiceProgramResponseDto Program updated
      * @throws ApiError
      */
     public static programControllerUpdateProgram(
         id: string,
-        requestBody: UpdateProgramDateDto,
-    ): CancelablePromise<any> {
+        requestBody: UpdateProgramDto,
+    ): CancelablePromise<ServiceProgramResponseDto> {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/api/worship-services/programs/{id}',

@@ -43,6 +43,18 @@ export class ServiceProgram extends BaseEntity {
   @Column({ name: 'published_at', type: 'timestamptz', nullable: true })
   publishedAt: Date | null;
 
+  @Column({ type: 'varchar', nullable: true })
+  title: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  preacher: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  theme: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  scripture: string | null;
+
   @OneToMany(() => ServiceProgramGroup, (group) => group.program, {
     cascade: true,
   })
