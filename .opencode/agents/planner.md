@@ -1,7 +1,7 @@
 ---
 description: Planning agent for OpenSpec proposals, specs, and design artifacts. Uses Kimi K2.6 for fast structured output.
 mode: subagent
-model: opencode-go/deepseek-v4-pro
+model: anthropic/claude-opus-4-8
 temperature: 0.3
 hidden: true
 permission:

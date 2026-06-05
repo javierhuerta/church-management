@@ -107,11 +107,12 @@ export function DepartmentsListPage() {
                     )}
                     {/* Task 9.3: Showcase indicator */}
                     {dept.hasShowcase && (
-                      <BookOpen
-                        className="h-3.5 w-3.5 shrink-0"
-                        style={{ color: dept.color }}
-                        title="Tiene showcase publicado"
-                      />
+                      <span title="Tiene showcase publicado">
+                        <BookOpen
+                          className="h-3.5 w-3.5 shrink-0"
+                          style={{ color: dept.color }}
+                        />
+                      </span>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">

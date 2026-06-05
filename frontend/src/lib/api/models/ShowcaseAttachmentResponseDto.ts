@@ -5,6 +5,7 @@
 export type ShowcaseAttachmentResponseDto = {
     id: string;
     originalName: string;
+    storedPath: string;
     mimeType: string;
     sizeBytes: number;
     createdAt: string;
