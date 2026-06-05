@@ -4,7 +4,80 @@ const { useState: useS1, useMemo: useM1 } = React;
 // ═════════════════════════════════════════════════════════
 // INICIO — editorial / moderno con hero asimétrico
 // ═════════════════════════════════════════════════════════
-function PageInicio({ setPage, nextService }) {
+function PageInicio({ setPage, nextService: propNextService }) {
+  // Datos por defecto (fallback si la API falla o no hay datos)
+  const DEFAULT_HOME = {
+    hero: {
+      title: 'Central',
+      subtitle: 'Una comunidad que adora cada sábado al pie de la cordillera. Las puertas están abiertas para ti.',
+      mainImageUrl: null,
+      smallImageUrl: null,
+    },
+    verse: {
+      text: '«Vengan a mí todos los que están cansados… y yo los haré descansar.»',
+      reference: 'MATEO 11:28',
+    },
+    schedule: {
+      title: 'Nuestros Horarios',
+      subtitle: 'Te esperamos en cada una de nuestras actividades',
+    },
+    social: {
+      facebookUrl: 'https://facebook.com',
+      instagramUrl: 'https://instagram.com',
+      youtubeUrl: 'https://youtube.com',
+    },
+    footerCta: {
+      title: 'Te esperamos este sábado.',
+      subtitle: 'Andrés Bello 748, Osorno.',
+      buttonText: 'Ver Ubicación',
+    },
+    nextService: propNextService,
+  };
+
+  const [homeData, setHomeData] = React.useState(DEFAULT_HOME);
+
+  // Cargar datos desde la API al montar
+  React.useEffect(() => {
+    if (window.IASD_API && window.IASD_API.fetchHome) {
+      window.IASD_API.fetchHome()
+        .then(data => {
+          // Merge con defaults para campos null
+          setHomeData(prev => ({
+            hero: {
+              title: data.hero.title || prev.hero.title,
+              subtitle: data.hero.subtitle || prev.hero.subtitle,
+              mainImageUrl: data.hero.mainImageUrl,
+              smallImageUrl: data.hero.smallImageUrl,
+            },
+            verse: {
+              text: data.verse.text || prev.verse.text,
+              reference: data.verse.reference || prev.verse.reference,
+            },
+            schedule: {
+              title: data.schedule.title || prev.schedule.title,
+              subtitle: data.schedule.subtitle || prev.schedule.subtitle,
+            },
+            social: {
+              facebookUrl: data.social.facebookUrl || prev.social.facebookUrl,
+              instagramUrl: data.social.instagramUrl || prev.social.instagramUrl,
+              youtubeUrl: data.social.youtubeUrl || prev.social.youtubeUrl,
+            },
+            footerCta: {
+              title: data.footerCta.title || prev.footerCta.title,
+              subtitle: data.footerCta.subtitle || prev.footerCta.subtitle,
+              buttonText: data.footerCta.buttonText || prev.footerCta.buttonText,
+            },
+            nextService: data.nextService || prev.nextService,
+          }));
+        })
+        .catch(err => {
+          console.warn('Error cargando inicio desde API:', err);
+        });
+    }
+  }, []);
+
+  const nextService = homeData.nextService;
+
   return (
     <main className="page-enter" data-screen-label="Inicio">
 
@@ -50,13 +123,15 @@ function PageInicio({ setPage, nextService }) {
                 fontWeight: 500,
                 margin: 0,
               }}>
-                Central
-                <span style={{
-                  display: 'block',
-                  fontStyle: 'italic',
-                  color: 'var(--gold)',
-                  marginLeft: 'clamp(20px, 4vw, 60px)',
-                }}>Osorno</span>
+                {homeData.hero.title}
+                {homeData.hero.title === 'Central' && (
+                  <span style={{
+                    display: 'block',
+                    fontStyle: 'italic',
+                    color: 'var(--gold)',
+                    marginLeft: 'clamp(20px, 4vw, 60px)',
+                  }}>Osorno</span>
+                )}
               </h1>
 
               <div style={{
@@ -68,8 +143,7 @@ function PageInicio({ setPage, nextService }) {
                   lineHeight: 1.55,
                   color: 'var(--fg)',
                 }}>
-                  Una comunidad que adora cada sábado al pie de la cordillera.
-                  <span className="muted"> Las puertas están abiertas para ti.</span>
+                  {homeData.hero.subtitle}
                 </p>
                 <div style={{ marginTop: 28, display: 'inline-flex', gap: 10, flexWrap: 'wrap' }}>
                   <button className="btn btn-primary" onClick={() => setPage('programa')}>
@@ -107,6 +181,7 @@ function PageInicio({ setPage, nextService }) {
                   label="Foto principal · interior / fachada"
                   height="100%"
                   radius={22}
+                  src={homeData.hero.mainImageUrl}
                   style={{ height: '100%' }} />
               </div>
               {/* Pequeña foto offset abajo izquierda */}
@@ -122,6 +197,7 @@ function PageInicio({ setPage, nextService }) {
                   label="Detalle · congregación"
                   height="100%"
                   radius={16}
+                  src={homeData.hero.smallImageUrl}
                   style={{ height: '100%' }} />
               </div>
             </div>
@@ -141,18 +217,18 @@ function PageInicio({ setPage, nextService }) {
             fontStyle: 'italic', lineHeight: 1.25, maxWidth: 820, margin: '0 auto',
             color: 'var(--cream)'
           }}>
-            «Vengan a mí todos los que están cansados…
-            y yo los haré descansar.»
+            {homeData.verse.text}
           </p>
           <div className="mono" style={{
             marginTop: 22, fontSize: 12, opacity: .7, letterSpacing: '.16em'
           }}>
-            MATEO 11:28
+            {homeData.verse.reference.toUpperCase()}
           </div>
         </div>
       </section>
 
       {/* Próximo culto — tarjeta editorial */}
+      {nextService && (
       <section className="section-tight">
         <div className="container">
           <div style={{
@@ -182,7 +258,7 @@ function PageInicio({ setPage, nextService }) {
                     textTransform: 'uppercase', fontWeight: 600,
                   }}>Cuándo</div>
                   <div style={{ fontSize: 15, fontWeight: 500, marginTop: 4 }}>
-                    {nextService.when}
+                    {nextService.date ? new Date(nextService.date).toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : nextService.when}
                   </div>
                 </div>
                 <div>
@@ -191,7 +267,7 @@ function PageInicio({ setPage, nextService }) {
                     textTransform: 'uppercase', fontWeight: 600,
                   }}>Dónde</div>
                   <div style={{ fontSize: 15, fontWeight: 500, marginTop: 4 }}>
-                    {nextService.where}
+                    {nextService.location || nextService.where}
                   </div>
                 </div>
               </div>
@@ -209,15 +285,21 @@ function PageInicio({ setPage, nextService }) {
                 label="Foto · ambiente del culto"
                 height="100%"
                 radius={14}
+                src={nextService.imageUrl}
                 style={{ height: '100%' }} />
             </div>
           </div>
         </div>
       </section>
+      )}
 
       {/* Tres horarios — barra rítmica */}
-      <section className="section-tight" style={{ paddingTop: 0 }}>
+      <section className="section-tight" style={{ paddingTop: nextService ? 0 : 'clamp(40px, 6vw, 80px)' }}>
         <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <div className="kicker">{homeData.schedule.title}</div>
+            <p className="muted" style={{ marginTop: 8 }}>{homeData.schedule.subtitle}</p>
+          </div>
           <div style={{
             display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0,
             borderTop: '1px solid var(--line)'
@@ -310,7 +392,11 @@ function PageInicio({ setPage, nextService }) {
             marginTop: 24, display: 'flex', justifyContent: 'center', gap: 28,
             flexWrap: 'wrap'
           }}>
-            {SOCIALS.map(s => (
+            {[
+              { name: 'Facebook', url: homeData.social.facebookUrl, handle: 'fb.com/iasdosornocentral' },
+              { name: 'Instagram', url: homeData.social.instagramUrl, handle: '@iasdosornocentral' },
+              { name: 'YouTube', url: homeData.social.youtubeUrl, handle: 'youtube.com/iasdosornocentral' },
+            ].filter(s => s.url).map(s => (
               <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer"
                 className="mono" style={{
                   fontSize: 12, letterSpacing: '.12em', color: 'var(--muted)',
@@ -333,11 +419,16 @@ function PageInicio({ setPage, nextService }) {
             fontSize: 'clamp(32px, 4.4vw, 52px)',
             maxWidth: 720, margin: '0 auto'
           }}>
-            Te esperamos este <span style={{ fontStyle: 'italic', color: 'var(--gold)' }}>sábado</span>.
+            {homeData.footerCta.title}
           </h2>
           <p className="muted" style={{ marginTop: 18, fontSize: 16, maxWidth: 480, margin: '18px auto 0' }}>
-            Andrés Bello 748, Osorno.
+            {homeData.footerCta.subtitle}
           </p>
+          <div style={{ marginTop: 32 }}>
+            <button className="btn btn-primary" onClick={() => window.open('https://maps.google.com/?q=Andres+Bello+748+Osorno', '_blank')}>
+              {homeData.footerCta.buttonText} <Arrow />
+            </button>
+          </div>
         </div>
       </section>
     </main>);

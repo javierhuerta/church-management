@@ -52,6 +52,13 @@ re-aplicar solo estos parches:
    - Los retratos de líderes usan `<img src={p.photoUrl}>` si existe, sino
      `PhotoSlot` con fallback.
 
+7. **`pages-1.jsx`** — `PageInicio` consume datos vivos:
+   - Se agregaron `useState` y `useEffect` al inicio de la función.
+   - Los textos e imágenes hardcodeados se conservan como `DEFAULT_HOME` (fallback).
+   - Al montar, se llama `window.IASD_API.fetchHome()` y se reemplazan los datos si la API responde.
+   - Se agregaron props `src` a los `PhotoSlot` del hero para mostrar las imágenes subidas desde el admin.
+   - Los enlaces de redes sociales y el CTA final ahora son dinámicos.
+
 ## Secciones removidas del sitio público
 
 - **Documentos**: contenido privado, se gestiona en el módulo de Documentos del

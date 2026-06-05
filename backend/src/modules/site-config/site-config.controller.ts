@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Body,
@@ -26,6 +27,7 @@ import { CreatePrincipalLeaderDto } from './dto/create-principal-leader.dto';
 import { UpdatePrincipalLeaderDto } from './dto/update-principal-leader.dto';
 import { PrincipalLeaderResponseDto } from './dto/principal-leader-response.dto';
 import { MinistryLeadershipDto } from './dto/public-leadership.dto';
+import { ReadHomeConfigDto, UpdateHomeConfigDto } from './dto/home-config.dto';
 import { UploadImageDto } from './dto/upload-image.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -40,6 +42,37 @@ import { siteImageMulterConfig } from './config/upload.config';
 @Roles(UserRole.Admin)
 export class SiteConfigController {
   constructor(private readonly service: SiteConfigService) {}
+
+  // ─── Sección Inicio ──────────────────────────────────────────────────────
+
+  @Get('home')
+  @ApiOperation({ summary: 'Get home section configuration (admin)' })
+  @ApiResponse({ status: 200, type: ReadHomeConfigDto })
+  getHomeConfig(): Promise<ReadHomeConfigDto> {
+    return this.service.getHomeConfig();
+  }
+
+  @Put('home')
+  @ApiOperation({ summary: 'Update home section configuration (admin)' })
+  @ApiResponse({ status: 200 })
+  async saveHomeConfig(@Body() dto: UpdateHomeConfigDto): Promise<{ success: true }> {
+    await this.service.saveHomeConfig(dto);
+    return { success: true };
+  }
+
+  @Post('home/images/:slot')
+  @UseInterceptors(FileInterceptor('file', siteImageMulterConfig))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: UploadImageDto })
+  @ApiOperation({ summary: 'Upload image for home section (admin)' })
+  @ApiResponse({ status: 201 })
+  setHomeImage(
+    @Param('slot') slot: 'main' | 'small' | 'next-service',
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<{ url: string | null }> {
+    if (!file) throw new BadRequestException('Imagen requerida');
+    return this.service.setHomeImage(slot, file);
+  }
 
   // ─── Líderes principales (junta directiva) ───────────────────────────────
 

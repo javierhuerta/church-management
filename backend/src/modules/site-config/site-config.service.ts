@@ -4,11 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, MoreThanOrEqual } from 'typeorm';
 import { join } from 'path';
 import { unlink } from 'fs/promises';
 import { PrincipalLeader } from './entities/principal-leader.entity';
 import { SiteSetting } from './entities/site-setting.entity';
+import { Event } from '../calendar/entities/event.entity';
+import { EventStatus } from '../calendar/entities/event-status.enum';
 import { CreatePrincipalLeaderDto } from './dto/create-principal-leader.dto';
 import { UpdatePrincipalLeaderDto } from './dto/update-principal-leader.dto';
 import { PrincipalLeaderResponseDto } from './dto/principal-leader-response.dto';
@@ -16,9 +18,29 @@ import {
   MinistryLeadershipDto,
   PublicLeadershipDto,
 } from './dto/public-leadership.dto';
+import { PublicHomeDto } from './dto/public-home.dto';
+import { ReadHomeConfigDto, UpdateHomeConfigDto } from './dto/home-config.dto';
 import { SITE_UPLOAD_SUBDIR } from './config/upload.config';
 
 const BOARD_PHOTO_KEY = 'leadership.board_photo';
+
+const HOME_KEYS = {
+  HERO_TITLE: 'inicio.hero_title',
+  HERO_SUBTITLE: 'inicio.hero_subtitle',
+  HERO_MAIN_IMAGE: 'inicio.hero_main_image',
+  HERO_SMALL_IMAGE: 'inicio.hero_small_image',
+  VERSE_TEXT: 'inicio.verse_text',
+  VERSE_REFERENCE: 'inicio.verse_reference',
+  SCHEDULE_TITLE: 'inicio.schedule_title',
+  SCHEDULE_SUBTITLE: 'inicio.schedule_subtitle',
+  FACEBOOK_URL: 'inicio.facebook_url',
+  INSTAGRAM_URL: 'inicio.instagram_url',
+  YOUTUBE_URL: 'inicio.youtube_url',
+  FOOTER_CTA_TITLE: 'inicio.footer_cta_title',
+  FOOTER_CTA_SUBTITLE: 'inicio.footer_cta_subtitle',
+  FOOTER_CTA_BUTTON: 'inicio.footer_cta_button',
+  NEXT_SERVICE_IMAGE: 'inicio.next_service_image',
+};
 
 @Injectable()
 export class SiteConfigService {
@@ -29,6 +51,8 @@ export class SiteConfigService {
     private readonly leaderRepo: Repository<PrincipalLeader>,
     @InjectRepository(SiteSetting)
     private readonly settingRepo: Repository<SiteSetting>,
+    @InjectRepository(Event)
+    private readonly eventRepo: Repository<Event>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -196,5 +220,121 @@ export class SiteConfigService {
       board: leaders.map((l) => this.toLeaderDto(l)),
       ministries,
     };
+  }
+
+  // ─── Sección Inicio ────────────────────────────────────────────────────────
+
+  async getPublicHome(): Promise<PublicHomeDto> {
+    const [settings, nextEvent] = await Promise.all([
+      this.settingRepo.find({
+        where: [
+          { key: MoreThanOrEqual('inicio.') }, // Simplificado para buscar por prefijo
+        ],
+      }),
+      this.eventRepo.findOne({
+        where: {
+          status: EventStatus.Published,
+          startDate: MoreThanOrEqual(new Date()),
+        },
+        order: { startDate: 'ASC' },
+      }),
+    ]);
+
+    const s = (key: string) => settings.find((r) => r.key === key)?.value ?? null;
+
+    return {
+      hero: {
+        title: s(HOME_KEYS.HERO_TITLE),
+        subtitle: s(HOME_KEYS.HERO_SUBTITLE),
+        mainImageUrl: this.toUrl(s(HOME_KEYS.HERO_MAIN_IMAGE)),
+        smallImageUrl: this.toUrl(s(HOME_KEYS.HERO_SMALL_IMAGE)),
+      },
+      verse: {
+        text: s(HOME_KEYS.VERSE_TEXT),
+        reference: s(HOME_KEYS.VERSE_REFERENCE),
+      },
+      schedule: {
+        title: s(HOME_KEYS.SCHEDULE_TITLE),
+        subtitle: s(HOME_KEYS.SCHEDULE_SUBTITLE),
+      },
+      social: {
+        facebookUrl: s(HOME_KEYS.FACEBOOK_URL),
+        instagramUrl: s(HOME_KEYS.INSTAGRAM_URL),
+        youtubeUrl: s(HOME_KEYS.YOUTUBE_URL),
+      },
+      footerCta: {
+        title: s(HOME_KEYS.FOOTER_CTA_TITLE),
+        subtitle: s(HOME_KEYS.FOOTER_CTA_SUBTITLE),
+        buttonText: s(HOME_KEYS.FOOTER_CTA_BUTTON),
+      },
+      nextService: nextEvent
+        ? {
+            title: nextEvent.title,
+            date: nextEvent.startDate.toISOString(),
+            location: nextEvent.location,
+            imageUrl: this.toUrl(s(HOME_KEYS.NEXT_SERVICE_IMAGE)),
+          }
+        : null,
+    };
+  }
+
+  async getHomeConfig(): Promise<ReadHomeConfigDto> {
+    const settings = await this.settingRepo.find();
+    const s = (key: string) => settings.find((r) => r.key === key)?.value ?? null;
+
+    return {
+      heroTitle: s(HOME_KEYS.HERO_TITLE) ?? '',
+      heroSubtitle: s(HOME_KEYS.HERO_SUBTITLE) ?? '',
+      verseText: s(HOME_KEYS.VERSE_TEXT) ?? '',
+      verseReference: s(HOME_KEYS.VERSE_REFERENCE) ?? '',
+      scheduleTitle: s(HOME_KEYS.SCHEDULE_TITLE) ?? '',
+      scheduleSubtitle: s(HOME_KEYS.SCHEDULE_SUBTITLE) ?? '',
+      facebookUrl: s(HOME_KEYS.FACEBOOK_URL) ?? '',
+      instagramUrl: s(HOME_KEYS.INSTAGRAM_URL) ?? '',
+      youtubeUrl: s(HOME_KEYS.YOUTUBE_URL) ?? '',
+      footerCtaTitle: s(HOME_KEYS.FOOTER_CTA_TITLE) ?? '',
+      footerCtaSubtitle: s(HOME_KEYS.FOOTER_CTA_SUBTITLE) ?? '',
+      footerCtaButtonText: s(HOME_KEYS.FOOTER_CTA_BUTTON) ?? '',
+      heroMainImageUrl: this.toUrl(s(HOME_KEYS.HERO_MAIN_IMAGE)),
+      heroSmallImageUrl: this.toUrl(s(HOME_KEYS.HERO_SMALL_IMAGE)),
+      nextServiceImageUrl: this.toUrl(s(HOME_KEYS.NEXT_SERVICE_IMAGE)),
+    };
+  }
+
+  async saveHomeConfig(dto: UpdateHomeConfigDto): Promise<void> {
+    const updates: Promise<void>[] = [];
+
+    if (dto.heroTitle !== undefined) updates.push(this.setSetting(HOME_KEYS.HERO_TITLE, dto.heroTitle));
+    if (dto.heroSubtitle !== undefined) updates.push(this.setSetting(HOME_KEYS.HERO_SUBTITLE, dto.heroSubtitle));
+    if (dto.verseText !== undefined) updates.push(this.setSetting(HOME_KEYS.VERSE_TEXT, dto.verseText));
+    if (dto.verseReference !== undefined) updates.push(this.setSetting(HOME_KEYS.VERSE_REFERENCE, dto.verseReference));
+    if (dto.scheduleTitle !== undefined) updates.push(this.setSetting(HOME_KEYS.SCHEDULE_TITLE, dto.scheduleTitle));
+    if (dto.scheduleSubtitle !== undefined) updates.push(this.setSetting(HOME_KEYS.SCHEDULE_SUBTITLE, dto.scheduleSubtitle));
+    if (dto.facebookUrl !== undefined) updates.push(this.setSetting(HOME_KEYS.FACEBOOK_URL, dto.facebookUrl));
+    if (dto.instagramUrl !== undefined) updates.push(this.setSetting(HOME_KEYS.INSTAGRAM_URL, dto.instagramUrl));
+    if (dto.youtubeUrl !== undefined) updates.push(this.setSetting(HOME_KEYS.YOUTUBE_URL, dto.youtubeUrl));
+    if (dto.footerCtaTitle !== undefined) updates.push(this.setSetting(HOME_KEYS.FOOTER_CTA_TITLE, dto.footerCtaTitle));
+    if (dto.footerCtaSubtitle !== undefined) updates.push(this.setSetting(HOME_KEYS.FOOTER_CTA_SUBTITLE, dto.footerCtaSubtitle));
+    if (dto.footerCtaButtonText !== undefined) updates.push(this.setSetting(HOME_KEYS.FOOTER_CTA_BUTTON, dto.footerCtaButtonText));
+
+    await Promise.all(updates);
+  }
+
+  async setHomeImage(
+    slot: 'main' | 'small' | 'next-service',
+    file: Express.Multer.File,
+  ): Promise<{ url: string | null }> {
+    let key = '';
+    if (slot === 'main') key = HOME_KEYS.HERO_MAIN_IMAGE;
+    else if (slot === 'small') key = HOME_KEYS.HERO_SMALL_IMAGE;
+    else if (slot === 'next-service') key = HOME_KEYS.NEXT_SERVICE_IMAGE;
+    else throw new NotFoundException('Slot de imagen inválido');
+
+    const previous = await this.getSetting(key);
+    await this.removeFile(previous);
+
+    const path = `${SITE_UPLOAD_SUBDIR}/${file.filename}`;
+    await this.setSetting(key, path);
+    return { url: this.toUrl(path) };
   }
 }

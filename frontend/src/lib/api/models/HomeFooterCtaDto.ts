@@ -2,7 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type UploadShowcaseAttachmentDto = {
-    file: ;
+export type HomeFooterCtaDto = {
+    title?: string | null;
+    subtitle?: string | null;
+    buttonText?: string | null;
 };
 

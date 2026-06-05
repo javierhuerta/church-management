@@ -5,12 +5,62 @@
 import type { CreatePrincipalLeaderDto } from '../models/CreatePrincipalLeaderDto';
 import type { MinistryLeadershipDto } from '../models/MinistryLeadershipDto';
 import type { PrincipalLeaderResponseDto } from '../models/PrincipalLeaderResponseDto';
+import type { ReadHomeConfigDto } from '../models/ReadHomeConfigDto';
+import type { UpdateHomeConfigDto } from '../models/UpdateHomeConfigDto';
 import type { UpdatePrincipalLeaderDto } from '../models/UpdatePrincipalLeaderDto';
 import type { UploadImageDto } from '../models/UploadImageDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class SiteConfigService {
+    /**
+     * Get home section configuration (admin)
+     * @returns ReadHomeConfigDto
+     * @throws ApiError
+     */
+    public static siteConfigControllerGetHomeConfig(): CancelablePromise<ReadHomeConfigDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/site-config/home',
+        });
+    }
+    /**
+     * Update home section configuration (admin)
+     * @param requestBody
+     * @returns any
+     * @throws ApiError
+     */
+    public static siteConfigControllerSaveHomeConfig(
+        requestBody: UpdateHomeConfigDto,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/site-config/home',
+            body: requestBody,
+            mediaType: 'application/json',
+        });
+    }
+    /**
+     * Upload image for home section (admin)
+     * @param slot
+     * @param formData
+     * @returns any
+     * @throws ApiError
+     */
+    public static siteConfigControllerSetHomeImage(
+        slot: string,
+        formData: UploadImageDto,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/site-config/home/images/{slot}',
+            path: {
+                'slot': slot,
+            },
+            formData: formData,
+            mediaType: 'multipart/form-data',
+        });
+    }
     /**
      * List principal leaders (admin)
      * @returns PrincipalLeaderResponseDto

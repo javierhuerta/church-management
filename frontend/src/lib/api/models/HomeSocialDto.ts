@@ -2,7 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type UploadShowcaseAttachmentDto = {
-    file: ;
+export type HomeSocialDto = {
+    facebookUrl?: string | null;
+    instagramUrl?: string | null;
+    youtubeUrl?: string | null;
 };
 

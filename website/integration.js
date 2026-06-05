@@ -101,11 +101,17 @@
     };
   }
 
+  // Inicio: textos, imágenes y próximo culto.
+  async function fetchHome() {
+    return apiGet('/public/home');
+  }
+
   window.IASD_API = {
     apiGet: apiGet,
     fetchEvents: fetchEvents,
     mapEvent: mapEvent,
     fetchLeadership: fetchLeadership,
+    fetchHome: fetchHome,
     mapLeader: mapLeader,
     mapMinistry: mapMinistry,
   };
