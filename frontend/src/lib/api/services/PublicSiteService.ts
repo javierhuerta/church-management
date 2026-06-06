@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { GalleryAlbumResponseDto } from '../models/GalleryAlbumResponseDto';
 import type { PublicHomeDto } from '../models/PublicHomeDto';
 import type { PublicLeadershipDto } from '../models/PublicLeadershipDto';
 import type { PublicScheduleResponseDto } from '../models/PublicScheduleResponseDto';
@@ -40,6 +41,17 @@ export class PublicSiteService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/public/schedule',
+        });
+    }
+    /**
+     * Galería pública — álbumes publicados con imágenes publicadas
+     * @returns GalleryAlbumResponseDto
+     * @throws ApiError
+     */
+    public static publicGalleryControllerGetGallery(): CancelablePromise<Array<GalleryAlbumResponseDto>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/public/gallery',
         });
     }
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Calendar, FileText, Church, LogOut, User, ChevronDown, ChevronLeft, Settings, Sun, Moon, Monitor, FolderOpen, Building2, BookOpen, Sliders } from 'lucide-react'
+import { Calendar, FileText, Church, LogOut, User, ChevronDown, ChevronLeft, Settings, Sun, Moon, Monitor, FolderOpen, Building2, BookOpen, Sliders, Image } from 'lucide-react'
 import logoFull from '@/assets/images/logo.png'
 import logoMark from '@/assets/images/logo-mark.png'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -32,6 +32,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: 'calendario', label: 'Calendario', icon: Calendar, path: '/calendario' },
   { id: 'cultos', label: 'Cultos', icon: FileText, path: '/cultos/programas', matchPrefix: '/cultos' },
+  { id: 'galeria', label: 'Galería', icon: Image, path: '/galeria', matchPrefix: '/galeria' },
   { id: 'misionero', label: 'Misión', icon: Church, path: '/misionero/personas', matchPrefix: '/misionero' },
   { id: 'documentos', label: 'Documentos', icon: FolderOpen, path: '/documentos' },
   { id: 'departamentos', label: 'Departamentos', icon: Building2, path: '/mantenedores/departamentos', matchPrefix: '/departamentos' },

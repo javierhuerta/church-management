@@ -227,6 +227,21 @@ const TransmisionesConfigPage = lazy(() =>
     default: m.TransmisionesConfigPage,
   })),
 )
+const GalleryAlbumListPage = lazy(() =>
+  import('./features/gallery/pages/gallery-album-list-page').then((m) => ({
+    default: m.GalleryAlbumListPage,
+  })),
+)
+const GalleryAlbumDetailPage = lazy(() =>
+  import('./features/gallery/pages/gallery-album-detail-page').then((m) => ({
+    default: m.GalleryAlbumDetailPage,
+  })),
+)
+const NotFoundPage = lazy(() =>
+  import('./features/misc/pages/not-found-page').then((m) => ({
+    default: m.NotFoundPage,
+  })),
+)
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token')
@@ -282,6 +297,9 @@ function App() {
               <Route path="cultos/programas" element={<ProgramsListPage />} />
               <Route path="cultos/programas/nuevo" element={<ProgramCreatePage />} />
               <Route path="cultos/programas/:id" element={<ProgramDetailPage />} />
+
+              <Route path="galeria" element={<GalleryAlbumListPage />} />
+              <Route path="galeria/:albumId" element={<GalleryAlbumDetailPage />} />
 
               <Route path="misionero" element={<MissionLayout />}>
                 <Route index element={<Navigate to="personas" replace />} />
@@ -344,7 +362,7 @@ function App() {
               </Route>
             </Route>
 
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
       </TextSizeProvider>

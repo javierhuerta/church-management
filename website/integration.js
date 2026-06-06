@@ -144,6 +144,31 @@
     return mapWorship(data);
   }
 
+  // Mapea un álbum de galería del backend al shape que espera PageGaleria.
+  function mapGalleryAlbum(album) {
+    var images = (album.images || []).map(function (img) {
+      return {
+        id: img.id,
+        url: img.url || ('/uploads/' + img.filePath),
+        caption: img.caption || '',
+        height: 360,
+        kind: '',
+      };
+    });
+    return {
+      title: album.title,
+      kicker: album.kicker || 'Galería',
+      images: images,
+    };
+  }
+
+  // Galería pública: álbumes publicados con sus imágenes publicadas.
+  // Endpoint: GET /api/public/gallery
+  async function fetchGallery() {
+    var data = await apiGet('/public/gallery');
+    return (Array.isArray(data) ? data : []).map(mapGalleryAlbum);
+  }
+
   // Calcula la puesta de sol para los próximos 4 viernes en Osorno, Chile.
   // Basado en una aproximación simplificada para la latitud -40.57.
   function getSunsetTimes() {
@@ -202,8 +227,10 @@
     fetchHome: fetchHome,
     fetchSchedule: fetchSchedule,
     fetchWorship: fetchWorship,
+    fetchGallery: fetchGallery,
     getSunsetTimes: getSunsetTimes,
     mapLeader: mapLeader,
     mapMinistry: mapMinistry,
+    mapGalleryAlbum: mapGalleryAlbum,
   };
 })();

@@ -144,6 +144,50 @@ El parche se documenta en `website/INTEGRATION.md`.
 - **Sin optimización de imágenes:** las imágenes se sirven en tamaño original. En producción, un reverse proxy (nginx) puede agregar `image_filter` o servir WebP. No es responsabilidad del backend en v1.
 - **El diseño del sitio usa un grid asimétrico donde cada slot tiene un `height` fijo y un `kind` ("wide" o "").** La respuesta de la API no incluye estos metadatos de layout en v1; el sitio aplica defaults (altura 360, kind vacío) o un cálculo simple. Si se necesita control fino de layout por imagen, se agrega en v2.
 
+### 7. Seeder con datos reales del sitio
+
+**Decisión:** el `GallerySeeder` debe replicar exactamente los 4 álbumes y 17 imágenes actualmente hardcodeados en `PageGaleria` (`website/pages-1.jsx`), con `isPublished = true` tanto para álbumes como para imágenes.
+
+#### Álbumes a crear (en orden `sortOrder`):
+
+| sortOrder | title | kicker | description |
+|---|---|---|---|
+| 0 | Cultos y predicaciones | Sábados | null |
+| 1 | Bautismos y compromisos | Momentos especiales | null |
+| 2 | Ministerios | Vida en comunidad | null |
+| 3 | Eventos especiales | A través del año | null |
+
+#### Imágenes por álbum (cada una con `isPublished = true`):
+
+**Cultos y predicaciones** (5 imágenes):
+- sortOrder 0: caption "Culto Divino"
+- sortOrder 1: caption "Predicación"
+- sortOrder 2: caption "Escuela Sabática"
+- sortOrder 3: caption "Coro"
+- sortOrder 4: caption "Lectura bíblica"
+
+**Bautismos y compromisos** (3 imágenes):
+- sortOrder 0: caption "Bautismo"
+- sortOrder 1: caption "Bautismo · río"
+- sortOrder 2: caption "Imposición de manos"
+
+**Ministerios** (6 imágenes):
+- sortOrder 0: caption "Ministerio de Jóvenes"
+- sortOrder 1: caption "Ministerio de Niños"
+- sortOrder 2: caption "Conquistadores"
+- sortOrder 3: caption "Damas"
+- sortOrder 4: caption "Música"
+- sortOrder 5: caption "Acción solidaria"
+
+**Eventos especiales** (3 imágenes):
+- sortOrder 0: caption "Semana Santa"
+- sortOrder 1: caption "Día del Pastor"
+- sortOrder 2: caption "Aniversario de la iglesia"
+
+**Idempotencia:** el seeder verifica si ya existe un álbum con el título "Cultos y predicaciones" antes de crear. Si existe, omite la creación completa (no crea álbumes duplicados ni imágenes duplicadas).
+
+**Archivos de imagen reales:** las 17 fotos reales del sitio (extraídas del estado original de `<image-slot>` en `website/.image-slots.state.json`) se versionan optimizadas como JPEG en `backend/src/seeds/gallery/assets/`. El `GallerySeeder` las copia a `uploads/gallery/` con nombres únicos al ejecutarse, de modo que en producción los álbumes y fotos iniciales quedan completos sin armarlos a mano. Cada álbum también recibe una portada (`coverImagePath`).
+
 ## Plan de migración
 
 1. Migración: crear tabla `gallery_albums`.

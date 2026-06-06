@@ -13,6 +13,7 @@ Este change crea el módulo de galería completo (backend + frontend admin + end
   - CRUD admin de álbumes e imágenes (`/api/gallery/*`), con subida de imágenes a `uploads/gallery/`, eliminación desde disco, reordenamiento y toggle de publicación.
   - Endpoint público `GET /api/public/gallery` que devuelve álbumes publicados con sus imágenes publicadas, en la forma que `PageGaleria` espera.
   - Migración para las tablas `gallery_albums` y `gallery_images`.
+  - **Seeder con datos reales**: los 4 álbumes y 17 imágenes actualmente hardcodeados en `PageGaleria` ("Cultos y predicaciones", "Bautismos y compromisos", "Ministerios", "Eventos especiales") deben ser creados por el `GallerySeeder` con sus títulos, kickers, descripciones, orden y estado publicado, replicando exactamente el contenido actual del sitio.
 
 - **Frontend admin** — gestión de galería:
   - Sub-sección "Galería" en el sidebar de admin (o dentro de una sección de Contenido del sitio), con listado de álbumes, vista de detalle con imágenes del álbum, formularios de creación/edición, subida/eliminación/reorden de imágenes, y toggle de publicación.

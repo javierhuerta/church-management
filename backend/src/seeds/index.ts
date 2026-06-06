@@ -49,6 +49,10 @@ import { WorshipPublicSeeder } from './worship-services/worship-public.seeder';
 import { RescueStageSeeder } from './catalogs/rescue-stage.seeder';
 import { VisitStatusSeeder } from './catalogs/visit-status.seeder';
 import { SabbathClassSeeder } from './catalogs/sabbath-class.seeder';
+import { GallerySeeder } from './gallery/gallery.seeder';
+
+import { GalleryAlbum } from '../modules/gallery/entities/gallery-album.entity';
+import { GalleryImage } from '../modules/gallery/entities/gallery-image.entity';
 
 export interface Seeder {
   run(dataSource: DataSource): Promise<void>;
@@ -82,6 +86,7 @@ const SEEDER_REGISTRY: SeederEntry[] = [
   { name: 'home-settings',     category: 'catalog', instance: new HomeSettingsSeeder() },
   { name: 'schedule-settings', category: 'catalog', instance: new ScheduleSettingsSeeder() },
   { name: 'schedule-items',    category: 'catalog', instance: new ScheduleItemSeeder() },
+  { name: 'gallery',           category: 'catalog', instance: new GallerySeeder() },
 
   // demo — requieren que los seeders de catalog se hayan ejecutado antes
   { name: 'persons',         category: 'demo',    instance: new PersonSeeder() },
@@ -134,6 +139,8 @@ function createDataSource(): DataSource {
       ElderShift,
       SiteSetting,
       ScheduleItem,
+      GalleryAlbum,
+      GalleryImage,
     ],
   });
 }

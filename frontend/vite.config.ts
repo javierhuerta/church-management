@@ -51,18 +51,33 @@ function serveWebsite(): Plugin {
         }
 
         const rel = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '')
-        const filePath = path.join(WEBSITE_DIR, rel)
+        let filePath = path.join(WEBSITE_DIR, rel)
 
         // Evitar path traversal fuera de WEBSITE_DIR.
         if (!filePath.startsWith(WEBSITE_DIR)) return next()
 
-        let stat: fs.Stats
+        let stat: fs.Stats | null = null
         try {
           stat = fs.statSync(filePath)
         } catch {
-          return next()
+          stat = null
         }
-        if (!stat.isFile()) return next()
+
+        // SPA fallback: si la ruta no corresponde a un archivo real del sitio
+        // público (p.ej. /holasd, /ruta-inexistente), servimos su index.html.
+        // El sitio público usa hash routing, así que cargará la página de inicio
+        // en vez de mostrar el error de base URL de Vite.
+        if (!stat || !stat.isFile()) {
+          // No interceptar peticiones de assets concretos (con extensión) que
+          // no existen: que sigan al 404 natural.
+          if (path.extname(pathname)) return next()
+          filePath = path.join(WEBSITE_DIR, 'index.html')
+          try {
+            stat = fs.statSync(filePath)
+          } catch {
+            return next()
+          }
+        }
 
         const ext = path.extname(filePath).toLowerCase()
         res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream')

@@ -84,6 +84,18 @@ El sistema SHALL exponer un endpoint `GET /api/public/gallery` sin autenticació
 - **WHEN** no hay álbumes publicados
 - **THEN** el endpoint responde con un arreglo vacío (200 OK)
 
+### Requirement: Seeder con datos reales del sitio
+
+El sistema SHALL incluir un seeder (`GallerySeeder`) que replique exactamente los 4 álbumes y 17 imágenes actualmente hardcodeados en `PageGaleria` del sitio público, con estado publicado tanto para álbumes como para imágenes.
+
+#### Scenario: Ejecutar seeder en base vacía
+- **WHEN** se ejecuta el seeder en una base de datos sin álbumes de galería
+- **THEN** el sistema crea 4 álbumes ("Cultos y predicaciones", "Bautismos y compromisos", "Ministerios", "Eventos especiales") con sus kickers, descripciones, orden y `isPublished = true`, y 17 imágenes con sus captions, orden y `isPublished = true`
+
+#### Scenario: Ejecutar seeder en base con datos existentes
+- **WHEN** se ejecuta el seeder y ya existe un álbum con título "Cultos y predicaciones"
+- **THEN** el seeder no crea ningún álbum ni imagen adicional (idempotente)
+
 ### Requirement: Configuración de la sección Galería
 
 El sistema SHALL permitir configurar el texto introductorio y el título del encabezado de la sección Galería del sitio público, a través de la tab "Galería" en la sección de Configuraciones del admin, usando el almacén `SiteSetting`.

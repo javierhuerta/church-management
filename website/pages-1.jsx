@@ -42,6 +42,25 @@ function PageInicio({ setPage, nextService: propNextService }) {
 
   const [homeData, setHomeData] = React.useState(DEFAULT_HOME);
   const [worshipData, setWorshipData] = React.useState(null);
+  const [moments, setMoments] = React.useState([]);
+
+  // Cargar las primeras fotos publicadas de la galería para la sección "Momentos"
+  React.useEffect(() => {
+    if (window.IASD_API && window.IASD_API.fetchGallery) {
+      window.IASD_API.fetchGallery()
+        .then(function (albums) {
+          // Aplanar todas las imágenes de todos los álbumes y tomar las primeras 5
+          var imgs = [];
+          (albums || []).forEach(function (album) {
+            (album.images || []).forEach(function (img) {
+              if (img.url) imgs.push({ url: img.url, caption: img.caption || album.title });
+            });
+          });
+          setMoments(imgs.slice(0, 5));
+        })
+        .catch(function () {});
+    }
+  }, []);
 
   // Cargar datos desde la API al montar
   React.useEffect(() => {
@@ -438,28 +457,33 @@ function PageInicio({ setPage, nextService: propNextService }) {
               Ver galería completa <Arrow />
             </button>
           </div>
-          {/* Grid asimétrico editorial */}
+          {/* Grid asimétrico editorial — alimentado desde el módulo de Galería */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(6, 1fr)',
             gridAutoRows: '180px',
             gap: 14,
           }} className="moments-grid">
-            <div style={{ gridColumn: 'span 3', gridRow: 'span 2' }}>
-              <PhotoSlot id="home-mom-1" label="Culto" height="100%" style={{ height: '100%' }} />
-            </div>
-            <div style={{ gridColumn: 'span 2' }}>
-              <PhotoSlot id="home-mom-2" label="Bautismo" height="100%" style={{ height: '100%' }} />
-            </div>
-            <div style={{ gridColumn: 'span 1' }}>
-              <PhotoSlot id="home-mom-3" label="Coro" height="100%" style={{ height: '100%' }} />
-            </div>
-            <div style={{ gridColumn: 'span 1' }}>
-              <PhotoSlot id="home-mom-4" label="Niños" height="100%" style={{ height: '100%' }} />
-            </div>
-            <div style={{ gridColumn: 'span 2' }}>
-              <PhotoSlot id="home-mom-5" label="Jóvenes" height="100%" style={{ height: '100%' }} />
-            </div>
+            {[
+              { id: 'home-mom-1', label: 'Culto', span: 'span 3', row: 'span 2' },
+              { id: 'home-mom-2', label: 'Bautismo', span: 'span 2' },
+              { id: 'home-mom-3', label: 'Coro', span: 'span 1' },
+              { id: 'home-mom-4', label: 'Niños', span: 'span 1' },
+              { id: 'home-mom-5', label: 'Jóvenes', span: 'span 2' },
+            ].map(function (cell, i) {
+              var img = moments[i] || null;
+              return (
+                <div key={cell.id} style={{ gridColumn: cell.span, gridRow: cell.row }}>
+                  <PhotoSlot
+                    id={cell.id}
+                    label={img ? img.caption : cell.label}
+                    height="100%"
+                    src={img ? img.url : null}
+                    style={{ height: '100%' }}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -814,8 +838,8 @@ function PageNosotros({ setPage }) {
 // GALERÍA — many photo slots
 // ═════════════════════════════════════════════════════════
 function PageGaleria() {
-  // Curated grid layouts — mix of sizes for visual rhythm
-  const collections = [
+  // Datos por defecto (fallback si la API falla)
+  const DEFAULT_COLLECTIONS = [
     {
       title: 'Cultos y predicaciones',
       kicker: 'Sábados',
@@ -859,6 +883,57 @@ function PageGaleria() {
     },
   ];
 
+  const [collections, setCollections] = React.useState(DEFAULT_COLLECTIONS);
+  const [galleryHeader, setGalleryHeader] = React.useState({
+    title: 'Vida de la congregación',
+    intro: 'Momentos de adoración, comunión y servicio.',
+  });
+
+  React.useEffect(() => {
+    if (window.IASD_API && window.IASD_API.fetchGallery) {
+      window.IASD_API.fetchGallery()
+        .then(function (albums) {
+          if (albums && albums.length > 0) {
+            // Convertir álbumes de la API al formato de collections
+            var mapped = albums.map(function (album) {
+              return {
+                title: album.title,
+                kicker: album.kicker || 'Galería',
+                slots: (album.images || []).map(function (img, idx) {
+                  return [
+                    img.id || ('gal-' + idx),
+                    img.caption || '',
+                    img.height || 360,
+                    img.kind || '',
+                    img.url || null,
+                  ];
+                }),
+              };
+            });
+            setCollections(mapped);
+          }
+        })
+        .catch(function (err) {
+          console.warn('Error cargando galería desde API:', err);
+        });
+    }
+
+    // Cargar configuración de galería (header_title, intro_text)
+    if (window.IASD_API && window.IASD_API.apiGet) {
+      Promise.all([
+        window.IASD_API.apiGet('/site-config/settings/galeria.header_title').catch(function () { return null; }),
+        window.IASD_API.apiGet('/site-config/settings/galeria.intro_text').catch(function () { return null; }),
+      ]).then(function (results) {
+        setGalleryHeader(function (prev) {
+          return {
+            title: (results[0] && results[0].value) || prev.title,
+            intro: (results[1] && results[1].value) || prev.intro,
+          };
+        });
+      }).catch(function () {});
+    }
+  }, []);
+
   return (
     <main className="page-enter" data-screen-label="Galería">
       <section className="section">
@@ -869,13 +944,16 @@ function PageGaleria() {
               fontSize: 'clamp(44px, 6vw, 80px)', marginTop: 18, lineHeight: 1,
               maxWidth: 820, margin: '18px auto 0'
             }}>
-              Vida de la <span style={{ fontStyle: 'italic', color: 'var(--gold)' }}>congregación</span>
+              {galleryHeader.title.split(' ').length > 2 ? (
+                <>{galleryHeader.title.split(' ').slice(0, -2).join(' ')} <span style={{ fontStyle: 'italic', color: 'var(--gold)' }}>{galleryHeader.title.split(' ').slice(-2).join(' ')}</span></>
+              ) : (
+                galleryHeader.title
+              )}
             </h1>
             <p className="muted" style={{
               marginTop: 22, fontSize: 16, maxWidth: 540, margin: '22px auto 0'
             }}>
-              Momentos de adoración, comunión y servicio. Arrastra una imagen sobre cualquier espacio
-              para colocarla.
+              {galleryHeader.intro}
             </p>
           </div>
 
@@ -892,15 +970,18 @@ function PageGaleria() {
                 gridTemplateColumns: 'repeat(6, 1fr)',
                 gap: 14
               }}>
-                {c.slots.map(([id, label, h, kind], si) => (
-                  <div key={id} style={{
-                    gridColumn: kind === 'wide'
-                      ? 'span 3'
-                      : (c.slots.length <= 3 ? 'span 2' : 'span 2'),
-                  }}>
-                    <PhotoSlot id={id} label={label} height={h} />
-                  </div>
-                ))}
+                {c.slots.map((slot, si) => {
+                  var id = slot[0], label = slot[1], h = slot[2], kind = slot[3], src = slot[4] || null;
+                  return (
+                    <div key={id} style={{
+                      gridColumn: kind === 'wide'
+                        ? 'span 3'
+                        : (c.slots.length <= 3 ? 'span 2' : 'span 2'),
+                    }}>
+                      <PhotoSlot id={id} label={label} height={h} src={src} />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
