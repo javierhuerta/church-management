@@ -49,6 +49,20 @@ function AppInner() {
     document.documentElement.style.fontSize = (t.fontScale * 16) + 'px';
   }, [t.fontScale]);
 
+  // Estado real de transmisión en vivo (desde la API, no el toggle de demo).
+  // Refresca cada 60s para reflejar el toggle manual del admin y la auto-detección.
+  const [liveNow, setLiveNow] = useSA(false);
+  useEA(() => {
+    if (!window.IASD_API || !window.IASD_API.fetchLiveStatus) return;
+    let active = true;
+    const load = () => window.IASD_API.fetchLiveStatus()
+      .then(s => { if (active) setLiveNow(!!(s && s.isLive)); })
+      .catch(() => {});
+    load();
+    const id = setInterval(load, 60000);
+    return () => { active = false; clearInterval(id); };
+  }, []);
+
   const nextService = useMA(() => ({
     title: 'Culto Divino · No se preocupen por la vida',
     when: 'Sábado 23 · 11:00 h',
@@ -60,18 +74,18 @@ function AppInner() {
       case 'inicio':     return <PageInicio setPage={setPage} nextService={nextService} />;
       case 'nosotros':   return <PageNosotros setPage={setPage} />;
       case 'horarios':   return <PageHorarios />;
-      case 'envivo':     return <PageEnVivo isLive={t.live} />;
+      case 'envivo':     return <PageEnVivo isLive={liveNow} />;
       case 'calendario': return <PageCalendarioEditable store={store} />;
       case 'programa':   return <PagePrograma store={store} />;
       case 'galeria':    return <PageGaleria />;
       case 'acceso':     return <PageAcceso setPage={setPage} />;
       default:           return <PageInicio setPage={setPage} nextService={nextService} />;
     }
-  }, [page, t.live, nextService, store.events, store.program]);
+  }, [page, liveNow, nextService, store.events, store.program]);
 
   return (
     <div className="shell">
-      <Nav page={page} setPage={setPage} isLive={t.live} />
+      <Nav page={page} setPage={setPage} isLive={liveNow} />
       {PageComp}
       <Footer setPage={setPage} />
 

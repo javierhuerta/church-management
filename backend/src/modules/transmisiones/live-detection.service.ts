@@ -90,7 +90,13 @@ export class LiveDetectionService {
       }
 
       if (mode === 'sabbath') {
-        const now = new Date();
+        // La ventana se evalúa en hora de Chile (America/Santiago), no en la
+        // hora local del proceso: en contenedores suele ser UTC, lo que
+        // desplazaba la ventana y dejaba el chequeo en 'skipped' justo durante
+        // el culto (11:00 Chile ≈ 14-15 UTC, fuera de [9,14)).
+        const now = new Date(
+          new Date().toLocaleString('en-US', { timeZone: 'America/Santiago' }),
+        );
         const isSabbath = now.getDay() === 6; // Sábado = 6
         const hour = now.getHours();
         const startHour = await this.getIntSetting(CONFIG_KEYS.sabbathStartHour, 9);

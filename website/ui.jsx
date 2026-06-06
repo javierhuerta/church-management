@@ -98,29 +98,40 @@ const PAGES = PUBLIC_PAGES; // backwards compat
 
 function Nav({ page, setPage, isLive }) {
   const { session } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Navega y cierra el menú mobile en cada selección.
+  const go = (id) => { setPage(id); setMenuOpen(false); };
   return (
     <nav className="nav" data-screen-label="Nav">
       <div className="container nav-inner">
-        <a onClick={() => setPage('inicio')} style={{ cursor: 'pointer' }}>
+        <a onClick={() => go('inicio')} style={{ cursor: 'pointer' }}>
           <BrandMark />
         </a>
-        <div className="nav-links">
+        <button
+          type="button"
+          className={'nav-toggle ' + (menuOpen ? 'open' : '')}
+          aria-label="Abrir menú"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((o) => !o)}>
+          <span /><span /><span />
+        </button>
+        <div className={'nav-links ' + (menuOpen ? 'open' : '')}>
           {PUBLIC_PAGES.map((p) =>
             <button
               key={p.id}
               className={'nav-link ' + (page === p.id ? 'active' : '')}
-              onClick={() => setPage(p.id)}>
+              onClick={() => go(p.id)}>
               {p.label}
             </button>
           )}
           <button
             className={'nav-live ' + (page === 'envivo' ? 'active' : '')}
-            onClick={() => setPage('envivo')}>
+            onClick={() => go('envivo')}>
             {isLive && <span className="dot" />}
             {isLive ? 'En Vivo' : 'En Vivo · Sáb'}
           </button>
-          <span style={{ width: 1, height: 22, background: 'var(--line)', margin: '0 4px' }} />
-          <UserBadge setPage={setPage} />
+          <span className="nav-sep" />
+          <UserBadge setPage={go} />
         </div>
       </div>
     </nav>);

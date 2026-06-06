@@ -94,6 +94,17 @@ p { text-wrap: pretty; margin: 0; }
   70% { box-shadow: 0 0 0 8px rgba(226,92,92,0); }
   100% { box-shadow: 0 0 0 0 rgba(226,92,92,0); }
 }
+.nav-sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; }
+/* Botón hamburguesa — oculto en desktop, visible en mobile (ver media query) */
+.nav-toggle { display: none; flex-direction: column; justify-content: center;
+  align-items: center; gap: 5px; width: 42px; height: 42px; padding: 0;
+  background: transparent; border: 0; border-radius: 10px; cursor: pointer; }
+.nav-toggle:hover { background: var(--cream-2); }
+.nav-toggle span { display: block; width: 22px; height: 2px; border-radius: 2px;
+  background: var(--fg); transition: transform .25s ease, opacity .2s ease; }
+.nav-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle.open span:nth-child(2) { opacity: 0; }
+.nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
 /* buttons */
 .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px;
@@ -225,7 +236,22 @@ p { text-wrap: pretty; margin: 0; }
   }
 }
 @media (max-width: 880px) {
-  .nav-links { display: none; }
+  .nav-toggle { display: flex; }
+  .nav-links {
+    display: none;
+    position: absolute; top: 100%; left: 0; right: 0;
+    flex-direction: column; align-items: stretch; gap: 4px;
+    background: color-mix(in oklab, var(--bg) 97%, transparent);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-bottom: 1px solid var(--line-2);
+    padding: 12px 20px 18px;
+    box-shadow: 0 14px 28px rgba(0,0,0,.10);
+  }
+  .nav-links.open { display: flex; }
+  .nav-link { padding: 12px 14px; text-align: left; font-size: 15px; opacity: .9; }
+  .nav-live { justify-content: center; margin-top: 6px; }
+  .nav-sep { display: none; }
   .nav-inner { height: 60px; }
   .hero-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
   .hero-grid > div:last-child { min-height: 70vw !important; }
