@@ -1,0 +1,122 @@
+version: '3.8'
+
+# =============================================================================
+# STAGING — Postgres + Backend + Frontend (admin) + Website (entrada publica)
+# Detras de un reverse-proxy externo en la red 'genesis'.
+#
+# IMPORTANTE — arquitectura del sitio web:
+#   El contenedor 'website' (Nginx) es la UNICA entrada publica. Enruta:
+#       /          -> sitio publico (website)
+#       /admin     -> frontend (admin SPA)
+#       /api       -> backend
+#       /uploads   -> backend (imagenes subidas, volumen persistente)
+#   Por eso el reverse-proxy de 'genesis' debe apuntar al contenedor
+#   'website' (NO al frontend). El frontend solo sirve /admin y queda interno.
+#
+# Deploy (imagenes de GHCR, rama development):
+#   docker compose -f docker-compose.staging.yml --env-file .env.staging pull
+#   docker compose -f docker-compose.staging.yml --env-file .env.staging up -d
+#
+# Variables requeridas en .env.staging:
+#   DB_USERNAME, DB_PASSWORD, DB_DATABASE, JWT_SECRET
+#   BACKEND_IMAGE, FRONTEND_IMAGE, WEBSITE_IMAGE  (ej: ghcr.io/<owner>/<repo>/website:development)
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backup:
+    image: prodrigestivill/postgres-backup-local:16-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: ${DB_PORT:-5432}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+      SCHEDULE: '@daily'
+      BACKUP_KEEP_DAYS: ${BACKUP_RETAIN_DAYS:-7}
+      BACKUP_KEEP_WEEKS: 2
+      BACKUP_KEEP_MONTHS: 1
+      HEALTHCHECK_PORT: 8080
+    volumes:
+      - backups_staging_data:/backups
+    restart: unless-stopped
+
+  backend:
+    image: ${BACKEND_IMAGE:-church-management-backend:local}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT:-3000}
+      DB_HOST: postgres
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      THROTTLE_TTL: ${THROTTLE_TTL:-60000}
+      THROTTLE_LIMIT: ${THROTTLE_LIMIT:-100}
+      LOG_LEVEL: ${LOG_LEVEL:-warn}
+      UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-10485760}
+      COVER_MAX_BYTES: ${COVER_MAX_BYTES:-10485760}
+      MAX_ATTACHMENTS_PER_EVENT: ${MAX_ATTACHMENTS_PER_EVENT:-10}
+      CACHE_TTL_DEFAULT: ${CACHE_TTL_DEFAULT:-60000}
+      CACHE_MAX: ${CACHE_MAX:-500}
+      UNSPLASH_ACCESS_KEY: ${UNSPLASH_ACCESS_KEY:-}
+    volumes:
+      - uploads_staging_data:/app/uploads
+    restart: unless-stopped
+    expose:
+      - '${PORT:-3000}'
+
+  # Admin (React+Vite) servido bajo /admin. Interno: la entrada publica es 'website'.
+  frontend:
+    image: ${FRONTEND_IMAGE:-church-management-frontend:local}
+    depends_on:
+      - backend
+    expose:
+      - '80'
+    restart: unless-stopped
+
+  # Sitio publico (diseno) + reverse proxy interno:
+  #   / -> sitio, /admin -> frontend, /api y /uploads -> backend.
+  # ESTE es el contenedor al que debe apuntar el proxy de 'genesis'.
+  church_management_frontend_staging:
+    image: ${WEBSITE_IMAGE:-church-management-website:local}
+    depends_on:
+      - backend
+      - frontend
+    expose:
+      - '80'
+    restart: unless-stopped
+
+volumes:
+  postgres_staging_data:
+  uploads_staging_data:
+  backups_staging_data:
+
+networks:
+  default:
+    external: true
+    name: genesis

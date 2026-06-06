@@ -681,11 +681,22 @@ function PageNosotros({ setPage }) {
               }}
             />
           ) : (
-            <PhotoSlot
-              id="liderazgo-grupal"
-              label="Foto grupal · junta de iglesia"
-              height="clamp(280px, 42vw, 560px)"
-              radius={18} />
+            <div
+              style={{
+                width: '100%',
+                height: 'clamp(280px, 42vw, 560px)',
+                borderRadius: 18,
+                background: 'var(--surface)',
+                border: '1px solid var(--line)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <span className="muted" style={{ fontSize: 14 }}>
+                Foto grupal · junta de iglesia
+              </span>
+            </div>
           )}
         </div>
       </section>
@@ -733,8 +744,23 @@ function PageNosotros({ setPage }) {
                       }}
                     />
                   ) : (
-                    <PhotoSlot id={p.slot || 'leader-' + p.role} label="Retrato"
-                      height={120} shape="circle" radius={60} />
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        width: 120,
+                        height: 120,
+                        borderRadius: 60,
+                        background: 'var(--surface)',
+                        border: '1px solid var(--line)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--muted)',
+                        fontSize: 12,
+                      }}
+                    >
+                      Sin foto
+                    </div>
                   )}
                 </div>
                 <div className="mono" style={{
