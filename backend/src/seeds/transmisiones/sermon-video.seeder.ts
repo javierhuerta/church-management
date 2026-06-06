@@ -12,9 +12,10 @@
  *   tituladas con el tema del sermón p.ej. "¿Madre Tierra o Madre Cielo?" o con
  *   el formato "CULTO DIVINO | fecha").
  *
- *   Se EXCLUYE explícitamente "Culto Divino · 30 de mayo" (8WGYhaBB9ik): no
- *   corresponde a una transmisión válida del culto (no figura en la pestaña
- *   "Más recientes" del canal). El orden de la lista replica esa pestaña.
+ *   La transmisión más reciente (destacada, order 0, fecha más reciente) es
+ *   "CULTO DIVINO | 6 JUNIO 2026" (8WGYhaBB9ik) — el último en vivo del canal.
+ *   El orden de la lista replica la pestaña "En vivo", del más reciente al más
+ *   antiguo.
  *
  * NOTA sobre el predicador:
  *   El feed RSS de YouTube no expone el nombre del predicador. Se deja un valor
@@ -43,19 +44,24 @@ const DEFAULT_PREACHER = 'IASD Central Osorno';
 
 // Cultos divinos reales del canal (transmisiones en vivo, "Transmitido" en
 // YouTube), del más reciente al más antiguo. El primero (order 0, fecha más
-// reciente) es la transmisión destacada — "El Valor de la Educación Eterna".
-// El orden replica la pestaña "Más recientes" del canal de YouTube.
-//
-// Se EXCLUYE "Culto Divino · 30 de mayo" (8WGYhaBB9ik): no corresponde a una
-// transmisión válida del culto (no aparece en "Más recientes" del canal).
+// reciente) es la transmisión destacada — "CULTO DIVINO | 6 JUNIO 2026", el
+// último en vivo. El orden replica la pestaña "En vivo" del canal de YouTube.
 const SERMONS_DATA: SermonSeedData[] = [
+  {
+    videoId: '8WGYhaBB9ik',
+    title: 'CULTO DIVINO | 6 JUNIO 2026',
+    preacher: DEFAULT_PREACHER,
+    reference: null,
+    date: '2026-06-06',
+    order: 0,
+  },
   {
     videoId: 'XD_bM0SejRA',
     title: 'El Valor de la Educación Eterna',
     preacher: DEFAULT_PREACHER,
     reference: null,
     date: '2026-05-31',
-    order: 0,
+    order: 1,
   },
   {
     videoId: 'CJ-MWvNWstg',
@@ -63,7 +69,7 @@ const SERMONS_DATA: SermonSeedData[] = [
     preacher: DEFAULT_PREACHER,
     reference: null,
     date: '2026-05-24',
-    order: 1,
+    order: 2,
   },
   {
     videoId: 'M_DqSL9eGyE',
@@ -71,7 +77,7 @@ const SERMONS_DATA: SermonSeedData[] = [
     preacher: DEFAULT_PREACHER,
     reference: null,
     date: '2026-05-10',
-    order: 2,
+    order: 3,
   },
   {
     videoId: 'FrcLjrDkJ8g',
@@ -79,7 +85,7 @@ const SERMONS_DATA: SermonSeedData[] = [
     preacher: DEFAULT_PREACHER,
     reference: null,
     date: '2026-05-03',
-    order: 3,
+    order: 4,
   },
   {
     videoId: 'M5b0zcQIZvY',
@@ -87,7 +93,7 @@ const SERMONS_DATA: SermonSeedData[] = [
     preacher: DEFAULT_PREACHER,
     reference: null,
     date: '2026-04-26',
-    order: 4,
+    order: 5,
   },
   {
     videoId: 'rMMbwsd4kpg',
@@ -95,7 +101,7 @@ const SERMONS_DATA: SermonSeedData[] = [
     preacher: DEFAULT_PREACHER,
     reference: null,
     date: '2026-04-19',
-    order: 5,
+    order: 6,
   },
   {
     videoId: '5QMBr4Zmx98',
@@ -103,7 +109,7 @@ const SERMONS_DATA: SermonSeedData[] = [
     preacher: DEFAULT_PREACHER,
     reference: null,
     date: '2026-04-12',
-    order: 6,
+    order: 7,
   },
 ];
 
@@ -123,30 +129,32 @@ export class SermonVideoSeeder implements Seeder {
     const sermonRepo = dataSource.getRepository(SermonVideo);
     const settingRepo = dataSource.getRepository(SiteSetting);
 
-    // Idempotencia: si ya existe la predicación destacada, no crear nada
-    const existing = await sermonRepo.findOne({
-      where: { videoId: SERMONS_DATA[0].videoId },
-    });
-    if (existing) {
-      console.log('    Predicaciones ya existen, omitiendo creación');
-    } else {
-      for (const data of SERMONS_DATA) {
-        await sermonRepo.save(
-          sermonRepo.create({
-            videoId: data.videoId,
-            title: data.title,
-            preacher: data.preacher,
-            reference: data.reference,
-            date: data.date,
-            thumbnailUrl: deriveThumbnail(data.videoId),
-            isPublished: true,
-            order: data.order,
-          }),
-        );
-        console.log(`    Predicación creada: "${data.title}"`);
+    // Idempotente por-video: crea solo las transmisiones que falten (clave:
+    // videoId). Así re-correr el seeder agrega un culto nuevo (p.ej. el último
+    // en vivo) sin duplicar ni saltarse todo por la regla all-or-nothing.
+    let created = 0;
+    for (const data of SERMONS_DATA) {
+      const existing = await sermonRepo.findOne({ where: { videoId: data.videoId } });
+      if (existing) {
+        console.log(`    Predicación ya existe: "${data.title}"`);
+        continue;
       }
-      console.log(`    Transmisiones seed completada: ${SERMONS_DATA.length} predicaciones`);
+      await sermonRepo.save(
+        sermonRepo.create({
+          videoId: data.videoId,
+          title: data.title,
+          preacher: data.preacher,
+          reference: data.reference,
+          date: data.date,
+          thumbnailUrl: deriveThumbnail(data.videoId),
+          isPublished: true,
+          order: data.order,
+        }),
+      );
+      created++;
+      console.log(`    Predicación creada: "${data.title}"`);
     }
+    console.log(`    Transmisiones: ${created} predicaciones nuevas`);
 
     // Sembrar SiteSettings por defecto (idempotente: solo crea si no existe)
     for (const setting of DEFAULT_SETTINGS) {
