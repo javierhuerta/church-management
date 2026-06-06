@@ -17,6 +17,11 @@ import { UpdateGalleryImageDto } from './dto/update-gallery-image.dto';
 import { GalleryAlbumResponseDto } from './dto/gallery-album-response.dto';
 import { GalleryImageResponseDto } from './dto/gallery-image-response.dto';
 import { ReorderImagesDto } from './dto/reorder-images.dto';
+import {
+  UpdateGalleryConfigDto,
+  GalleryConfigResponseDto,
+} from './dto/gallery-config.dto';
+import { SiteSetting } from '../site-config/entities/site-setting.entity';
 import { toDto } from '../common';
 
 const ALLOWED_MIME_TYPES = [
@@ -28,6 +33,12 @@ const ALLOWED_MIME_TYPES = [
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+const CONFIG_KEYS = {
+  headerTitle: 'galeria.header_title',
+  introText: 'galeria.intro_text',
+  homeAlbumId: 'galeria.home_album_id',
+} as const;
+
 @Injectable()
 export class GalleryService {
   private readonly logger = new Logger(GalleryService.name);
@@ -37,7 +48,50 @@ export class GalleryService {
     private readonly albumRepo: Repository<GalleryAlbum>,
     @InjectRepository(GalleryImage)
     private readonly imageRepo: Repository<GalleryImage>,
+    @InjectRepository(SiteSetting)
+    private readonly settingRepo: Repository<SiteSetting>,
   ) {}
+
+  // ─── Configuración de la sección (SiteSetting) ───────────────────────────
+
+  private async getSetting(key: string): Promise<string | null> {
+    const row = await this.settingRepo.findOne({ where: { key } });
+    return row?.value ?? null;
+  }
+
+  private async setSetting(key: string, value: string | null): Promise<void> {
+    const existing = await this.settingRepo.findOne({ where: { key } });
+    if (existing) {
+      existing.value = value;
+      await this.settingRepo.save(existing);
+    } else {
+      await this.settingRepo.save(this.settingRepo.create({ key, value }));
+    }
+  }
+
+  async getConfig(): Promise<GalleryConfigResponseDto> {
+    const [headerTitle, introText, homeAlbumId] = await Promise.all([
+      this.getSetting(CONFIG_KEYS.headerTitle),
+      this.getSetting(CONFIG_KEYS.introText),
+      this.getSetting(CONFIG_KEYS.homeAlbumId),
+    ]);
+    return { headerTitle, introText, homeAlbumId };
+  }
+
+  async updateConfig(
+    dto: UpdateGalleryConfigDto,
+  ): Promise<GalleryConfigResponseDto> {
+    if (dto.headerTitle !== undefined) {
+      await this.setSetting(CONFIG_KEYS.headerTitle, dto.headerTitle);
+    }
+    if (dto.introText !== undefined) {
+      await this.setSetting(CONFIG_KEYS.introText, dto.introText);
+    }
+    if (dto.homeAlbumId !== undefined) {
+      await this.setSetting(CONFIG_KEYS.homeAlbumId, dto.homeAlbumId);
+    }
+    return this.getConfig();
+  }
 
   // ─── CRUD de álbumes ─────────────────────────────────────────────────────
 
@@ -316,6 +370,37 @@ export class GalleryService {
         images: publishedImages,
       });
     });
+  }
+
+  /**
+   * Álbum destacado para la sección "Momentos" del inicio. Usa el configurado
+   * en `galeria.home_album_id`; si no hay o no está publicado, cae al primer
+   * álbum publicado. Devuelve null si no hay ningún álbum publicado.
+   */
+  async getHomeAlbum(): Promise<GalleryAlbumResponseDto | null> {
+    const homeAlbumId = await this.getSetting(CONFIG_KEYS.homeAlbumId);
+
+    let album: GalleryAlbum | null = null;
+    if (homeAlbumId) {
+      album = await this.albumRepo.findOne({
+        where: { id: homeAlbumId, isPublished: true },
+        relations: ['images'],
+      });
+    }
+    if (!album) {
+      album = await this.albumRepo.findOne({
+        where: { isPublished: true },
+        relations: ['images'],
+        order: { sortOrder: 'ASC' },
+      });
+    }
+    if (!album) return null;
+
+    const publishedImages = (album.images || [])
+      .filter((img) => img.isPublished)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+
+    return this.toAlbumResponse({ ...album, images: publishedImages });
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────

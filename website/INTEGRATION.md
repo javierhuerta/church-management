@@ -123,6 +123,84 @@ anónimos (sin token).
 - **Admin**: crear/publicar un evento en `/admin/calendario` lo refleja
   automáticamente en el sitio público (sin configuración adicional).
 
+## Sección Transmisiones (En Vivo)
+
+Parche aplicado sobre `pages-3.jsx` (`PageEnVivo`) para consumir datos reales del backend.
+
+### Endpoints consumidos
+
+- `GET /api/public/live` → `{ isLive: boolean, channelId: string, channelHandle: string, embedUrl: string|null }`
+  - `isLive` viene del toggle manual `transmisiones.isLiveManual` (SiteSetting).
+  - `embedUrl` es `null` si `channelId` no está configurado.
+- `GET /api/public/sermons` → array de predicaciones publicadas, destacada primero (más reciente).
+  - Cada item: `{ id, videoId, title, preacher, reference, date, thumbnailUrl, url, isPublished, order }`.
+
+### Helpers agregados a `integration.js`
+
+- `fetchLiveStatus()` — llama a `apiGet('/public/live')`. El caller hace catch (igual que `fetchWorship`).
+- `fetchRecentSermons()` — llama a `apiGet('/public/sermons')`, mapea cada item con `mapSermon()`.
+- `mapSermon(s)` — convierte un item del backend al shape de la grilla:
+  - `d`: fecha formateada "23 may 2026" (usando `MESES_CORTOS`, mismo estilo que `getSunsetTimes`).
+  - `t`: `s.title`
+  - `p`: `s.preacher`
+  - `url`: `s.url`
+  - `thumb`: `s.thumbnailUrl` (miniatura real de YouTube)
+  - `reference`: `s.reference` (cita bíblica, para el kicker de la destacada)
+  - Campos crudos: `title`, `preacher`, `date`.
+
+### Parches aplicados a `PageEnVivo` en `pages-3.jsx`
+
+Si llega una actualización del diseño de Claude Artifacts, re-aplicar estos cambios:
+
+1. **Firma del componente**: `function PageEnVivo({ isLive: isLiveProp })` (renombrar prop para no colisionar con el estado de la API).
+
+2. **Estado y efecto** (agregar al inicio de la función, usando los hooks aliasados `useS3`/`useE3`):
+   ```javascript
+   const [live, setLive]       = useS3(null);
+   const [sermons, setSermons] = useS3(null);
+   useE3(function () {
+     if (!window.IASD_API) return;
+     window.IASD_API.fetchLiveStatus()
+       .then(setLive)
+       .catch(function () { setLive({ isLive: false, embedUrl: null }); });
+     window.IASD_API.fetchRecentSermons()
+       .then(setSermons)
+       .catch(function () { setSermons([])); });
+   }, []);
+   const isLive   = live ? live.isLive : isLiveProp;
+   const embedUrl = live && live.embedUrl ? live.embedUrl : null;
+   const hasEmbed = !!embedUrl;
+   ```
+
+3. **Reproductor**: reemplazar `HAS_EMBED`/`YOUTUBE_EMBED_URL` por `hasEmbed`/`embedUrl` (de la API).
+   - Si `hasEmbed` → `<iframe src={embedUrl} ...>`.
+   - Si no → fallback con `<Ph>` + botón play que abre `YOUTUBE_LIVE_URL`.
+
+4. **Badge "EN VIVO AHORA"**: controlado por `isLive` (de la API, no el prop hardcodeado).
+
+5. **Predicación destacada** (meta de culto): usar `sermons[0]` cuando exista.
+   - `featuredKicker = 'PREDICACIÓN' + (featured.reference ? ' · ' + featured.reference.toUpperCase() : '')`
+   - `featuredTitle = featured.t`
+   - `featuredSubtitle = featured.p + ' · ' + featured.d`
+   - Fallback hardcodeado en `FALLBACK_FEATURED` si la API no responde.
+
+6. **Grilla de predicaciones anteriores**: `sermons.slice(1)` en vez del array `past` hardcodeado.
+   - Cada card usa `<img src={s.thumb}>` si existe, sino `<Ph dark label="Predicación" ...>`.
+   - La sección entera se oculta si `sermons === null` (cargando) o `past.length === 0` (vacío/error).
+
+7. **Constantes conservadas**: `YOUTUBE_CHANNEL_URL` y `YOUTUBE_LIVE_URL` (se usan en botones).
+   - `YOUTUBE_EMBED_URL` y `HAS_EMBED` eliminados (el embed ahora viene de la API).
+
+### Degradación elegante (design decisión 9)
+
+| Escenario | Comportamiento |
+|-----------|---------------|
+| `channelId` no configurado | `embedUrl = null`; muestra fallback con `<Ph>` + botón play. |
+| `fetchLiveStatus` falla | `live = { isLive: false, embedUrl: null }`; badge oculto, fallback de reproductor. |
+| `fetchRecentSermons` falla | `sermons = []`; grilla oculta, destacada usa fallback hardcodeado. |
+| `sermons === null` (cargando) | Grilla oculta (`showGrid = false`), destacada usa fallback. |
+| `isLiveManual = false` | Badge "EN VIVO AHORA" no se muestra. |
+
 ## Pendiente (próximas etapas)
 
 - La pantalla demo `#acceso` (`PageAcceso` en `auth.jsx`) quedó sin enlaces; se

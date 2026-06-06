@@ -5,11 +5,12 @@ import { GalleryImage } from './entities/gallery-image.entity';
 import { GalleryService } from './gallery.service';
 import { GalleryAdminController } from './gallery-admin.controller';
 import { PublicGalleryController } from './public-gallery.controller';
+import { SiteSetting } from '../site-config/entities/site-setting.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([GalleryAlbum, GalleryImage]),
+    TypeOrmModule.forFeature([GalleryAlbum, GalleryImage, SiteSetting]),
     AuthModule,
   ],
   controllers: [GalleryAdminController, PublicGalleryController],

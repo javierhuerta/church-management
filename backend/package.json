@@ -28,6 +28,7 @@
     "seed:run:prod": "node dist/scripts/seeders/run-all.js"
   },
   "dependencies": {
+    "@nestjs/axios": "^4.0.1",
     "@nestjs/cache-manager": "^3.1.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
@@ -41,6 +42,7 @@
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/typeorm": "^11.0.1",
     "@types/multer": "^2.1.0",
+    "axios": "^1.17.0",
     "bcrypt": "^6.0.0",
     "cache-manager": "^7.2.8",
     "class-transformer": "^0.5.1",

@@ -4,21 +4,49 @@ const { useState: useS3, useEffect: useE3, useMemo: useM3 } = React;
 // Canal de YouTube de la iglesia
 const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@IASDCentralOsorno';
 const YOUTUBE_LIVE_URL    = 'https://www.youtube.com/@IASDCentralOsorno/live';
-// Para incrustar el reproductor: live_stream con channel handle (YouTube redirige al stream activo)
-const YOUTUBE_EMBED_URL   = 'https://www.youtube.com/embed/live_stream?channel=UC_PLACEHOLDER_CHANNEL_ID&autoplay=0';
-// ↑ Reemplaza UC_PLACEHOLDER_CHANNEL_ID por el ID del canal cuando lo obtengan (formato UCxxxx…)
-// Si no hay channel ID configurado, mostramos el thumbnail con botón de play que abre YouTube.
-const HAS_EMBED = !YOUTUBE_EMBED_URL.includes('PLACEHOLDER');
+
+// Fallbacks hardcodeados para degradación elegante cuando la API falla.
+const FALLBACK_FEATURED = {
+  kicker:   'PREDICACIÓN · MATEO 6:25–34',
+  t:        'No se preocupen por la vida',
+  subtitle: 'Pr. Israel Jaramillo · Sábado 23 de mayo, 2026',
+};
 
 // ═════════════════════════════════════════════════════════
 // EN VIVO
 // ═════════════════════════════════════════════════════════
-function PageEnVivo({ isLive }) {
-  const past = [
-    { d: '17 may 2026', t: 'La paciencia de Job',           p: 'Pr. Esteban Soto',    url: YOUTUBE_CHANNEL_URL },
-    { d: '10 may 2026', t: 'Cuando la fe se pone a prueba', p: 'Pr. Israel Jaramillo', url: YOUTUBE_CHANNEL_URL },
-    { d: '03 may 2026', t: 'Un nuevo comienzo',             p: 'Anciano',             url: YOUTUBE_CHANNEL_URL },
-  ];
+function PageEnVivo({ isLive: isLiveProp }) {
+  // null = cargando, objeto = datos recibidos
+  const [live, setLive]       = useS3(null);
+  // null = cargando, [] = vacío o error
+  const [sermons, setSermons] = useS3(null);
+
+  useE3(function () {
+    if (!window.IASD_API) return;
+    window.IASD_API.fetchLiveStatus()
+      .then(setLive)
+      .catch(function () { setLive({ isLive: false, embedUrl: null }); });
+    window.IASD_API.fetchRecentSermons()
+      .then(setSermons)
+      .catch(function () { setSermons([]); });
+  }, []);
+
+  // isLive real: la API manda; si la API no respondió aún, cae al prop demo
+  const isLive   = live ? live.isLive : isLiveProp;
+  const embedUrl = live && live.embedUrl ? live.embedUrl : null;
+  const hasEmbed = !!embedUrl;
+
+  // Predicación destacada: primera del array o fallback hardcodeado
+  const featured = sermons && sermons.length > 0 ? sermons[0] : null;
+  const featuredKicker   = featured
+    ? ('PREDICACIÓN' + (featured.reference ? ' · ' + featured.reference.toUpperCase() : ''))
+    : FALLBACK_FEATURED.kicker;
+  const featuredTitle    = featured ? featured.t    : FALLBACK_FEATURED.t;
+  const featuredSubtitle = featured ? (featured.p + ' · ' + featured.d) : FALLBACK_FEATURED.subtitle;
+
+  // Grilla: predicaciones desde la segunda en adelante
+  const past = sermons && sermons.length > 1 ? sermons.slice(1) : [];
+  const showGrid = sermons !== null && past.length > 0;
 
   return (
     <main className="page-enter" data-screen-label="En Vivo"
@@ -63,9 +91,9 @@ function PageEnVivo({ isLive }) {
             background: '#000', aspectRatio: '16/9',
             border: '1px solid rgba(240,232,210,.1)',
           }}>
-            {HAS_EMBED ? (
+            {hasEmbed ? (
               <iframe
-                src={YOUTUBE_EMBED_URL}
+                src={embedUrl}
                 title="Transmisión en vivo · IASD Central Osorno"
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -85,8 +113,8 @@ function PageEnVivo({ isLive }) {
                     boxShadow: '0 0 0 14px rgba(245,239,224,.18), 0 0 0 32px rgba(245,239,224,.08)',
                     transition: 'transform .2s',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.06)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'translate(-50%, -50%)'}>
+                  onMouseEnter={function (e) { e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.06)'; }}
+                  onMouseLeave={function (e) { e.currentTarget.style.transform = 'translate(-50%, -50%)'; }}>
                   <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M6 4l14 8-14 8V4z" />
                   </svg>
@@ -154,95 +182,110 @@ function PageEnVivo({ isLive }) {
             </a>
           </div>
 
-          {/* meta del culto */}
+          {/* meta del culto — predicación destacada (sermons[0] o fallback) */}
           <div style={{ textAlign: 'center', paddingTop: 32 }}>
             <div className="mono" style={{ fontSize: 11, color: '#C9A26B', letterSpacing: '.14em' }}>
-              PREDICACIÓN · MATEO 6:25–34
+              {featuredKicker}
             </div>
             <h2 className="serif" style={{
               fontSize: 'clamp(28px, 3.4vw, 40px)', marginTop: 10, color: '#F0E8D2'
             }}>
-              No se preocupen por la vida
+              {featuredTitle}
             </h2>
             <div style={{ marginTop: 10, fontSize: 14, opacity: .75 }}>
-              Pr. Israel Jaramillo · Sábado 23 de mayo, 2026
+              {featuredSubtitle}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Predicaciones anteriores */}
-      <section style={{
-        padding: '72px 0 96px',
-        borderTop: '1px solid rgba(245,239,224,.12)'
-      }}>
-        <div className="container" style={{ maxWidth: 1040 }}>
-          <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <div className="kicker" style={{ color: '#C9A26B' }}>Predicaciones anteriores</div>
-            <h2 className="serif" style={{
-              fontSize: 'clamp(28px, 3.6vw, 40px)', marginTop: 12, color: '#F0E8D2'
-            }}>
-              Vuelve a escuchar
-            </h2>
-            <p style={{ marginTop: 14, fontSize: 14, opacity: .65, maxWidth: 460, margin: '14px auto 0' }}>
-              Todas nuestras predicaciones quedan publicadas en el canal de YouTube de la iglesia.
-            </p>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}
-            className="past-sermons-grid">
-            {past.map((s, i) => (
-              <a key={i} href={s.url} target="_blank" rel="noopener noreferrer"
-                style={{ textDecoration: 'none', color: '#F0E8D2', cursor: 'pointer',
-                  display: 'block', transition: 'transform .15s' }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-3px)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                <div style={{ position: 'relative' }}>
-                  <Ph dark label="Predicación" height={200} radius={12} />
-                  <div style={{
-                    position: 'absolute', bottom: 12, right: 12,
-                    width: 40, height: 40, borderRadius: '50%',
-                    background: 'rgba(0,0,0,.75)',
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                      <path d="M6 4l14 8-14 8V4z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="mono" style={{
-                  fontSize: 11, color: '#C9A26B', marginTop: 14, letterSpacing: '.12em'
-                }}>
-                  {s.d.toUpperCase()}
-                </div>
-                <div className="serif" style={{
-                  fontSize: 20, marginTop: 6, color: '#F0E8D2', lineHeight: 1.2
-                }}>
-                  {s.t}
-                </div>
-                <div style={{ fontSize: 13, marginTop: 8, opacity: .65 }}>
-                  {s.p}
-                </div>
-              </a>
-            ))}
-          </div>
-
-          <div style={{ textAlign: 'center', marginTop: 48 }}>
-            <a href={YOUTUBE_CHANNEL_URL} target="_blank" rel="noopener noreferrer"
-              className="btn"
-              style={{
-                background: 'transparent', color: '#F0E8D2',
-                border: '1px solid rgba(240,232,210,.3)',
-                padding: '14px 24px',
+      {/* Predicaciones anteriores — solo si hay datos */}
+      {showGrid && (
+        <section style={{
+          padding: '72px 0 96px',
+          borderTop: '1px solid rgba(245,239,224,.12)'
+        }}>
+          <div className="container" style={{ maxWidth: 1040 }}>
+            <div style={{ textAlign: 'center', marginBottom: 40 }}>
+              <div className="kicker" style={{ color: '#C9A26B' }}>Predicaciones anteriores</div>
+              <h2 className="serif" style={{
+                fontSize: 'clamp(28px, 3.6vw, 40px)', marginTop: 12, color: '#F0E8D2'
               }}>
-              Ver canal completo en YouTube
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ marginLeft: 4 }}>
-                <path d="M3 9L9 3M5 3h4v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </a>
+                Vuelve a escuchar
+              </h2>
+              <p style={{ marginTop: 14, fontSize: 14, opacity: .65, maxWidth: 460, margin: '14px auto 0' }}>
+                Todas nuestras predicaciones quedan publicadas en el canal de YouTube de la iglesia.
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}
+              className="past-sermons-grid">
+              {past.map(function (s, i) {
+                return (
+                  <a key={i} href={s.url} target="_blank" rel="noopener noreferrer"
+                    style={{ textDecoration: 'none', color: '#F0E8D2', cursor: 'pointer',
+                      display: 'block', transition: 'transform .15s' }}
+                    onMouseEnter={function (e) { e.currentTarget.style.transform = 'translateY(-3px)'; }}
+                    onMouseLeave={function (e) { e.currentTarget.style.transform = 'translateY(0)'; }}>
+                    <div style={{ position: 'relative' }}>
+                      {s.thumb ? (
+                        <img
+                          src={s.thumb}
+                          alt={s.t}
+                          style={{
+                            width: '100%', height: 200, objectFit: 'cover',
+                            borderRadius: 12, display: 'block',
+                          }} />
+                      ) : (
+                        <Ph dark label="Predicación" height={200} radius={12} />
+                      )}
+                      <div style={{
+                        position: 'absolute', bottom: 12, right: 12,
+                        width: 40, height: 40, borderRadius: '50%',
+                        background: 'rgba(0,0,0,.75)',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
+                          <path d="M6 4l14 8-14 8V4z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="mono" style={{
+                      fontSize: 11, color: '#C9A26B', marginTop: 14, letterSpacing: '.12em'
+                    }}>
+                      {s.d.toUpperCase()}
+                    </div>
+                    <div className="serif" style={{
+                      fontSize: 20, marginTop: 6, color: '#F0E8D2', lineHeight: 1.2
+                    }}>
+                      {s.t}
+                    </div>
+                    <div style={{ fontSize: 13, marginTop: 8, opacity: .65 }}>
+                      {s.p}
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: 48 }}>
+              <a href={YOUTUBE_CHANNEL_URL} target="_blank" rel="noopener noreferrer"
+                className="btn"
+                style={{
+                  background: 'transparent', color: '#F0E8D2',
+                  border: '1px solid rgba(240,232,210,.3)',
+                  padding: '14px 24px',
+                }}>
+                Ver canal completo en YouTube
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ marginLeft: 4 }}>
+                  <path d="M3 9L9 3M5 3h4v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </a>
+            </div>
           </div>
-        </div>
-      </section>
-    </main>);
+        </section>
+      )}
+    </main>
+  );
 
 }
 

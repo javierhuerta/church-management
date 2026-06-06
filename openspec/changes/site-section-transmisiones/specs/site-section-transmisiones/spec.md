@@ -1,148 +1,163 @@
 ## ADDED Requirements
 
-### Requirement: Detección de transmisión en vivo del canal de YouTube
+### Requirement: Badge "En vivo" controlado manualmente
 
-El sistema SHALL detectar si el canal de YouTube configurado está transmitiendo en
-vivo en este momento, consultando la YouTube Data API v3 con caché para no exceder
-la cuota. El resultado SHALL incluir: si hay transmisión en vivo, el título del
-stream, el ID del video, la URL de embed, y la miniatura.
+El sistema SHALL exponer el estado de transmisión en vivo del sitio público a
+partir de un toggle manual `transmisiones.isLiveManual` (SiteSetting boolean) que
+el administrador enciende/apaga. NO SHALL existir detección automática ni consulta
+a la YouTube Data API. El endpoint `GET /api/public/live` SHALL reportar `isLive`
+igual al valor de `transmisiones.isLiveManual`.
 
-La detección SHALL usar caché con TTL configurable (por defecto 600 segundos) para
-limitar las llamadas a la API de YouTube.
+#### Scenario: Toggle manual encendido
+- **WHEN** el administrador enciende `transmisiones.isLiveManual` y se consulta `GET /api/public/live`
+- **THEN** el sistema responde con `isLive: true`, el `channelId`, el `channelHandle`
+  y la `embedUrl` del canal
 
-#### Scenario: Canal está transmitiendo en vivo
-- **WHEN** el canal de YouTube está transmitiendo en vivo y se consulta `GET /api/public/live`
-- **THEN** el sistema responde con `isLive: true`, el título del stream, la URL de
-  embed con el video ID activo, y la miniatura
+#### Scenario: Toggle manual apagado
+- **WHEN** `transmisiones.isLiveManual` está apagado y se consulta `GET /api/public/live`
+- **THEN** el sistema responde con `isLive: false` y la misma `embedUrl` del canal
 
-#### Scenario: Canal no está transmitiendo
-- **WHEN** el canal de YouTube no está transmitiendo en vivo y se consulta `GET /api/public/live`
-- **THEN** el sistema responde con `isLive: false` y la URL de embed genérica del canal
+#### Scenario: Canal no configurado
+- **WHEN** no hay `transmisiones.channelId` configurado y se consulta `GET /api/public/live`
+- **THEN** el sistema responde con `isLive` según el toggle y `embedUrl: null`, sin error
 
-#### Scenario: API key de YouTube no configurada
-- **WHEN** la variable de entorno `YOUTUBE_API_KEY` no está definida
-- **THEN** el endpoint `GET /api/public/live` responde con `isLive: false` sin
-  intentar llamar a la API de YouTube, registrando un warning
+### Requirement: Reproductor con embed nativo de YouTube
 
-#### Scenario: Cuota de YouTube excedida
-- **WHEN** la YouTube Data API devuelve error 403 por cuota excedida
-- **THEN** el sistema responde con `isLive: false` (o respeta el toggle manual si
-  está activo), registrando un error, sin romper la respuesta
+El sistema SHALL construir la URL de embed usando el embed nativo
+`https://www.youtube.com/embed/live_stream?channel={channelId}&autoplay=0`, que
+YouTube resuelve automáticamente a la transmisión activa del canal si existe. NO
+SHALL requerir API Key, video ID del stream, ni llamadas a la YouTube Data API.
 
-### Requirement: Listado de últimos videos del canal
+#### Scenario: Embed con canal configurado
+- **WHEN** `transmisiones.channelId` está configurado y se consulta `GET /api/public/live`
+- **THEN** el sistema responde con `embedUrl` apuntando a
+  `embed/live_stream?channel={channelId}&autoplay=0`
 
-El sistema SHALL obtener los últimos videos publicados en el canal de YouTube
-configurado, usando la playlist de uploads del canal (`playlistItems.list`) para
-minimizar el consumo de cuota (1 unidad por llamada). SHALL devolver hasta 9
-videos con título, fecha de publicación, miniatura y URL.
+### Requirement: Predicaciones curadas desde el admin
 
-#### Scenario: Obtener videos recientes
-- **WHEN** se consulta `GET /api/public/videos` y el canal tiene videos publicados
-- **THEN** el sistema responde con un array de videos (máximo 9), cada uno con
-  título, fecha, miniatura y URL al video en YouTube
+El sistema SHALL permitir al administrador gestionar predicaciones anteriores como
+entidad `SermonVideo` con los campos: `videoId`, `title`, `preacher`, `reference`
+(cita bíblica, opcional), `date`, `thumbnailUrl` (derivada del `videoId`),
+`isPublished` y `order`. El administrador SHALL poder crear, editar, eliminar,
+reordenar y publicar/ocultar cada predicación. Solo las predicaciones con
+`isPublished = true` SHALL aparecer en el sitio público.
 
-#### Scenario: Canal sin videos
-- **WHEN** se consulta `GET /api/public/videos` y el canal no tiene videos públicos
+#### Scenario: Crear predicación
+- **WHEN** un administrador crea una predicación con un `videoId`, título,
+  predicador y fecha válidos
+- **THEN** el sistema persiste el `SermonVideo`, deriva `thumbnailUrl` como
+  `https://i.ytimg.com/vi/{videoId}/hqdefault.jpg` y lo deja sin publicar por defecto
+
+#### Scenario: Publicar predicación
+- **WHEN** un administrador alterna el estado de publicación de una predicación
+- **THEN** el sistema actualiza `isPublished` y la predicación aparece o desaparece
+  del listado público en consecuencia
+
+#### Scenario: Eliminar predicación
+- **WHEN** un administrador elimina una predicación
+- **THEN** el sistema borra el registro y la predicación deja de aparecer en el sitio
+
+### Requirement: Auto-rellenar título vía YouTube oEmbed
+
+El sistema SHALL ofrecer un helper que, dado un `videoId` o una URL de YouTube,
+consulte el endpoint público `https://www.youtube.com/oembed` (sin API Key, gratis)
+y devuelva el título y el autor sugeridos para auto-rellenar el formulario de
+creación de predicaciones. Si la consulta a oEmbed falla, el sistema SHALL degradar
+devolviendo un título vacío para que el administrador lo complete manualmente.
+
+#### Scenario: oEmbed resuelve el título
+- **WHEN** el administrador pega una URL de YouTube válida y el sistema consulta oEmbed
+- **THEN** el sistema devuelve el `title` y el `authorName` del video para
+  auto-sugerir el formulario
+
+#### Scenario: oEmbed falla
+- **WHEN** la consulta a oEmbed falla (red, video privado, 404)
+- **THEN** el sistema devuelve un resultado con `title` vacío, sin romper, y el
+  administrador completa el título a mano
+
+#### Scenario: Aceptar URL o videoId
+- **WHEN** el administrador ingresa una URL completa de YouTube o solo el videoId
+- **THEN** el sistema extrae correctamente el `videoId` en ambos casos
+
+### Requirement: Listado público de predicaciones con destacada
+
+El sistema SHALL exponer `GET /api/public/sermons` con las predicaciones publicadas,
+ordenadas con la de fecha más reciente primero (la "destacada") y el resto a
+continuación, limitado a ~9–10 elementos. Cada elemento SHALL incluir `id`,
+`videoId`, `title`, `preacher`, `reference`, `date`, `thumbnailUrl` y `url`
+(`https://www.youtube.com/watch?v={videoId}`).
+
+#### Scenario: Obtener predicaciones publicadas
+- **WHEN** se consulta `GET /api/public/sermons` y hay predicaciones publicadas
+- **THEN** el sistema responde con un array (máx. ~9–10), la de fecha más reciente
+  primero, cada una con sus metadatos y la `url` al video
+
+#### Scenario: Sin predicaciones publicadas
+- **WHEN** se consulta `GET /api/public/sermons` y no hay predicaciones publicadas
 - **THEN** el sistema responde con un array vacío
 
-### Requirement: Toggle manual de respaldo "en vivo"
-
-El sistema SHALL permitir al administrador activar un toggle manual
-(`transmisiones.manualLiveOverride`) que fuerce el estado `isLive: true` en el
-endpoint público, independientemente del resultado de la YouTube Data API. Esto
-sirve como respaldo si la API falla, excede cuota, o para transmisiones en otras
-plataformas.
-
-#### Scenario: Toggle manual activado
-- **WHEN** el administrador activa `transmisiones.manualLiveOverride` y se consulta
-  `GET /api/public/live`
-- **THEN** el sistema responde con `isLive: true` incluso si la API de YouTube no
-  detecta transmisión
-
-#### Scenario: Toggle manual desactivado
-- **WHEN** el administrador desactiva `transmisiones.manualLiveOverride`
-- **THEN** el sistema vuelve a usar la detección automática vía YouTube Data API
-
-### Requirement: Configuración del canal de YouTube desde el admin
+### Requirement: Configuración del canal desde el admin
 
 El sistema SHALL permitir al administrador configurar, desde la pestaña
-"Transmisiones" de Configuraciones, el channel ID y el handle del canal de YouTube,
-la habilitación del embed, y el toggle manual de respaldo. La API key de YouTube
-SHALL configurarse exclusivamente por variable de entorno del backend y NO SHALL
-ser visible ni editable desde el admin.
+"Transmisiones" de Configuraciones, el `channelId`, el `channelHandle` (sin `@`) y
+el toggle `isLiveManual` del canal de YouTube, persistidos como `SiteSetting`. NO
+SHALL requerir ni exponer ninguna API Key de YouTube.
 
-#### Scenario: Configurar channel ID
-- **WHEN** un administrador guarda un channel ID válido en la pestaña Transmisiones
-- **THEN** el sistema persiste el valor en `transmisiones.channelId` y los endpoints
-  públicos usan ese canal
+#### Scenario: Guardar configuración del canal
+- **WHEN** un administrador guarda `channelId`, `channelHandle` e `isLiveManual` en
+  la pestaña Transmisiones
+- **THEN** el sistema persiste los valores en `transmisiones.channelId`,
+  `transmisiones.channelHandle` y `transmisiones.isLiveManual`, y los endpoints
+  públicos los reflejan
 
-#### Scenario: Channel ID inválido
-- **WHEN** un administrador ingresa un channel ID que no cumple el formato UC + 22
-  caracteres
-- **THEN** el sistema rechaza el valor con un mensaje de validación
-
-#### Scenario: API key visible como estado
-- **WHEN** un administrador abre la pestaña Transmisiones
-- **THEN** el sistema muestra si la API key está configurada o no en el backend
-  (indicador verde/rojo), pero nunca muestra el valor de la clave
+#### Scenario: Solo Admin puede configurar
+- **WHEN** un usuario sin rol `Admin` intenta acceder a los endpoints de
+  administración de transmisiones
+- **THEN** el sistema rechaza la petición (401/403)
 
 ### Requirement: Endpoints públicos sin autenticación
 
-Los endpoints `GET /api/public/live` y `GET /api/public/videos` SHALL ser
+Los endpoints `GET /api/public/live` y `GET /api/public/sermons` SHALL ser
 accesibles sin autenticación (anónimos), para que el sitio público los consuma
-directamente. SHALL devolver únicamente datos públicos del canal de YouTube, sin
-exponer configuraciones internas.
+directamente. SHALL devolver únicamente datos públicos, sin exponer
+configuraciones internas ni credenciales.
 
 #### Scenario: Acceso anónimo a live
 - **WHEN** el sitio público (sin token) solicita `GET /api/public/live`
-- **THEN** el sistema responde con el estado en vivo sin requerir autenticación
+- **THEN** el sistema responde con el estado en vivo y la `embedUrl` sin requerir token
 
-#### Scenario: Acceso anónimo a videos
-- **WHEN** el sitio público (sin token) solicita `GET /api/public/videos`
-- **THEN** el sistema responde con los videos sin requerir autenticación
+#### Scenario: Acceso anónimo a sermons
+- **WHEN** el sitio público (sin token) solicita `GET /api/public/sermons`
+- **THEN** el sistema responde con las predicaciones publicadas sin requerir token
 
 ### Requirement: Integración con el sitio público vía integration.js
 
 El sitio público SHALL consumir los endpoints de transmisiones a través de
-`window.IASD_API` en `website/integration.js`, con funciones `fetchLiveStatus()`
-y `fetchRecentVideos()` que mapean las respuestas de la API al formato esperado
-por `PageEnVivo`. Si la API falla, la página SHALL mostrar el estado por defecto
-sin romperse.
+`window.IASD_API` en `website/integration.js`, con funciones `fetchLiveStatus()` y
+`fetchRecentSermons()` que mapean las respuestas al formato esperado por
+`PageEnVivo`. La primera predicación SHALL usarse como destacada y el resto en la
+grilla. Si la API falla, `PageEnVivo` SHALL mostrar el estado por defecto sin
+romperse, conservando el diseño visual existente.
 
 #### Scenario: PageEnVivo consume datos reales
 - **WHEN** un visitante carga la sección "En Vivo" del sitio público
-- **THEN** `PageEnVivo` obtiene el estado en vivo y los videos desde
-  `window.IASD_API.fetchLiveStatus()` y `window.IASD_API.fetchRecentVideos()`
+- **THEN** `PageEnVivo` obtiene el estado en vivo y las predicaciones desde
+  `window.IASD_API.fetchLiveStatus()` y `window.IASD_API.fetchRecentSermons()`, y
+  muestra la destacada arriba y el resto en la grilla
 
 #### Scenario: Degradación ante fallo de API en el sitio
-- **WHEN** `fetchLiveStatus()` o `fetchRecentVideos()` fallan (error de red, timeout)
+- **WHEN** `fetchLiveStatus()` o `fetchRecentSermons()` fallan (red, timeout)
 - **THEN** `PageEnVivo` muestra el estado por defecto ("Próxima transmisión · Sábado
-  11:00") y oculta la grilla de videos sin lanzar errores visibles al usuario
-
-### Requirement: Caché para protección de cuota
-
-El sistema SHALL cachear las respuestas de la YouTube Data API para no exceder la
-cuota diaria. La caché de estado en vivo SHALL tener un TTL de 600 segundos; la
-caché de videos SHALL tener un TTL de 600 segundos. La caché SHALL invalidarse si
-el administrador cambia el channel ID configurado.
-
-#### Scenario: Segunda llamada en ventana de caché
-- **WHEN** se consulta `GET /api/public/live` dos veces en menos de 600 segundos
-- **THEN** la segunda llamada sirve el valor cacheado sin consumir cuota de YouTube
-
-#### Scenario: Cambio de canal invalida caché
-- **WHEN** el administrador cambia el `transmisiones.channelId`
-- **THEN** la siguiente consulta a `GET /api/public/live` o `GET /api/public/videos`
-  consulta la API de YouTube con el nuevo canal y re-puebla la caché
+  11:00") y oculta la grilla, sin errores visibles ni cambios en el diseño
 
 ## MODIFIED Requirements
 
 ### Requirement: Ampliación del puente de integración del sitio
 
 El objeto `window.IASD_API` SHALL incluir las funciones `fetchLiveStatus()` y
-`fetchRecentVideos()` que consumen `/api/public/live` y `/api/public/videos`
-respectivamente, con mapeo de datos al formato esperado por el diseño del sitio
-y manejo de errores con degradación elegante.
+`fetchRecentSermons()` que consumen `/api/public/live` y `/api/public/sermons`
+respectivamente, con mapeo de datos al formato esperado por el diseño del sitio y
+manejo de errores con degradación elegante.
 
 > Modifica: `public-site-content` → *Requirement: Puente de integración del sitio* de `site-config-foundation`.
 
@@ -151,7 +166,7 @@ y manejo de errores con degradación elegante.
 - **THEN** `window.IASD_API.fetchLiveStatus` es una función que devuelve una promesa
   con el estado en vivo
 
-#### Scenario: fetchRecentVideos disponible
+#### Scenario: fetchRecentSermons disponible
 - **WHEN** el sitio público carga `integration.js`
-- **THEN** `window.IASD_API.fetchRecentVideos` es una función que devuelve una
-  promesa con el array de videos
+- **THEN** `window.IASD_API.fetchRecentSermons` es una función que devuelve una
+  promesa con el array de predicaciones publicadas

@@ -50,9 +50,11 @@ import { RescueStageSeeder } from './catalogs/rescue-stage.seeder';
 import { VisitStatusSeeder } from './catalogs/visit-status.seeder';
 import { SabbathClassSeeder } from './catalogs/sabbath-class.seeder';
 import { GallerySeeder } from './gallery/gallery.seeder';
+import { SermonVideoSeeder } from './transmisiones/sermon-video.seeder';
 
 import { GalleryAlbum } from '../modules/gallery/entities/gallery-album.entity';
 import { GalleryImage } from '../modules/gallery/entities/gallery-image.entity';
+import { SermonVideo } from '../modules/transmisiones/entities/sermon-video.entity';
 
 export interface Seeder {
   run(dataSource: DataSource): Promise<void>;
@@ -87,6 +89,7 @@ const SEEDER_REGISTRY: SeederEntry[] = [
   { name: 'schedule-settings', category: 'catalog', instance: new ScheduleSettingsSeeder() },
   { name: 'schedule-items',    category: 'catalog', instance: new ScheduleItemSeeder() },
   { name: 'gallery',           category: 'catalog', instance: new GallerySeeder() },
+  { name: 'transmisiones',     category: 'catalog', instance: new SermonVideoSeeder() },
 
   // demo — requieren que los seeders de catalog se hayan ejecutado antes
   { name: 'persons',         category: 'demo',    instance: new PersonSeeder() },
@@ -141,6 +144,7 @@ function createDataSource(): DataSource {
       ScheduleItem,
       GalleryAlbum,
       GalleryImage,
+      SermonVideo,
     ],
   });
 }

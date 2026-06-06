@@ -4,15 +4,44 @@
 /* eslint-disable */
 import type { CreateGalleryAlbumDto } from '../models/CreateGalleryAlbumDto';
 import type { GalleryAlbumResponseDto } from '../models/GalleryAlbumResponseDto';
+import type { GalleryConfigResponseDto } from '../models/GalleryConfigResponseDto';
 import type { GalleryImageResponseDto } from '../models/GalleryImageResponseDto';
 import type { ReorderImagesDto } from '../models/ReorderImagesDto';
 import type { UpdateGalleryAlbumDto } from '../models/UpdateGalleryAlbumDto';
+import type { UpdateGalleryConfigDto } from '../models/UpdateGalleryConfigDto';
 import type { UpdateGalleryImageDto } from '../models/UpdateGalleryImageDto';
 import type { UploadGalleryImageDto } from '../models/UploadGalleryImageDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class GalleryService {
+    /**
+     * Obtener configuración de la sección Galería
+     * @returns GalleryConfigResponseDto
+     * @throws ApiError
+     */
+    public static galleryAdminControllerGetConfig(): CancelablePromise<GalleryConfigResponseDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/gallery/config',
+        });
+    }
+    /**
+     * Actualizar configuración de la sección Galería
+     * @param requestBody
+     * @returns GalleryConfigResponseDto
+     * @throws ApiError
+     */
+    public static galleryAdminControllerUpdateConfig(
+        requestBody: UpdateGalleryConfigDto,
+    ): CancelablePromise<GalleryConfigResponseDto> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/gallery/config',
+            body: requestBody,
+            mediaType: 'application/json',
+        });
+    }
     /**
      * Listar todos los álbumes de galería
      * @returns GalleryAlbumResponseDto

@@ -169,6 +169,59 @@
     return (Array.isArray(data) ? data : []).map(mapGalleryAlbum);
   }
 
+  // Álbum destacado para la sección "Momentos" del inicio.
+  // Endpoint: GET /api/public/gallery/home-album (devuelve el álbum configurado
+  // o el primero publicado; null si no hay ninguno).
+  async function fetchHomeAlbum() {
+    var data = await apiGet('/public/gallery/home-album');
+    return data ? mapGalleryAlbum(data) : null;
+  }
+
+  // Nombres de meses en español corto (mismo estilo que getSunsetTimes).
+  var MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+  // Formatea una fecha 'YYYY-MM-DD' al formato corto español "23 may 2026".
+  function formatSermonDate(dateStr) {
+    if (!dateStr) return '';
+    var parts = dateStr.split('-');
+    if (parts.length < 3) return dateStr;
+    var year = parseInt(parts[0], 10);
+    var month = parseInt(parts[1], 10) - 1; // 0-indexed
+    var day = parseInt(parts[2], 10);
+    return day + ' ' + MESES_CORTOS[month] + ' ' + year;
+  }
+
+  // Mapea un item de /api/public/sermons al shape que espera la grilla de PageEnVivo.
+  // Shape de salida: { d, t, p, url, thumb, reference, title, preacher, date }
+  function mapSermon(s) {
+    return {
+      d: formatSermonDate(s.date),
+      t: s.title,
+      p: s.preacher,
+      url: s.url,
+      thumb: s.thumbnailUrl || null,
+      reference: s.reference || null,
+      // Campos crudos por si se necesitan
+      title: s.title,
+      preacher: s.preacher,
+      date: s.date,
+    };
+  }
+
+  // Estado de transmisión en vivo.
+  // Devuelve { isLive, channelId, channelHandle, embedUrl }.
+  // Si falla, el caller hace catch (igual que fetchWorship).
+  async function fetchLiveStatus() {
+    return apiGet('/public/live');
+  }
+
+  // Predicaciones publicadas desde el backend, mapeadas al shape de la grilla.
+  // La primera es la destacada (más reciente), el resto va a la grilla.
+  async function fetchRecentSermons() {
+    var data = await apiGet('/public/sermons');
+    return (Array.isArray(data) ? data : []).map(mapSermon);
+  }
+
   // Calcula la puesta de sol para los próximos 4 viernes en Osorno, Chile.
   // Basado en una aproximación simplificada para la latitud -40.57.
   function getSunsetTimes() {
@@ -228,9 +281,14 @@
     fetchSchedule: fetchSchedule,
     fetchWorship: fetchWorship,
     fetchGallery: fetchGallery,
+    fetchHomeAlbum: fetchHomeAlbum,
     getSunsetTimes: getSunsetTimes,
     mapLeader: mapLeader,
     mapMinistry: mapMinistry,
     mapGalleryAlbum: mapGalleryAlbum,
+    // Transmisiones
+    fetchLiveStatus: fetchLiveStatus,
+    fetchRecentSermons: fetchRecentSermons,
+    mapSermon: mapSermon,
   };
 })();

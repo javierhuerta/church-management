@@ -44,19 +44,21 @@ function PageInicio({ setPage, nextService: propNextService }) {
   const [worshipData, setWorshipData] = React.useState(null);
   const [moments, setMoments] = React.useState([]);
 
-  // Cargar las primeras fotos publicadas de la galería para la sección "Momentos"
+  // Cargar las fotos del álbum destacado para la sección "Momentos" del inicio.
   React.useEffect(() => {
-    if (window.IASD_API && window.IASD_API.fetchGallery) {
-      window.IASD_API.fetchGallery()
-        .then(function (albums) {
-          // Aplanar todas las imágenes de todos los álbumes y tomar las primeras 5
-          var imgs = [];
-          (albums || []).forEach(function (album) {
-            (album.images || []).forEach(function (img) {
-              if (img.url) imgs.push({ url: img.url, caption: img.caption || album.title });
-            });
-          });
-          setMoments(imgs.slice(0, 5));
+    if (window.IASD_API && window.IASD_API.fetchHomeAlbum) {
+      window.IASD_API.fetchHomeAlbum()
+        .then(function (album) {
+          if (album && album.images && album.images.length > 0) {
+            setMoments(
+              album.images
+                .filter(function (img) { return img.url; })
+                .slice(0, 5)
+                .map(function (img) {
+                  return { url: img.url, caption: img.caption || album.title };
+                })
+            );
+          }
         })
         .catch(function () {});
     }

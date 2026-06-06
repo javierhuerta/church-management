@@ -27,6 +27,10 @@ import { UploadGalleryImageDto } from './dto/upload-gallery-image.dto';
 import { ReorderImagesDto } from './dto/reorder-images.dto';
 import { GalleryAlbumResponseDto } from './dto/gallery-album-response.dto';
 import { GalleryImageResponseDto } from './dto/gallery-image-response.dto';
+import {
+  UpdateGalleryConfigDto,
+  GalleryConfigResponseDto,
+} from './dto/gallery-config.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -39,6 +43,24 @@ import { UserRole } from '../common/entities/user-role.enum';
 @Controller('gallery')
 export class GalleryAdminController {
   constructor(private readonly galleryService: GalleryService) {}
+
+  // ─── Configuración de la sección ─────────────────────────────────────────
+
+  @Get('config')
+  @ApiOperation({ summary: 'Obtener configuración de la sección Galería' })
+  @ApiResponse({ status: 200, type: GalleryConfigResponseDto })
+  async getConfig(): Promise<GalleryConfigResponseDto> {
+    return this.galleryService.getConfig();
+  }
+
+  @Patch('config')
+  @ApiOperation({ summary: 'Actualizar configuración de la sección Galería' })
+  @ApiResponse({ status: 200, type: GalleryConfigResponseDto })
+  async updateConfig(
+    @Body() dto: UpdateGalleryConfigDto,
+  ): Promise<GalleryConfigResponseDto> {
+    return this.galleryService.updateConfig(dto);
+  }
 
   // ─── Álbumes CRUD ────────────────────────────────────────────────────────
 

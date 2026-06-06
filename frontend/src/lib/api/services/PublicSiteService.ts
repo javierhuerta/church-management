@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { GalleryAlbumResponseDto } from '../models/GalleryAlbumResponseDto';
+import type { GalleryConfigResponseDto } from '../models/GalleryConfigResponseDto';
 import type { PublicHomeDto } from '../models/PublicHomeDto';
 import type { PublicLeadershipDto } from '../models/PublicLeadershipDto';
 import type { PublicScheduleResponseDto } from '../models/PublicScheduleResponseDto';
@@ -52,6 +53,28 @@ export class PublicSiteService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/public/gallery',
+        });
+    }
+    /**
+     * Configuración pública de la sección Galería
+     * @returns GalleryConfigResponseDto
+     * @throws ApiError
+     */
+    public static publicGalleryControllerGetConfig(): CancelablePromise<GalleryConfigResponseDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/public/gallery/config',
+        });
+    }
+    /**
+     * Álbum destacado para la sección Momentos del inicio
+     * @returns GalleryAlbumResponseDto
+     * @throws ApiError
+     */
+    public static publicGalleryControllerGetHomeAlbum(): CancelablePromise<GalleryAlbumResponseDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/public/gallery/home-album',
         });
     }
 }
