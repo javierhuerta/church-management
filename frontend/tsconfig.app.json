@@ -23,5 +23,12 @@
     }
   },
   "include": ["src"],
-  "exclude": ["src/lib/api/**/*"]
+  "exclude": [
+    "src/lib/api/**/*",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    "src/test/**/*"
+  ]
 }

@@ -13,7 +13,11 @@ export class GalleryAlbumResponseDto {
   @ApiProperty() @Expose() createdAt: Date;
   @ApiPropertyOptional({ type: String, nullable: true }) @Expose() updatedAt: Date | null;
 
-  @ApiPropertyOptional({ description: 'URL pública de la imagen de portada' })
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description: 'URL pública de la imagen de portada',
+  })
   @Expose()
   coverImageUrl?: string | null;
 

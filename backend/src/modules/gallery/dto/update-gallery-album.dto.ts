@@ -8,13 +8,13 @@ export class UpdateGalleryAlbumDto {
   @MaxLength(255)
   title?: string;
 
-  @ApiPropertyOptional({ description: 'Kicker (etiqueta corta)' })
+  @ApiPropertyOptional({ type: String, nullable: true, description: 'Kicker (etiqueta corta)' })
   @IsOptional()
   @IsString()
   @MaxLength(100)
   kicker?: string | null;
 
-  @ApiPropertyOptional({ description: 'Descripción del álbum' })
+  @ApiPropertyOptional({ type: String, nullable: true, description: 'Descripción del álbum' })
   @IsOptional()
   @IsString()
   description?: string | null;
@@ -29,7 +29,7 @@ export class UpdateGalleryAlbumDto {
   @IsBoolean()
   isPublished?: boolean;
 
-  @ApiPropertyOptional({ description: 'Ruta de imagen de portada' })
+  @ApiPropertyOptional({ type: String, nullable: true, description: 'Ruta de imagen de portada' })
   @IsOptional()
   @IsString()
   coverImagePath?: string | null;

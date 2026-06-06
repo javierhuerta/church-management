@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
-import { NavLink, Outlet, Navigate, useLocation } from 'react-router-dom'
-import { Settings, ChevronLeft, ChevronRight } from 'lucide-react'
+import { NavLink, Outlet, Navigate } from 'react-router-dom'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 function getUserRole(): string | null {
   try {
@@ -33,7 +33,6 @@ const BASE_TABS: ConfigTab[] = [
 
 export function ConfiguracionesLayout() {
   const role = getUserRole()
-  const location = useLocation()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)

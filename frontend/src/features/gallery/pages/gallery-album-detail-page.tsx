@@ -23,12 +23,10 @@ import {
   Eye,
   EyeOff,
   Pencil,
-  Loader2,
   Image as ImageIcon,
   GripVertical,
   Check,
   X,
-  Star,
 } from 'lucide-react'
 import { GalleryService } from '@/lib/api'
 import type { GalleryImageResponseDto } from '@/lib/api'

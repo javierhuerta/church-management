@@ -10,11 +10,11 @@ export type CreateGalleryAlbumDto = {
     /**
      * Kicker (etiqueta corta)
      */
-    kicker?: Record<string, any>;
+    kicker?: string | null;
     /**
      * Descripción del álbum
      */
-    description?: Record<string, any>;
+    description?: string | null;
     /**
      * Orden de presentación
      */
@@ -26,6 +26,6 @@ export type CreateGalleryAlbumDto = {
     /**
      * Ruta de imagen de portada
      */
-    coverImagePath?: Record<string, any>;
+    coverImagePath?: string | null;
 };
 

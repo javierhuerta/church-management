@@ -29,7 +29,6 @@ import { useTheme } from '@/components/theme-provider'
 import { Skeleton } from '@/components/ui/skeleton'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const GOLD = '#C9A84C'
 const NAVY = '#1B3A6B'
 
 // ─── Schema ──────────────────────────────────────────────────────────────────

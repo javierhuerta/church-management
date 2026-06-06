@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2, Camera, Upload, ExternalLink, X } from 'lucide-react'
+import { Plus, Pencil, Trash2, Camera, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -28,12 +28,10 @@ import { toast } from 'sonner'
 import {
   SiteConfigService,
   type PrincipalLeaderResponseDto,
-  type MinistryLeadershipDto,
 } from '@/lib/api'
 import { LeaderPhotoCropper } from '../components/leader-photo-cropper'
 
 type Leader = PrincipalLeaderResponseDto
-type Ministry = MinistryLeadershipDto
 
 type LeaderFormData = {
   role: string

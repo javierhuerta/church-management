@@ -16,7 +16,7 @@ export type GalleryAlbumResponseDto = {
     /**
      * URL pública de la imagen de portada
      */
-    coverImageUrl?: Record<string, any>;
+    coverImageUrl?: string | null;
     images: Array<GalleryImageResponseDto>;
     /**
      * Número total de imágenes en el álbum

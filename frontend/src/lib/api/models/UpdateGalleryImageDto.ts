@@ -6,7 +6,7 @@ export type UpdateGalleryImageDto = {
     /**
      * Caption de la imagen
      */
-    caption?: Record<string, any>;
+    caption?: string | null;
     /**
      * Orden de presentación
      */
