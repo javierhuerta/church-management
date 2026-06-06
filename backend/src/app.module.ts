@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import { join } from 'path';
@@ -136,6 +137,7 @@ const ENTITIES = [
 
     // --- Infrastructure ---
     TypeOrmModule.forRootAsync(databaseFactory(ENTITIES)),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRootAsync(throttleFactory()),
     CacheModule.registerAsync({ isGlobal: true, ...cacheFactory() }),
     ServeStaticModule.forRoot({

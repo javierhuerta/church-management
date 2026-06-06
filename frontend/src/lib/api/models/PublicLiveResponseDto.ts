@@ -4,7 +4,7 @@
 /* eslint-disable */
 export type PublicLiveResponseDto = {
     /**
-     * true si el badge EN VIVO AHORA está activo (isLiveManual)
+     * true si hay transmisión en vivo (isLiveManual OR auto-detección confirmó live)
      */
     isLive: boolean;
     /**
@@ -16,8 +16,24 @@ export type PublicLiveResponseDto = {
      */
     channelHandle: string | null;
     /**
-     * URL del embed nativo del canal (live_stream)
+     * VideoId de la transmisión en vivo detectada automáticamente
      */
-    embedUrl: string | null;
+    liveVideoId?: string | null;
+    /**
+     * VideoId del último sermón publicado (fallback offline)
+     */
+    lastVideoId?: string | null;
+    /**
+     * URL del embed de YouTube: video en vivo si isLive, último sermón si offline, null si no hay nada
+     */
+    embedUrl?: string | null;
+    /**
+     * Timestamp ISO del último chequeo de auto-detección
+     */
+    lastCheckAt?: string | null;
+    /**
+     * Resultado del último chequeo: 'live' | 'offline' | 'error' | 'skipped' | ''
+     */
+    lastCheckResult: string;
 };
 

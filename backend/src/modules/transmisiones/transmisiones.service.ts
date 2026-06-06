@@ -16,10 +16,26 @@ import {
 import { PublicLiveResponseDto } from './dto/public-live.dto';
 import { OembedResponseDto } from './dto/oembed-response.dto';
 
+/**
+ * Claves de SiteSetting usadas por este servicio.
+ *
+ * Nota: las claves de auto-detección (autoDetect*, liveVideoId, etc.) las escribe
+ * LiveDetectionService en background. El toggle manual isLiveManual tiene prioridad
+ * sobre la detección automática para determinar isLive.
+ */
 const CONFIG_KEYS = {
   channelId: 'transmisiones.channelId',
   channelHandle: 'transmisiones.channelHandle',
   isLiveManual: 'transmisiones.isLiveManual',
+  autoDetectEnabled: 'transmisiones.autoDetectEnabled',
+  autoDetectMode: 'transmisiones.autoDetectMode',
+  autoDetectIntervalMinutes: 'transmisiones.autoDetectIntervalMinutes',
+  sabbathStartHour: 'transmisiones.sabbathStartHour',
+  sabbathEndHour: 'transmisiones.sabbathEndHour',
+  liveVideoId: 'transmisiones.liveVideoId',
+  liveDetectedAt: 'transmisiones.liveDetectedAt',
+  lastCheckAt: 'transmisiones.lastCheckAt',
+  lastCheckResult: 'transmisiones.lastCheckResult',
 } as const;
 
 @Injectable()
@@ -54,15 +70,46 @@ export class TransmisionesService {
   // ─── Config del canal ────────────────────────────────────────────────────
 
   async getConfig(): Promise<TransmisionesConfigResponseDto> {
-    const [channelId, channelHandle, isLiveManualRaw] = await Promise.all([
+    const [
+      channelId,
+      channelHandle,
+      isLiveManualRaw,
+      autoDetectEnabledRaw,
+      autoDetectMode,
+      autoDetectIntervalRaw,
+      sabbathStartRaw,
+      sabbathEndRaw,
+      liveVideoId,
+      liveDetectedAt,
+      lastCheckAt,
+      lastCheckResult,
+    ] = await Promise.all([
       this.getSetting(CONFIG_KEYS.channelId),
       this.getSetting(CONFIG_KEYS.channelHandle),
       this.getSetting(CONFIG_KEYS.isLiveManual),
+      this.getSetting(CONFIG_KEYS.autoDetectEnabled),
+      this.getSetting(CONFIG_KEYS.autoDetectMode),
+      this.getSetting(CONFIG_KEYS.autoDetectIntervalMinutes),
+      this.getSetting(CONFIG_KEYS.sabbathStartHour),
+      this.getSetting(CONFIG_KEYS.sabbathEndHour),
+      this.getSetting(CONFIG_KEYS.liveVideoId),
+      this.getSetting(CONFIG_KEYS.liveDetectedAt),
+      this.getSetting(CONFIG_KEYS.lastCheckAt),
+      this.getSetting(CONFIG_KEYS.lastCheckResult),
     ]);
     return {
       channelId,
       channelHandle,
       isLiveManual: isLiveManualRaw === 'true',
+      autoDetectEnabled: autoDetectEnabledRaw !== 'false', // default true
+      autoDetectMode: autoDetectMode || 'sabbath',
+      autoDetectIntervalMinutes: parseInt(autoDetectIntervalRaw || '2', 10),
+      sabbathStartHour: parseInt(sabbathStartRaw || '9', 10),
+      sabbathEndHour: parseInt(sabbathEndRaw || '14', 10),
+      liveVideoId: liveVideoId || null,
+      liveDetectedAt: liveDetectedAt || null,
+      lastCheckAt: lastCheckAt || null,
+      lastCheckResult: lastCheckResult || '',
     };
   }
 
@@ -70,10 +117,10 @@ export class TransmisionesService {
     dto: UpdateTransmisionesConfigDto,
   ): Promise<TransmisionesConfigResponseDto> {
     if (dto.channelId !== undefined) {
-      await this.setSetting(CONFIG_KEYS.channelId, dto.channelId);
+      await this.setSetting(CONFIG_KEYS.channelId, dto.channelId ?? null);
     }
     if (dto.channelHandle !== undefined) {
-      await this.setSetting(CONFIG_KEYS.channelHandle, dto.channelHandle);
+      await this.setSetting(CONFIG_KEYS.channelHandle, dto.channelHandle ?? null);
     }
     if (dto.isLiveManual !== undefined) {
       await this.setSetting(
@@ -81,21 +128,88 @@ export class TransmisionesService {
         dto.isLiveManual ? 'true' : 'false',
       );
     }
+    if (dto.autoDetectEnabled !== undefined) {
+      await this.setSetting(
+        CONFIG_KEYS.autoDetectEnabled,
+        dto.autoDetectEnabled ? 'true' : 'false',
+      );
+    }
+    if (dto.autoDetectMode !== undefined) {
+      await this.setSetting(CONFIG_KEYS.autoDetectMode, dto.autoDetectMode);
+    }
+    if (dto.autoDetectIntervalMinutes !== undefined) {
+      await this.setSetting(
+        CONFIG_KEYS.autoDetectIntervalMinutes,
+        String(dto.autoDetectIntervalMinutes),
+      );
+    }
+    if (dto.sabbathStartHour !== undefined) {
+      await this.setSetting(
+        CONFIG_KEYS.sabbathStartHour,
+        String(dto.sabbathStartHour),
+      );
+    }
+    if (dto.sabbathEndHour !== undefined) {
+      await this.setSetting(
+        CONFIG_KEYS.sabbathEndHour,
+        String(dto.sabbathEndHour),
+      );
+    }
     return this.getConfig();
   }
 
   // ─── Estado en vivo ──────────────────────────────────────────────────────
 
+  /**
+   * Devuelve el estado público de la transmisión.
+   *
+   * Lógica de isLive:
+   *   isLiveManual === true  →  SIEMPRE en vivo (override manual, gana sobre detección)
+   *   lastCheckResult === 'live'  →  en vivo por auto-detección
+   *   otro caso  →  offline
+   *
+   * Lógica de embedUrl:
+   *   1. isLive + liveVideoId detectado  →  embed/{videoId}  (más fiable que live_stream)
+   *   2. isLive sin liveVideoId (toggle manual sin detección)  →  live_stream?channel={id}
+   *   3. No live + último sermón publicado  →  embed/{lastVideoId}  (fallback offline)
+   *   4. Sin datos  →  null
+   */
   async getLiveStatus(): Promise<PublicLiveResponseDto> {
     const config = await this.getConfig();
-    const embedUrl = config.channelId
-      ? `https://www.youtube.com/embed/live_stream?channel=${config.channelId}&autoplay=0`
-      : null;
+
+    // isLive = override manual OR detección automática confirmó live
+    const isLive =
+      config.isLiveManual || config.lastCheckResult === 'live';
+
+    // liveVideoId: solo si la detección automática encontró uno
+    const liveVideoId = config.liveVideoId || null;
+
+    // lastVideoId: videoId del sermón publicado más reciente (fallback offline)
+    const lastVideoId = await this.getLastPublishedVideoId();
+
+    // embedUrl con cascada de fallbacks
+    let embedUrl: string | null = null;
+    if (isLive && liveVideoId) {
+      // Caso 1: live detectado → embed del video concreto
+      embedUrl = `https://www.youtube.com/embed/${liveVideoId}?autoplay=0`;
+    } else if (isLive && config.channelId) {
+      // Caso 2: toggle manual sin videoId → live_stream genérico del canal
+      embedUrl = `https://www.youtube.com/embed/live_stream?channel=${config.channelId}&autoplay=0`;
+    } else if (!isLive && lastVideoId) {
+      // Caso 3: offline → embed del último sermón publicado
+      embedUrl = `https://www.youtube.com/embed/${lastVideoId}?autoplay=0`;
+    }
+    // Caso 4: sin datos → null
+
     return {
-      isLive: config.isLiveManual,
+      isLive,
       channelId: config.channelId,
       channelHandle: config.channelHandle,
+      liveVideoId,
+      lastVideoId,
       embedUrl,
+      lastCheckAt: config.lastCheckAt,
+      lastCheckResult: config.lastCheckResult,
     };
   }
 
@@ -240,6 +354,19 @@ export class TransmisionesService {
   }
 
   // ─── Helpers privados ────────────────────────────────────────────────────
+
+  /**
+   * Obtiene el videoId del sermón publicado más reciente.
+   * Usado como fallback offline para embedUrl.
+   */
+  private async getLastPublishedVideoId(): Promise<string | null> {
+    const last = await this.sermonRepo.findOne({
+      where: { isPublished: true },
+      order: { date: 'DESC' },
+      select: ['videoId'],
+    });
+    return last?.videoId ?? null;
+  }
 
   /**
    * Deriva la URL del thumbnail de YouTube a partir del videoId.

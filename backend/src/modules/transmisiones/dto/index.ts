@@ -6,3 +6,4 @@ export * from './transmisiones-config.dto';
 export * from './public-live.dto';
 export * from './oembed-request.dto';
 export * from './oembed-response.dto';
+export * from './live-detection-result.dto';

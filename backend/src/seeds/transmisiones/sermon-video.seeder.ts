@@ -1,21 +1,29 @@
 /**
  * sermon-video.seeder.ts
  *
- * Siembra predicaciones REALES del canal de YouTube de la iglesia
+ * Siembra las TRANSMISIONES EN VIVO reales del canal de YouTube de la iglesia
  * (@IASDCentralOsorno, channelId UCxKD5QO7LzXxm_WjHr7o-Lg), extraídas del
- * feed RSS público del canal — solo videos cuyo título contiene "CULTO DIVINO".
+ * feed RSS público del canal.
  *
  *   Fuente: https://www.youtube.com/feeds/videos.xml?channel_id=UCxKD5QO7LzXxm_WjHr7o-Lg
- *   Los videoIds, títulos y fechas son reales (a la fecha de generación del seeder).
+ *
+ * IMPORTANTE — qué se incluye:
+ *   Videos cuyo título contiene "CULTO DIVINO" (transmisiones del culto, ya sea
+ *   tituladas con el tema del sermón p.ej. "¿Madre Tierra o Madre Cielo?" o con
+ *   el formato "CULTO DIVINO | fecha").
+ *
+ *   Se EXCLUYE explícitamente "Culto Divino · 30 de mayo" (8WGYhaBB9ik): no
+ *   corresponde a una transmisión válida del culto (no figura en la pestaña
+ *   "Más recientes" del canal). El orden de la lista replica esa pestaña.
  *
  * NOTA sobre el predicador:
  *   El feed RSS de YouTube no expone el nombre del predicador. Se deja un valor
  *   genérico ("IASD Central Osorno"); el administrador puede editar cada
- *   predicación desde el panel de Transmisiones para asignar el predicador real.
+ *   transmisión desde el panel de Transmisiones para asignar el predicador real.
  *
  * Reglas del proyecto (AGENTS.md):
  *   - Cada entidad con su repositorio propio, sin cascade implícito.
- *   - Idempotente: si ya existe la predicación destacada, no crea nada.
+ *   - Idempotente: si ya existe la transmisión destacada, no crea nada.
  */
 import { DataSource } from 'typeorm';
 import { SermonVideo } from '../../modules/transmisiones/entities/sermon-video.entity';
@@ -33,8 +41,13 @@ interface SermonSeedData {
 
 const DEFAULT_PREACHER = 'IASD Central Osorno';
 
-// Videos reales "CULTO DIVINO" del canal, del más reciente al más antiguo.
-// El primero (order 0, fecha más reciente) es la predicación destacada.
+// Cultos divinos reales del canal (transmisiones en vivo, "Transmitido" en
+// YouTube), del más reciente al más antiguo. El primero (order 0, fecha más
+// reciente) es la transmisión destacada — "El Valor de la Educación Eterna".
+// El orden replica la pestaña "Más recientes" del canal de YouTube.
+//
+// Se EXCLUYE "Culto Divino · 30 de mayo" (8WGYhaBB9ik): no corresponde a una
+// transmisión válida del culto (no aparece en "Más recientes" del canal).
 const SERMONS_DATA: SermonSeedData[] = [
   {
     videoId: 'XD_bM0SejRA',
@@ -45,20 +58,12 @@ const SERMONS_DATA: SermonSeedData[] = [
     order: 0,
   },
   {
-    videoId: '8WGYhaBB9ik',
-    title: 'Culto Divino · 30 de mayo',
-    preacher: DEFAULT_PREACHER,
-    reference: null,
-    date: '2026-05-30',
-    order: 1,
-  },
-  {
     videoId: 'CJ-MWvNWstg',
     title: 'El Precio de Hacer lo Correcto',
     preacher: DEFAULT_PREACHER,
     reference: null,
     date: '2026-05-24',
-    order: 2,
+    order: 1,
   },
   {
     videoId: 'M_DqSL9eGyE',
@@ -66,7 +71,7 @@ const SERMONS_DATA: SermonSeedData[] = [
     preacher: DEFAULT_PREACHER,
     reference: null,
     date: '2026-05-10',
-    order: 3,
+    order: 2,
   },
   {
     videoId: 'FrcLjrDkJ8g',
@@ -74,7 +79,7 @@ const SERMONS_DATA: SermonSeedData[] = [
     preacher: DEFAULT_PREACHER,
     reference: null,
     date: '2026-05-03',
-    order: 4,
+    order: 3,
   },
   {
     videoId: 'M5b0zcQIZvY',
@@ -82,7 +87,7 @@ const SERMONS_DATA: SermonSeedData[] = [
     preacher: DEFAULT_PREACHER,
     reference: null,
     date: '2026-04-26',
-    order: 5,
+    order: 4,
   },
   {
     videoId: 'rMMbwsd4kpg',
@@ -90,7 +95,7 @@ const SERMONS_DATA: SermonSeedData[] = [
     preacher: DEFAULT_PREACHER,
     reference: null,
     date: '2026-04-19',
-    order: 6,
+    order: 5,
   },
   {
     videoId: '5QMBr4Zmx98',
@@ -98,7 +103,7 @@ const SERMONS_DATA: SermonSeedData[] = [
     preacher: DEFAULT_PREACHER,
     reference: null,
     date: '2026-04-12',
-    order: 7,
+    order: 6,
   },
 ];
 

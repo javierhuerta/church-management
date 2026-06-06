@@ -17,14 +17,25 @@ import {
   AlertTriangle,
   Info,
   Tv,
+  RefreshCw,
+  ExternalLink,
+  Radio,
 } from 'lucide-react'
 import { TransmisionesAdminService } from '@/lib/api'
 import type { SermonVideoResponseDto } from '@/lib/api'
+import { UpdateTransmisionesConfigDto } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -39,6 +50,10 @@ import { useTheme } from '@/components/theme-provider'
 const STATUS_COLORS = {
   published: { light: '#0F766E', dark: '#0D9488' },
   draft: { light: '#C9A84C', dark: '#D4B566' },
+  live: { light: '#DC2626', dark: '#EF4444' },
+  offline: { light: '#475569', dark: '#64748B' },
+  error: { light: '#B45309', dark: '#D97706' },
+  skipped: { light: '#475569', dark: '#64748B' },
 }
 
 // ─── Schemas Zod ─────────────────────────────────────────────────────────────
@@ -46,6 +61,11 @@ const configSchema = z.object({
   channelId: z.string(),
   channelHandle: z.string(),
   isLiveManual: z.boolean(),
+  autoDetectEnabled: z.boolean(),
+  autoDetectMode: z.enum(['sabbath', 'always']),
+  autoDetectIntervalMinutes: z.number().min(1),
+  sabbathStartHour: z.number().min(0).max(23),
+  sabbathEndHour: z.number().min(0).max(23),
 })
 type ConfigFormValues = z.infer<typeof configSchema>
 
@@ -57,6 +77,24 @@ const sermonSchema = z.object({
   date: z.string().min(1, 'La fecha es requerida'),
 })
 type SermonFormValues = z.infer<typeof sermonSchema>
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function formatLastCheck(dateStr: string | null | undefined): string {
+  if (!dateStr) return 'Nunca'
+  try {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMin = Math.floor(diffMs / 60000)
+    if (diffMin < 1) return 'Ahora mismo'
+    if (diffMin < 60) return `Hace ${diffMin} min`
+    const diffHrs = Math.floor(diffMin / 60)
+    if (diffHrs < 24) return `Hace ${diffHrs} h`
+    return date.toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })
+  } catch {
+    return 'Nunca'
+  }
+}
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ isPublished }: { isPublished: boolean }) {
@@ -497,6 +535,11 @@ function ChannelConfigBlock() {
       channelId: config?.channelId ?? '',
       channelHandle: config?.channelHandle ?? '',
       isLiveManual: config?.isLiveManual ?? false,
+      autoDetectEnabled: config?.autoDetectEnabled ?? false,
+      autoDetectMode: (config?.autoDetectMode as 'sabbath' | 'always') ?? 'sabbath',
+      autoDetectIntervalMinutes: config?.autoDetectIntervalMinutes ?? 5,
+      sabbathStartHour: config?.sabbathStartHour ?? 10,
+      sabbathEndHour: config?.sabbathEndHour ?? 16,
     },
   })
 
@@ -508,6 +551,11 @@ function ChannelConfigBlock() {
         channelId: values.channelId || null,
         channelHandle: values.channelHandle || null,
         isLiveManual: values.isLiveManual,
+        autoDetectEnabled: values.autoDetectEnabled,
+        autoDetectMode: values.autoDetectMode as UpdateTransmisionesConfigDto.autoDetectMode,
+        autoDetectIntervalMinutes: values.autoDetectIntervalMinutes,
+        sabbathStartHour: values.sabbathStartHour,
+        sabbathEndHour: values.sabbathEndHour,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transmisiones-config'] })
@@ -609,6 +657,103 @@ function ChannelConfigBlock() {
         )}
       </div>
 
+      {/* ── Auto-detección ── */}
+      <div className="space-y-4 pt-3 border-t border-border">
+        <div className="flex items-center justify-between">
+          <div>
+            <Label htmlFor="autoDetectEnabled" className="text-sm font-medium text-foreground">
+              Detectar automáticamente si estamos en vivo
+            </Label>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              El sistema revisa el canal de YouTube periódicamente y enciende el badge
+              automáticamente cuando detecta una transmisión en vivo.
+            </p>
+          </div>
+          <Switch
+            id="autoDetectEnabled"
+            data-testid="transmisiones-autoDetect-switch"
+            checked={form.watch('autoDetectEnabled')}
+            onCheckedChange={(checked) =>
+              form.setValue('autoDetectEnabled', checked, { shouldDirty: true })
+            }
+          />
+        </div>
+
+        {/* Campos condicionales — solo cuando autoDetect está ON */}
+        {form.watch('autoDetectEnabled') && (
+          <div className="space-y-4 pl-1">
+            {/* Modo */}
+            <div className="space-y-2">
+              <Label>Modo de detección</Label>
+              <Select
+                value={form.watch('autoDetectMode')}
+                onValueChange={(val) =>
+                  form.setValue('autoDetectMode', val as 'sabbath' | 'always', {
+                    shouldDirty: true,
+                  })
+                }
+              >
+                <SelectTrigger data-testid="transmisiones-autoDetectMode-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sabbath">Solo sábados en horario de culto</SelectItem>
+                  <SelectItem value="always">Siempre, cada N minutos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Horario sabbath — solo en modo sabbath */}
+            {form.watch('autoDetectMode') === 'sabbath' && (
+              <div className="space-y-2">
+                <Label>Horario sabático</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    data-testid="transmisiones-sabbathStart-input"
+                    type="number"
+                    min={0}
+                    max={23}
+                    className="w-20"
+                    {...form.register('sabbathStartHour', { valueAsNumber: true })}
+                  />
+                  <span className="text-sm text-muted-foreground">h hasta las</span>
+                  <Input
+                    data-testid="transmisiones-sabbathEnd-input"
+                    type="number"
+                    min={0}
+                    max={23}
+                    className="w-20"
+                    {...form.register('sabbathEndHour', { valueAsNumber: true })}
+                  />
+                  <span className="text-sm text-muted-foreground">h</span>
+                </div>
+              </div>
+            )}
+
+            {/* Intervalo */}
+            <div className="space-y-2">
+              <Label htmlFor="autoDetectIntervalMinutes">Revisar cada</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="autoDetectIntervalMinutes"
+                  data-testid="transmisiones-interval-input"
+                  type="number"
+                  min={1}
+                  className="w-24"
+                  {...form.register('autoDetectIntervalMinutes', { valueAsNumber: true })}
+                />
+                <span className="text-sm text-muted-foreground">minutos</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {form.watch('autoDetectMode') === 'sabbath'
+                  ? 'Frecuencia de revisión dentro de la ventana sabática.'
+                  : 'El sistema revisará el canal cada N minutos las 24 horas.'}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Guardar */}
       <div className="flex justify-end pt-2">
         <Button
@@ -626,6 +771,132 @@ function ChannelConfigBlock() {
         </Button>
       </div>
     </form>
+  )
+}
+
+// ─── Bloque C: Estado de detección + Forzar revisión ──────────────────────────
+function DetectionStatusBlock() {
+  const queryClient = useQueryClient()
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
+
+  const { data: config, isLoading } = useQuery({
+    queryKey: ['transmisiones-config'],
+    queryFn: () => TransmisionesAdminService.transmisionesAdminControllerGetConfig(),
+  })
+
+  const forceCheckMutation = useMutation({
+    mutationFn: () => TransmisionesAdminService.transmisionesAdminControllerForceCheck(),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['transmisiones-config'] })
+      if (result.isLive) {
+        toast.success('En vivo detectado')
+      } else if (result.lastCheckResult === 'error') {
+        toast.error('Error al revisar')
+      } else {
+        toast.success('Sin transmisión')
+      }
+    },
+    onError: () => toast.error('Error al verificar la transmisión'),
+  })
+
+  if (isLoading) {
+    return <Skeleton className="h-40 w-full rounded-xl" />
+  }
+
+  const lastCheckResult = config?.lastCheckResult ?? ''
+  const lastCheckAt = config?.lastCheckAt ?? null
+  const liveVideoId = config?.liveVideoId ?? null
+
+  // Badge config for detection result
+  const resultConfig: Record<string, { label: string; variant: keyof typeof STATUS_COLORS }> = {
+    live: { label: 'EN VIVO', variant: 'live' },
+    offline: { label: 'Sin transmisión', variant: 'offline' },
+    error: { label: 'Error al revisar', variant: 'error' },
+    skipped: { label: 'Fuera de horario', variant: 'skipped' },
+  }
+  const resultCfg = resultConfig[lastCheckResult] ?? { label: 'Sin datos', variant: 'offline' as const }
+  const badgeBg = isDark
+    ? STATUS_COLORS[resultCfg.variant].dark
+    : STATUS_COLORS[resultCfg.variant].light
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-3 border-b border-border">
+        <div className="flex items-center gap-2">
+          <Radio className="h-4 w-4 text-primary" />
+          <p className="text-sm font-bold text-foreground uppercase tracking-wider">
+            Detección automática
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          data-testid="transmisiones-forceCheck-button"
+          onClick={() => forceCheckMutation.mutate()}
+          disabled={forceCheckMutation.isPending}
+          className="gap-2"
+        >
+          {forceCheckMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
+          Forzar revisión ahora
+        </Button>
+      </div>
+
+      {/* Status panel */}
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+        {/* Last check */}
+        <div className="flex-1 space-y-1">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+            Último chequeo
+          </p>
+          <p className="text-sm font-medium text-foreground">{formatLastCheck(lastCheckAt)}</p>
+        </div>
+
+        {/* Result */}
+        <div className="flex-1 space-y-1">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+            Resultado
+          </p>
+          <span
+            style={{
+              background: badgeBg,
+              color: '#fff',
+              borderRadius: 9999,
+              padding: '3px 10px',
+              fontSize: 11,
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+            }}
+          >
+            {resultCfg.label}
+          </span>
+        </div>
+
+        {/* Live video link */}
+        {liveVideoId && (
+          <div className="flex-1 space-y-1">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+              Video en vivo
+            </p>
+            <a
+              href={`https://www.youtube.com/watch?v=${liveVideoId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+            >
+              Ver en YouTube
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -742,6 +1013,10 @@ export function TransmisionesConfigPage() {
         {/* En desktop: columna centrada para config, ancho completo para sermons */}
         <div className="lg:max-w-2xl lg:mx-auto">
           <ChannelConfigBlock />
+        </div>
+
+        <div className="lg:max-w-2xl lg:mx-auto">
+          <DetectionStatusBlock />
         </div>
 
         <SermonsBlock />

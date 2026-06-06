@@ -15,6 +15,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { TransmisionesService } from './transmisiones.service';
+import { LiveDetectionService } from './live-detection.service';
 import { CreateSermonVideoDto } from './dto/create-sermon-video.dto';
 import { UpdateSermonVideoDto } from './dto/update-sermon-video.dto';
 import { SermonVideoResponseDto } from './dto/sermon-video-response.dto';
@@ -23,6 +24,7 @@ import {
   UpdateTransmisionesConfigDto,
   TransmisionesConfigResponseDto,
 } from './dto/transmisiones-config.dto';
+import { LiveDetectionResultDto } from './dto/live-detection-result.dto';
 import { OembedRequestDto } from './dto/oembed-request.dto';
 import { OembedResponseDto } from './dto/oembed-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -36,7 +38,10 @@ import { UserRole } from '../common/entities/user-role.enum';
 @Roles(UserRole.Admin)
 @Controller('transmisiones')
 export class TransmisionesAdminController {
-  constructor(private readonly transmisionesService: TransmisionesService) {}
+  constructor(
+    private readonly transmisionesService: TransmisionesService,
+    private readonly liveDetectionService: LiveDetectionService,
+  ) {}
 
   // ─── Config del canal ────────────────────────────────────────────────────
 
@@ -54,6 +59,18 @@ export class TransmisionesAdminController {
     @Body() dto: UpdateTransmisionesConfigDto,
   ): Promise<TransmisionesConfigResponseDto> {
     return this.transmisionesService.updateConfig(dto);
+  }
+
+  // ─── Auto-detección ──────────────────────────────────────────────────────
+
+  @Post('force-check')
+  @ApiOperation({
+    summary:
+      'Forzar chequeo de transmisión en vivo — ignora modo/horario/intervalo',
+  })
+  @ApiResponse({ status: 200, type: LiveDetectionResultDto })
+  async forceCheck(): Promise<LiveDetectionResultDto> {
+    return this.liveDetectionService.forceCheck();
   }
 
   // ─── CRUD de predicaciones ───────────────────────────────────────────────

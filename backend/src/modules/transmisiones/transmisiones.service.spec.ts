@@ -86,68 +86,116 @@ describe('TransmisionesService', () => {
   // ════════════════════════════════════════════════════════════════════════════
 
   describe('getLiveStatus', () => {
-    it('returns isLive=true when isLiveManual is "true"', async () => {
-      settingRepo.findOne
-        .mockResolvedValueOnce(makeSiteSetting('transmisiones.channelId', 'UCxxxxxxx'))
-        .mockResolvedValueOnce(makeSiteSetting('transmisiones.channelHandle', 'IASDCentralOsorno'))
-        .mockResolvedValueOnce(makeSiteSetting('transmisiones.isLiveManual', 'true'));
+    // Mock por clave para settingRepo.findOne — robusto ante el orden/cantidad
+    // de claves que lea getConfig() (usa Promise.all de varios getSetting).
+    function mockSettings(map: Record<string, string | null>): void {
+      settingRepo.findOne.mockImplementation(
+        async (opts: { where: { key: string } }) => {
+          const key = opts.where.key;
+          return key in map ? makeSiteSetting(key, map[key]) : null;
+        },
+      );
+    }
+
+    // Mock del último sermón publicado (fallback offline de embedUrl).
+    function mockLastVideo(videoId: string | null): void {
+      sermonRepo.findOne.mockResolvedValue(
+        videoId ? makeSermon({ videoId }) : null,
+      );
+    }
+
+    it('returns isLive=true (manual override) with live_stream embed when no liveVideoId', async () => {
+      mockSettings({
+        'transmisiones.channelId': 'UCxxxxxxx',
+        'transmisiones.channelHandle': 'IASDCentralOsorno',
+        'transmisiones.isLiveManual': 'true',
+      });
+      mockLastVideo('lastVid1234');
 
       const result = await service.getLiveStatus();
 
       expect(result.isLive).toBe(true);
       expect(result.channelId).toBe('UCxxxxxxx');
       expect(result.channelHandle).toBe('IASDCentralOsorno');
+      // Caso 2: manual sin liveVideoId → live_stream genérico
       expect(result.embedUrl).toBe(
         'https://www.youtube.com/embed/live_stream?channel=UCxxxxxxx&autoplay=0',
       );
     });
 
-    it('returns isLive=false when isLiveManual is "false"', async () => {
-      settingRepo.findOne
-        .mockResolvedValueOnce(makeSiteSetting('transmisiones.channelId', 'UCyyyyyyy'))
-        .mockResolvedValueOnce(makeSiteSetting('transmisiones.channelHandle', 'IASDCentralOsorno'))
-        .mockResolvedValueOnce(makeSiteSetting('transmisiones.isLiveManual', 'false'));
+    it('returns isLive=true with embed of detected liveVideoId (auto-detección)', async () => {
+      mockSettings({
+        'transmisiones.channelId': 'UCxxxxxxx',
+        'transmisiones.isLiveManual': 'false',
+        'transmisiones.lastCheckResult': 'live',
+        'transmisiones.liveVideoId': 'LIVEvid9999',
+      });
+      mockLastVideo('lastVid1234');
+
+      const result = await service.getLiveStatus();
+
+      expect(result.isLive).toBe(true);
+      expect(result.liveVideoId).toBe('LIVEvid9999');
+      // Caso 1: live detectado → embed del video concreto
+      expect(result.embedUrl).toBe(
+        'https://www.youtube.com/embed/LIVEvid9999?autoplay=0',
+      );
+    });
+
+    it('returns isLive=false with embed of last published video when offline', async () => {
+      mockSettings({
+        'transmisiones.channelId': 'UCyyyyyyy',
+        'transmisiones.channelHandle': 'IASDCentralOsorno',
+        'transmisiones.isLiveManual': 'false',
+      });
+      mockLastVideo('lastVid1234');
 
       const result = await service.getLiveStatus();
 
       expect(result.isLive).toBe(false);
       expect(result.channelId).toBe('UCyyyyyyy');
+      expect(result.lastVideoId).toBe('lastVid1234');
+      // Caso 3: offline → embed del último sermón publicado
       expect(result.embedUrl).toBe(
-        'https://www.youtube.com/embed/live_stream?channel=UCyyyyyyy&autoplay=0',
+        'https://www.youtube.com/embed/lastVid1234?autoplay=0',
       );
     });
 
     it('returns isLive=false when isLiveManual setting does not exist (null)', async () => {
-      settingRepo.findOne
-        .mockResolvedValueOnce(makeSiteSetting('transmisiones.channelId', 'UCzzzzzzz'))
-        .mockResolvedValueOnce(makeSiteSetting('transmisiones.channelHandle', 'IASDCentralOsorno'))
-        .mockResolvedValueOnce(null); // isLiveManual not found
+      mockSettings({
+        'transmisiones.channelId': 'UCzzzzzzz',
+        'transmisiones.channelHandle': 'IASDCentralOsorno',
+        // isLiveManual ausente → default false
+      });
+      mockLastVideo('lastVid1234');
 
       const result = await service.getLiveStatus();
 
       expect(result.isLive).toBe(false);
       expect(result.embedUrl).toBe(
-        'https://www.youtube.com/embed/live_stream?channel=UCzzzzzzz&autoplay=0',
+        'https://www.youtube.com/embed/lastVid1234?autoplay=0',
       );
     });
 
-    it('returns embedUrl=null when channelId is empty string', async () => {
-      settingRepo.findOne
-        .mockResolvedValueOnce(makeSiteSetting('transmisiones.channelId', ''))
-        .mockResolvedValueOnce(makeSiteSetting('transmisiones.channelHandle', null))
-        .mockResolvedValueOnce(makeSiteSetting('transmisiones.isLiveManual', 'false'));
+    it('returns embedUrl=null when offline and no published video exists', async () => {
+      mockSettings({
+        'transmisiones.channelId': 'UCnoVideos',
+        'transmisiones.isLiveManual': 'false',
+      });
+      mockLastVideo(null); // no hay sermones publicados
 
       const result = await service.getLiveStatus();
 
-      expect(result.channelId).toBe('');
+      expect(result.isLive).toBe(false);
       expect(result.embedUrl).toBeNull();
     });
 
     it('returns embedUrl=null and isLive=false when channelId is null', async () => {
-      settingRepo.findOne
-        .mockResolvedValueOnce(null) // channelId
-        .mockResolvedValueOnce(null) // channelHandle
-        .mockResolvedValueOnce(makeSiteSetting('transmisiones.isLiveManual', 'false'));
+      mockSettings({
+        'transmisiones.isLiveManual': 'false',
+        // channelId y channelHandle ausentes → null
+      });
+      mockLastVideo(null);
 
       const result = await service.getLiveStatus();
 

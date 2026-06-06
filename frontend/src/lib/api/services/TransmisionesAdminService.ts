@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CreateSermonVideoDto } from '../models/CreateSermonVideoDto';
+import type { LiveDetectionResultDto } from '../models/LiveDetectionResultDto';
 import type { OembedRequestDto } from '../models/OembedRequestDto';
 import type { OembedResponseDto } from '../models/OembedResponseDto';
 import type { ReorderSermonVideosDto } from '../models/ReorderSermonVideosDto';
@@ -39,6 +40,17 @@ export class TransmisionesAdminService {
             url: '/api/transmisiones/config',
             body: requestBody,
             mediaType: 'application/json',
+        });
+    }
+    /**
+     * Forzar chequeo de transmisión en vivo — ignora modo/horario/intervalo
+     * @returns LiveDetectionResultDto
+     * @throws ApiError
+     */
+    public static transmisionesAdminControllerForceCheck(): CancelablePromise<LiveDetectionResultDto> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/transmisiones/force-check',
         });
     }
     /**
