@@ -1,4 +1,6 @@
 import { DataSource } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import { SiteSetting } from '../../modules/site-config/entities/site-setting.entity';
 import { Seeder } from '../seeder';
 
@@ -103,6 +105,39 @@ const DEFAULTS: { key: string; value: string }[] = [
   },
 ];
 
+/**
+ * Imágenes del hero versionadas en `src/seeds/site-config/assets/`. Se copian a
+ * `uploads/site/` (con el mismo nombre que referencian las claves inicio.*_image)
+ * al ejecutar el seeder, para que en producción el sitio público las tenga sin
+ * subirlas a mano. Idempotente: no sobreescribe una imagen ya presente (p. ej.
+ * si el admin reemplazó el hero).
+ */
+const ASSETS_DIR = path.join(__dirname, 'assets');
+const SITE_UPLOADS_DIR = path.join(process.cwd(), 'uploads', 'site');
+const HERO_IMAGE_FILES = [
+  'seed-home-hero-main.png',
+  'seed-home-hero-small.png',
+  'seed-home-next-service.png',
+];
+
+function copyHeroImage(fileName: string): void {
+  const source = path.join(ASSETS_DIR, fileName);
+  if (!fs.existsSync(source)) {
+    console.warn(`    ⚠ Asset de hero no encontrado: ${source}`);
+    return;
+  }
+  if (!fs.existsSync(SITE_UPLOADS_DIR)) {
+    fs.mkdirSync(SITE_UPLOADS_DIR, { recursive: true });
+  }
+  const dest = path.join(SITE_UPLOADS_DIR, fileName);
+  if (fs.existsSync(dest)) {
+    console.log(`    Imagen de hero ya existe en uploads: ${fileName}`);
+    return;
+  }
+  fs.copyFileSync(source, dest);
+  console.log(`    Imagen de hero copiada a uploads/site: ${fileName}`);
+}
+
 export class HomeSettingsSeeder implements Seeder {
   async run(dataSource: DataSource): Promise<void> {
     const repo = dataSource.getRepository(SiteSetting);
@@ -115,6 +150,11 @@ export class HomeSettingsSeeder implements Seeder {
       } else {
         console.log(`  Site setting already exists: ${key}`);
       }
+    }
+
+    // Copia las imágenes del hero versionadas al volumen de uploads.
+    for (const fileName of HERO_IMAGE_FILES) {
+      copyHeroImage(fileName);
     }
   }
 }
