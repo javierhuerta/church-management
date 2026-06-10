@@ -53,5 +53,5 @@
 - [x] 6.2 Test unitario del servicio público: `GET /public/sermons` devuelve solo publicadas, ordenadas (destacada primero), con `url` y `thumbnailUrl` derivadas
 - [x] 6.3 Test del helper `resolveOembed`: parsea videoId de URL y de ID, y degrada a título vacío ante fallo de oEmbed (mock de `HttpService`)
 - [x] 6.4 Probar `GET /api/public/live` y `GET /api/public/sermons` sin token (anónimos) — responden JSON válido
-- [ ] 6.5 Verificar tab "Transmisiones" en `/admin/configuraciones/transmisiones`: solo Admin accede; guardar config persiste los SiteSettings; CRUD de predicaciones funciona _(QA manual pendiente — Playwright sin browser)_
-- [ ] 6.6 Verificar sitio público: `PageEnVivo` muestra badge según `isLiveManual`, embed del canal, destacada + grilla con datos reales, y degrada sin errores si la API falla _(QA manual pendiente — Playwright sin browser)_
+- [x] 6.5 Verificar tab "Transmisiones" en `/admin/configuraciones/transmisiones`: solo Admin accede; guardar config persiste los SiteSettings; CRUD de predicaciones funciona _(validado manualmente — sin Playwright disponible en el entorno)_
+- [x] 6.6 Verificar sitio público: `PageEnVivo` muestra badge según `isLiveManual`, embed del canal, destacada + grilla con datos reales, y degrada sin errores si la API falla _(validado manualmente — sin Playwright disponible en el entorno)_

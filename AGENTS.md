@@ -298,6 +298,58 @@ Registrados via `.opencode/opencode.json` → `skills.paths`. OpenCode los escan
 - `accessibility` — WCAG 2.2, a11y, keyboard navigation, ARIA
 - `frontend-design` — UI production-grade, tipografia, motion, estetica
 
+## Engram Memory Protocol
+
+Tienes acceso a **memoria persistente** via MCP (Engram) — herramientas disponibles: `mem_save`, `mem_search`, `mem_context`, `mem_session_summary`, `mem_capture_passive`, `mem_get_observation`, `mem_current_project`.
+
+### Cuándo guardar (obligatorio)
+
+Llamar `mem_save` automáticamente después de CADA uno de estos eventos:
+
+- **Bugfixes** — qué estaba mal, por qué, cómo se arregló
+- **Decisiones arquitectónicas** — trade-offs, alternativas consideradas
+- **Descubrimientos** — gotchas, comportamientos inesperados, configuraciones
+- **Nuevos patrones o convenciones** establecidas en el proyecto
+- **Cambios en estructura de archivos** significativos
+
+Formato del contenido:
+```
+**What**: [qué se hizo]
+**Why**: [por qué]
+**Where**: [archivos afectados]
+**Learned**: [gotchas o aprendizajes, omitir si no aplica]
+```
+
+### Cuándo buscar memoria
+
+- **Al inicio** de cada sesión significativa, llamar `mem_context` para ver contexto reciente
+- **Reactivo**: cuando el usuario diga "recuerda", "busca" o similar
+- **Proactivo**: antes de implementar algo que podría tener contexto de sesiones previas
+
+### Cierre de sesión
+
+Al terminar tareas importantes, llamar `mem_session_summary` con el formato:
+```
+## Goal
+[qué se buscaba]
+
+## Discoveries
+- [hallazgos importantes]
+
+## Accomplished
+- ✅ [lo completado]
+
+## Next Steps
+- [lo que sigue]
+
+## Relevant Files
+- ruta/archivo.ts — [qué cambió]
+```
+
+### Post-compactación
+
+Si el contexto se comprime o reinicia, llamar `mem_context` inmediatamente para recuperar estado antes de continuar.
+
 ---
 
 **Version**: 2.0 — 2026-05-24
