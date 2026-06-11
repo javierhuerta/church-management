@@ -98,7 +98,7 @@ function PageHorarios() {
           {/* programa */}
           <div className="mt-6" style={{ maxWidth: 920, margin: '64px auto 0' }}>
             {week.map((day) => (
-              <div key={day.d} style={{
+              <div key={day.d} className="schedule-day" style={{
                 borderTop: '1px solid var(--line)',
                 padding: '40px 0',
                 display: 'grid', gridTemplateColumns: '200px 1fr', gap: 40,
@@ -157,7 +157,7 @@ function PageHorarios() {
               ÉXODO 20:8
             </div>
           </div>
-          <div style={{
+          <div className="sunset-grid" style={{
             display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0,
             maxWidth: 880, margin: '0 auto'
           }}>

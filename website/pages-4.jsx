@@ -359,6 +359,15 @@ function PageCalendarioEditable({ store }) {
 
   const [selectedId, setSelectedId] = useS4(null);
 
+  // Escuchar petición del MonthView mobile para cambiar a vista lista
+  useE4(function () {
+    function onSetView(e) {
+      if (e && e.detail === 'lista') setView('lista');
+    }
+    window.addEventListener('iasd:cal:setView', onSetView);
+    return function () { window.removeEventListener('iasd:cal:setView', onSetView); };
+  }, []);
+
   const updateEvent = (id, patch) =>
     setEvents(events.map(e => e.id === id ? { ...e, ...patch } : e));
 
@@ -516,6 +525,11 @@ function ListView({ events, isEditor, selectedId, onUpdate, onRemove }) {
               }}>
                 {isEditor ? (
                   <>
+                    <div className="cal-event-editor" style={{
+                      display: 'grid',
+                      gridTemplateColumns: '130px 110px 1fr auto',
+                      gap: 10, alignItems: 'center',
+                    }}>
                     <input
                       type="date"
                       value={e.date}
@@ -529,7 +543,7 @@ function ListView({ events, isEditor, selectedId, onUpdate, onRemove }) {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <InlineInput value={e.title} onChange={v => onUpdate(e.id, { title: v })}
                         style={{ fontSize: 17, fontWeight: 500, fontFamily: 'var(--serif)' }} />
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                         <InlineInput value={e.loc} onChange={v => onUpdate(e.id, { loc: v })}
                           style={{ fontSize: 13, color: 'var(--muted)' }} />
                         <label style={{
@@ -545,6 +559,7 @@ function ListView({ events, isEditor, selectedId, onUpdate, onRemove }) {
                     <IconBtn title="Eliminar"
                       onClick={() => { if (confirm('¿Eliminar este evento?')) onRemove(e.id); }}
                       danger>×</IconBtn>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -568,6 +583,21 @@ function ListView({ events, isEditor, selectedId, onUpdate, onRemove }) {
 // MONTH VIEW
 function MonthView({ events, cursor, setCursor, isEditor, onDayClick, onEventClick }) {
   const { y, m } = cursor;
+
+  // Detectar mobile: en pantallas chicas la grilla 7×6 es ilegible.
+  // Mostrar mensaje + botón "Ver como lista" en lugar de la grilla.
+  const [isMobile, setIsMobile] = useS4(false);
+  useE4(function () {
+    var mq = window.matchMedia('(max-width: 720px)');
+    function onChange() { setIsMobile(mq.matches); }
+    onChange();
+    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    else mq.addListener(onChange);
+    return function () {
+      if (mq.removeEventListener) mq.removeEventListener('change', onChange);
+      else mq.removeListener(onChange);
+    };
+  }, []);
 
   // First day of month, last day, weekday offset (Monday = 0)
   const firstDay = new Date(y, m, 1);
@@ -622,6 +652,40 @@ function MonthView({ events, cursor, setCursor, isEditor, onDayClick, onEventCli
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+      {isMobile ? (
+        <div className="card" style={{
+          marginTop: 24,
+          padding: '32px 22px',
+          textAlign: 'center',
+          border: '1px solid var(--line)',
+          background: 'var(--surface)',
+          borderRadius: 14,
+        }}>
+          <div className="kicker" style={{ color: 'var(--gold)' }}>Vista Mes</div>
+          <h3 className="serif" style={{
+            fontSize: 22, fontWeight: 500, marginTop: 12, lineHeight: 1.2,
+          }}>
+            Esta vista no está optimizada para mobile
+          </h3>
+          <p className="muted" style={{
+            marginTop: 12, fontSize: 14, lineHeight: 1.5, maxWidth: 360,
+            marginLeft: 'auto', marginRight: 'auto',
+          }}>
+            Cambia a la vista de lista para ver las actividades del mes en formato vertical, una por una.
+          </p>
+          <button
+            onClick={function () {
+              // Disparar un evento custom que PageCalendarioEditable escucha
+              window.dispatchEvent(new CustomEvent('iasd:cal:setView', { detail: 'lista' }));
+            }}
+            className="btn btn-primary"
+            style={{ marginTop: 20 }}
+          >
+            Ver como lista
+          </button>
+        </div>
+      ) : null}
+
       {/* Top nav: [← Anterior]  [Hoy]  [Siguiente →] */}
       <div style={{
         display: 'flex', justifyContent: 'center', alignItems: 'center',

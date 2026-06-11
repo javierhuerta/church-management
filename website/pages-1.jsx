@@ -417,14 +417,14 @@ function PageInicio({ setPage, nextService: propNextService }) {
             <div className="kicker">{homeData.schedule.title}</div>
             <p className="muted" style={{ marginTop: 8 }}>{homeData.schedule.subtitle}</p>
           </div>
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0,
+          <div className="home-schedule-grid" style={{
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 0,
             borderTop: '1px solid var(--line)'
           }}>
             {homeData.scheduleItems.map(([d, h, t], i) => (
               <div key={d + h + i} style={{
                 padding: '32px 28px',
-                borderRight: i < homeData.scheduleItems.length - 1 ? '1px solid var(--line)' : 0,
+                borderRight: '1px solid var(--line)',
                 borderBottom: '1px solid var(--line)'
               }}>
                 <div className="mono" style={{
@@ -717,7 +717,7 @@ function PageNosotros({ setPage }) {
           </div>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
             gap: 24,
             maxWidth: 880, margin: '0 auto',
           }}>
@@ -995,16 +995,14 @@ function PageGaleria() {
               </div>
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(6, 1fr)',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                 gap: 14
               }}>
                 {c.slots.map((slot, si) => {
                   var id = slot[0], label = slot[1], h = slot[2], kind = slot[3], src = slot[4] || null;
                   return (
                     <div key={id} style={{
-                      gridColumn: kind === 'wide'
-                        ? 'span 3'
-                        : (c.slots.length <= 3 ? 'span 2' : 'span 2'),
+                      gridColumn: 'auto',
                     }}>
                       <PhotoSlot id={id} label={label} height={h} src={src} />
                     </div>

@@ -153,6 +153,12 @@ p { text-wrap: pretty; margin: 0; }
 .footer .container { color: var(--cream); }
 .footer a { opacity: .76; }
 .footer a:hover { opacity: 1; }
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
 
 /* focus */
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
@@ -259,4 +265,19 @@ p { text-wrap: pretty; margin: 0; }
   .moments-grid { grid-template-columns: repeat(2, 1fr) !important; grid-auto-rows: 160px !important; }
   .moments-grid > div { grid-column: span 1 !important; grid-row: span 1 !important; }
   .past-sermons-grid { grid-template-columns: 1fr !important; }
+  .footer-grid { grid-template-columns: 1fr; gap: 32px; text-align: center; }
+  .footer-grid > div { display: flex; flex-direction: column; align-items: center; }
+  .footer .between { flex-direction: column; gap: 8px; }
+  .home-schedule-grid > div { border-right: 0 !important; }
+  .home-schedule-grid > div:last-child { border-bottom: 0 !important; }
+  .schedule-day { grid-template-columns: 1fr !important; gap: 20px !important; }
+  .sunset-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .sunset-grid > div { border-left: 0 !important; border-bottom: 1px solid rgba(245,239,224,.18) !important; }
+  .sunset-grid > div:nth-last-child(-n+2) { border-bottom: 0 !important; }
+}
+
+@media (max-width: 480px) {
+  .sunset-grid { grid-template-columns: 1fr !important; }
+  .cal-event-editor { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .cal-event-editor > * { min-width: 0; }
 }
