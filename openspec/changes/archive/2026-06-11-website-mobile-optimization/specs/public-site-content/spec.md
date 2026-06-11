@@ -1,26 +1,6 @@
-# public-site-content
+# public-site-content (delta)
 
-## Purpose
-
-Definir la especificacion principal del espacio de endpoints publicos y del puente de integracion `window.IASD_API` que alimenta el sitio web publico desde `/api/public/*`, sin autenticacion, con degradacion elegante ante errores.
-
-## Requirements
-
-### Requirement: Espacio de API publico para el sitio
-
-El sistema SHALL exponer un espacio de endpoints publicos bajo `/api/public/*`, sin autenticacion, destinado a alimentar el sitio web publico. Estos endpoints SHALL devolver unicamente contenido publicado/activo, ya agregado para la seccion que lo consume, sin exponer borradores ni datos sensibles. El endpoint `GET /api/public/gallery` SHALL estar disponible en este espacio, devolviendo los albumes e imagenes de galeria publicados.
-
-#### Scenario: Lectura anonima
-- **WHEN** el sitio publico (sin token) solicita contenido a un endpoint `/api/public/*`
-- **THEN** el sistema responde con el contenido publicado sin requerir autenticacion
-
-#### Scenario: No exponer borradores
-- **WHEN** existe contenido en estado borrador/no publicado
-- **THEN** los endpoints `/api/public/*` no lo incluyen en la respuesta
-
-#### Scenario: Galeria en el espacio publico
-- **WHEN** el sitio consulta `/api/public/gallery`
-- **THEN** el sistema responde con los albumes e imagenes publicados, sin token de autenticacion
+## MODIFIED Requirements
 
 ### Requirement: Puente de integracion del sitio
 
@@ -54,7 +34,3 @@ El sitio publico SHALL renderizarse correctamente en mobile (viewport ≤ 720px)
 - **WHEN** un usuario visita cualquier pagina del sitio publico con viewport ≤ 720px
 - **THEN** el sitio renderiza sin scroll horizontal y los grids colapsan a 1-2 columnas
 - **AND** los endpoints `/api/public/*` mantienen la misma forma de respuesta que en desktop
-
-#### Scenario: Degradacion ante error de API en galeria
-- **WHEN** la API de galeria no responde
-- **THEN** `PageGaleria` muestra un mensaje de contenido no disponible sin romper la pagina

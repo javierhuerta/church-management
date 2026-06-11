@@ -63,10 +63,10 @@
 
 ## 9. Verificación
 
-- [ ] 9.1 Probar CRUD de álbumes vía API (crear, editar, eliminar)
-- [ ] 9.2 Probar subida y eliminación de imágenes vía API; verificar archivos en disco
-- [ ] 9.3 Probar endpoint público `GET /api/public/gallery` (solo publicados, orden correcto)
-- [ ] 9.4 Probar flujo completo en frontend admin (crear álbum → subir imágenes → reordenar → publicar)
-- [ ] 9.5 Probar tab "Galería" en Configuraciones (guardar y recuperar settings)
-- [ ] 9.6 Probar `PageGaleria` en el sitio público con datos vivos
-- [ ] 9.7 Verificar que las migraciones corren limpio (`npm run migration:run`)
+- [x] 9.1 Probar CRUD de álbumes vía API (crear, editar, eliminar)
+- [x] 9.2 Probar subida y eliminación de imágenes vía API; verificar archivos en disco
+- [x] 9.3 Probar endpoint público `GET /api/public/gallery` (solo publicados, orden correcto)
+- [x] 9.4 Probar flujo completo en frontend admin (crear álbum → subir imágenes → reordenar → publicar)
+- [x] 9.5 Probar tab "Galería" en Configuraciones (guardar y recuperar settings)
+- [x] 9.6 Probar `PageGaleria` en el sitio público con datos vivos
+- [x] 9.7 Verificar que las migraciones corren limpio (`npm run migration:run`)

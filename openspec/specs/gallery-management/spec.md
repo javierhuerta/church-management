@@ -1,4 +1,10 @@
-## ADDED Requirements
+# gallery-management
+
+## Purpose
+
+Definir la especificacion del modulo de galeria que permite a los administradores gestionar los albumes e imagenes de la galeria del sitio publico, su publicacion, y la configuracion de la seccion Galeria en el admin.
+
+## Requirements
 
 ### Requirement: Gestionar álbumes de galería
 
@@ -68,22 +74,6 @@ El sistema SHALL permitir marcar un álbum como publicado o no publicado, y marc
 - **WHEN** un álbum está publicado pero una de sus imágenes está marcada como no publicada
 - **THEN** el endpoint público incluye el álbum pero excluye esa imagen
 
-### Requirement: Endpoint público de galería
-
-El sistema SHALL exponer un endpoint `GET /api/public/gallery` sin autenticación que devuelve los álbumes publicados con sus imágenes publicadas, ordenados por `sortOrder`, en un formato adecuado para el sitio público.
-
-#### Scenario: Lectura anónima de galería
-- **WHEN** el sitio público solicita `GET /api/public/gallery`
-- **THEN** el sistema responde con un arreglo de álbumes publicados, cada uno con su arreglo de imágenes publicadas, sin requerir autenticación
-
-#### Scenario: No exponer borradores
-- **WHEN** existen álbumes o imágenes no publicados
-- **THEN** el endpoint `GET /api/public/gallery` no los incluye en la respuesta
-
-#### Scenario: Respuesta vacía cuando no hay contenido publicado
-- **WHEN** no hay álbumes publicados
-- **THEN** el endpoint responde con un arreglo vacío (200 OK)
-
 ### Requirement: Seeder con datos reales del sitio
 
 El sistema SHALL incluir un seeder (`GallerySeeder`) que replique exactamente los 4 álbumes y 17 imágenes actualmente hardcodeados en `PageGaleria` del sitio público, con estado publicado tanto para álbumes como para imágenes.
@@ -107,33 +97,3 @@ El sistema SHALL permitir configurar el texto introductorio y el título del enc
 #### Scenario: Recuperar configuración de galería
 - **WHEN** el sitio público carga la sección Galería
 - **THEN** puede obtener los textos de configuración vía la API pública o desde la respuesta de galería
-
-## MODIFIED Requirements
-
-### Requirement: Navegación por tabs de Configuraciones
-
-El sistema SHALL incluir la tab "Galería" en la navegación por tabs de la sección Configuraciones del admin, junto a las tabs de otras secciones del sitio.
-
-#### Scenario: Acceder a la tab Galería
-- **WHEN** un administrador selecciona la tab "Galería" en Configuraciones
-- **THEN** el sistema navega a `/admin/configuraciones/galeria` y muestra las opciones de personalización de la sección Galería
-
-### Requirement: API pública del sitio
-
-El endpoint `GET /api/public/gallery` SHALL estar disponible en el espacio `/api/public/*` sin autenticación, como parte de los endpoints públicos del sitio.
-
-#### Scenario: Galería en el espacio público
-- **WHEN** el sitio consulta `/api/public/gallery`
-- **THEN** el sistema responde con los álbumes e imágenes publicados, sin token de autenticación
-
-### Requirement: Puente de integración del sitio
-
-El helper `fetchGallery` SHALL estar disponible en `window.IASD_API` para consumir el endpoint público de galería y mapear la respuesta al formato que `PageGaleria` espera.
-
-#### Scenario: Consumo de galería desde el sitio
-- **WHEN** `PageGaleria` carga
-- **THEN** obtiene los álbumes publicados vía `window.IASD_API.fetchGallery()` y los renderiza en la grilla de imágenes
-
-#### Scenario: Degradación ante error de API en galería
-- **WHEN** la API de galería no responde
-- **THEN** `PageGaleria` muestra un mensaje de contenido no disponible sin romper la página

@@ -20,7 +20,7 @@ El sistema SHALL ofrecer en el admin una seccion "Configuraciones" accesible des
 
 ### Requirement: Navegacion por tabs por seccion del sitio
 
-La seccion Configuraciones SHALL presentar una navegacion por **tabs**, donde cada tab corresponde a una seccion del sitio publico. La base SHALL permitir que nuevas secciones registren su tab sin modificar las existentes.
+La seccion Configuraciones SHALL presentar una navegacion por **tabs**, donde cada tab corresponde a una seccion del sitio publico. La base SHALL permitir que nuevas secciones registren su tab sin modificar las existentes. La tab "Galeria" SHALL estar disponible como tab de tipo editor para personalizar el contenido de la seccion Galeria del sitio publico.
 
 #### Scenario: Cambiar de tab
 - **WHEN** un administrador selecciona una tab de seccion
@@ -29,6 +29,10 @@ La seccion Configuraciones SHALL presentar una navegacion por **tabs**, donde ca
 #### Scenario: Indice sin tab seleccionada
 - **WHEN** un administrador entra a Configuraciones sin elegir una tab
 - **THEN** el sistema muestra un indice/bienvenida de la seccion de configuracion
+
+#### Scenario: Acceder a la tab Galeria
+- **WHEN** un administrador selecciona la tab "Galeria" en Configuraciones
+- **THEN** el sistema navega a `/admin/configuraciones/galeria` y muestra las opciones de personalizacion de la seccion Galeria
 
 ### Requirement: Tabs editor y tabs explicativas
 
