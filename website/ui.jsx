@@ -99,10 +99,28 @@ const PAGES = PUBLIC_PAGES; // backwards compat
 function Nav({ page, setPage, isLive }) {
   const { session } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const navRef = useRef(null);
+
+  // Cerrar el menú mobile al tocar fuera del nav
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onDocPointer(ev) {
+      if (navRef.current && !navRef.current.contains(ev.target)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onDocPointer);
+    document.addEventListener('touchstart', onDocPointer);
+    return function () {
+      document.removeEventListener('mousedown', onDocPointer);
+      document.removeEventListener('touchstart', onDocPointer);
+    };
+  }, [menuOpen]);
+
   // Navega y cierra el menú mobile en cada selección.
   const go = (id) => { setPage(id); setMenuOpen(false); };
   return (
-    <nav className="nav" data-screen-label="Nav">
+    <nav className="nav" data-screen-label="Nav" ref={navRef}>
       <div className="container nav-inner">
         <a onClick={() => go('inicio')} style={{ cursor: 'pointer' }}>
           <BrandMark />
@@ -194,7 +212,7 @@ function Footer({ setPage }) {
   return (
     <footer className="footer">
       <div className="container">
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: 48, alignItems: 'start' }}>
+        <div className="footer-grid">
           <div>
             <div style={{ width: 64, height: 64, background: 'var(--cream)', borderRadius: 12, padding: 6 }}>
               <img src="assets/logo.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />

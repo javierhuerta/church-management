@@ -201,6 +201,91 @@ Si llega una actualización del diseño de Claude Artifacts, re-aplicar estos ca
 | `sermons === null` (cargando) | Grilla oculta (`showGrid = false`), destacada usa fallback. |
 | `isLiveManual = false` | Badge "EN VIVO AHORA" no se muestra. |
 
+## Mobile responsive (2026-06)
+
+Parches aplicados para que el sitio público se vea correctamente en mobile
+(viewport ≤ 880px) sin scroll horizontal. La verificación con Playwright a
+390×844 muestra `document.documentElement.scrollWidth === 390` en las 7
+páginas (`inicio`, `nosotros`, `horarios`, `calendario`, `programa`,
+`galeria`, `envivo`).
+
+### Cambios centralizados en `styles.css`
+
+Son cambios de CSS que **sobreviven a un re-export de Claude Artifacts** sin
+necesidad de re-aplicar. Se mantienen en el archivo CSS del sitio.
+
+#### Clases nuevas en `styles.css`
+
+- `.footer-grid` — grid de 3 columnas en desktop, 1 columna en mobile (≤ 880px).
+  Reemplaza el `gridTemplateColumns: '1.2fr 1fr 1fr'` inline del footer
+  (`ui.jsx`).
+- `.home-schedule-grid` — grid de horarios destacados en `PageInicio`. En
+  mobile, los `border-right` se quitan y queda solo el `border-bottom` entre
+  filas.
+- `.schedule-day` — grid día+items en `PageHorarios`. En mobile colapsa a
+  1 columna (`1fr`).
+- `.sunset-grid` — grid de 4 viernes en `PageHorarios`. En mobile pasa a 2
+  columnas (≤ 880px) y luego a 1 columna (≤ 480px).
+- `.cal-event-editor` — grid del editor inline del calendario. En mobile
+  (≤ 480px) apila los 4 elementos verticalmente.
+
+#### Media queries existentes (sin cambios)
+
+- `@media (max-width: 880px)` — incluye ahora también las reglas para
+  `.footer-grid`, `.home-schedule-grid`, `.schedule-day`, `.sunset-grid`.
+- `@media (max-width: 480px)` — agregado para `.sunset-grid` 1 col y
+  `.cal-event-editor` stack vertical.
+- `@media (max-width: 720px)` — `.prog-row` colapsa (ya existía).
+
+### Parches JSX (pequeños, hay que re-aplicar si llega un update)
+
+Si llega una versión nueva del diseño de Claude Artifacts, re-aplicar estos
+cambios:
+
+1. **`ui.jsx` · Footer**: el `<div>` que envuelve las 3 columnas del footer
+   debe tener `className="footer-grid"` en vez del `style={{ display: 'grid',
+   gridTemplateColumns: '1.2fr 1fr 1fr', gap: 48, alignItems: 'start' }}`
+   inline.
+
+2. **`ui.jsx` · Nav**: el componente `Nav` debe tener un `useEffect` que
+   registra `mousedown` y `touchstart` en `document` para cerrar
+   `menuOpen` cuando el target no está dentro del `navRef`. El `<nav>` debe
+   tener `ref={navRef}`.
+
+3. **`pages-1.jsx` · Nuestros Horarios** (en `PageInicio`): el grid de los
+   3 horarios destacados debe tener `className="home-schedule-grid"` y
+   `gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))'`. El
+   `borderRight` condicional se reemplaza por un `borderRight: '1px solid
+   var(--line)'` siempre presente (la clase CSS lo desactiva en mobile).
+
+4. **`pages-1.jsx` · Junta directiva** (en `PageNosotros`): cambiar
+   `gridTemplateColumns: 'repeat(3, 1fr)'` → `repeat(auto-fit, minmax(220px,
+   1fr))`.
+
+5. **`pages-1.jsx` · Galería**: el grid de cada colección debe usar
+   `gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))'` y los slots
+   deben tener `gridColumn: 'auto'` en vez de `span 2/3`.
+
+6. **`pages-2.jsx` · Horarios**: el grid día+items debe tener
+   `className="schedule-day"`. El grid de 4 puesta-de-sol debe tener
+   `className="sunset-grid"`.
+
+7. **`pages-4.jsx` · MonthView mobile guard**: en `MonthView`, agregar un
+   hook `useState` + `useEffect` con `window.matchMedia('(max-width:
+   720px)')` que setea `isMobile`. En el return, si `isMobile` es true,
+   renderizar un card con el mensaje "Esta vista no está optimizada para
+   mobile" y un botón que dispara `window.dispatchEvent(new
+   CustomEvent('iasd:cal:setView', { detail: 'lista' }))`.
+
+8. **`pages-4.jsx` · PageCalendarioEditable listener**: agregar un
+   `useEffect` que registra un listener en `window` para el evento
+   `iasd:cal:setView` y, si `e.detail === 'lista'`, hace `setView('lista')`.
+
+9. **`pages-4.jsx` · ListView editor**: el `<div>` con el grid del editor
+   inline debe tener `className="cal-event-editor"` y
+   `gridTemplateColumns: '130px 110px 1fr auto'` (la clase CSS lo apila en
+   mobile).
+
 ## Pendiente (próximas etapas)
 
 - La pantalla demo `#acceso` (`PageAcceso` en `auth.jsx`) quedó sin enlaces; se
