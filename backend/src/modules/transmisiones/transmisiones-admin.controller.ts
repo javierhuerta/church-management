@@ -76,6 +76,15 @@ export class TransmisionesAdminController {
     return this.liveDetectionService.forceCheck();
   }
 
+  @Get('diagnose-live')
+  @ApiOperation({
+    summary:
+      'Diagnóstico: muestra qué HTML recibe el servidor desde YouTube (para depurar prod)',
+  })
+  async diagnoseLive(): Promise<Record<string, unknown>> {
+    return this.liveDetectionService.diagnose();
+  }
+
   // ─── CRUD de predicaciones ───────────────────────────────────────────────
 
   @Get('sermons')

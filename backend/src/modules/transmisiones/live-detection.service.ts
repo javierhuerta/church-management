@@ -63,6 +63,15 @@ const CANONICAL_LIVE_RE =
   /rel="canonical" href="https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})"/;
 
 /**
+ * Señal secundaria: el JSON embebido (ytInitialData / ytInitialPlayerResponse)
+ * contiene "isLiveNow":true y un videoId cuando hay transmisión. Algunas
+ * respuestas de YouTube a IPs de datacenter NO traen el canonical de watch?v=
+ * pero sí este flag. Se usa como fallback del canonical.
+ */
+const IS_LIVE_NOW_RE = /"isLiveNow":\s*true/;
+const VIDEO_ID_RE = /"videoId":"([A-Za-z0-9_-]{11})"/;
+
+/**
  * Background service que detecta automáticamente si el canal de YouTube
  * está en vivo, sin necesidad de YouTube API Key.
  *
@@ -195,23 +204,38 @@ export class LiveDetectionService {
           ? response.data
           : String(response.data);
 
-      const match = CANONICAL_LIVE_RE.exec(html);
       const now = new Date().toISOString();
-
       await this.setSetting(CONFIG_KEYS.lastCheckAt, now);
 
-      // Defensa: si no hay match Y la respuesta es la página de consentimiento
-      // (sin <link rel="canonical"> del canal), NO es un offline real — es que
-      // YouTube no nos sirvió el HTML del canal. Marcar 'error' para no apagar
-      // el badge por error y para que el admin lo note. (Pasaba en producción
-      // desde IPs de datacenter antes de enviar la cookie de consentimiento.)
+      // ── Detección con dos señales (robusta para datacenter/prod) ──────────
+      // 1ª señal: <link rel="canonical" href=".../watch?v=ID"> (la más fiable).
+      // 2ª señal (fallback): "isLiveNow":true + "videoId":"ID" en el JSON
+      //    embebido. Algunas respuestas de YouTube a IPs de datacenter no traen
+      //    el canonical de watch?v= aunque sí estos flags.
+      const canonicalMatch = CANONICAL_LIVE_RE.exec(html);
+      let videoId: string | null =
+        canonicalMatch && canonicalMatch[1] ? canonicalMatch[1] : null;
+      let source = videoId ? 'canonical' : '';
+
+      if (!videoId && IS_LIVE_NOW_RE.test(html)) {
+        const idMatch = VIDEO_ID_RE.exec(html);
+        if (idMatch && idMatch[1]) {
+          videoId = idMatch[1];
+          source = 'isLiveNow';
+        }
+      }
+
+      // Defensa: si NO detectamos live y la respuesta no parece el HTML real del
+      // canal (sin canonical, o página de consent), es un fallo de fetch, no un
+      // offline real. Marcar 'error' para no apagar el badge ni reportar falso
+      // offline. (Pasaba en producción desde IPs de datacenter.)
       const looksLikeConsent =
         !html.includes('rel="canonical"') ||
         /consent\.youtube\.com|before you continue to youtube/i.test(html);
-      if (!match && looksLikeConsent) {
+      if (!videoId && looksLikeConsent) {
         await this.setSetting(CONFIG_KEYS.lastCheckResult, 'error');
         this.logger.warn(
-          'YouTube devolvió una página sin canonical (posible consent/bloqueo) — marcando error, no offline',
+          `YouTube devolvió una página sin señal de canal (posible consent/bloqueo, len=${html.length}) — marcando error, no offline`,
         );
         return {
           isLive: false,
@@ -221,13 +245,11 @@ export class LiveDetectionService {
         };
       }
 
-      if (match && match[1]) {
-        // LIVE detectado — canonical apunta a watch?v=VIDEO_ID
-        const videoId = match[1];
+      if (videoId) {
         await this.setSetting(CONFIG_KEYS.liveVideoId, videoId);
         await this.setSetting(CONFIG_KEYS.liveDetectedAt, now);
         await this.setSetting(CONFIG_KEYS.lastCheckResult, 'live');
-        this.logger.log(`Live detectado: videoId=${videoId}`);
+        this.logger.log(`Live detectado [${source}]: videoId=${videoId}`);
         return {
           isLive: true,
           liveVideoId: videoId,
@@ -235,10 +257,10 @@ export class LiveDetectionService {
           lastCheckAt: now,
         };
       } else {
-        // OFFLINE — canonical apunta al canal, no a un video
+        // OFFLINE real — HTML del canal sin señal de live
         await this.setSetting(CONFIG_KEYS.liveVideoId, '');
         await this.setSetting(CONFIG_KEYS.lastCheckResult, 'offline');
-        this.logger.debug('Sin transmisión en vivo (canonical → canal)');
+        this.logger.debug('Sin transmisión en vivo (sin canonical watch ni isLiveNow)');
         return {
           isLive: false,
           liveVideoId: null,
@@ -270,6 +292,57 @@ export class LiveDetectionService {
   async forceCheck(): Promise<LiveDetectionResultDto> {
     this.logger.log('Force-check solicitado');
     return this.detectLive();
+  }
+
+  /**
+   * Diagnóstico: hace el fetch a YouTube y devuelve metadata de la respuesta sin
+   * tocar el estado guardado. Útil para depurar por qué falla la detección en
+   * producción (ej. página de consent, geo-bloqueo, HTML distinto en datacenter).
+   */
+  async diagnose(): Promise<Record<string, unknown>> {
+    const channelHandle = await this.getStringSetting(CONFIG_KEYS.channelHandle, '');
+    const channelId = await this.getStringSetting(CONFIG_KEYS.channelId, '');
+    const url = channelHandle
+      ? `https://www.youtube.com/@${channelHandle}/live`
+      : `https://www.youtube.com/channel/${channelId}/live`;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get<string>(url, {
+          headers: YT_HEADERS,
+          responseType: 'text',
+          maxRedirects: 5,
+          timeout: 8000,
+        }),
+      );
+      const html =
+        typeof response.data === 'string' ? response.data : String(response.data);
+
+      const canonicalMatch = /rel="canonical" href="([^"]*)"/.exec(html);
+      const watchMatch = CANONICAL_LIVE_RE.exec(html);
+      const idMatch = VIDEO_ID_RE.exec(html);
+
+      return {
+        url,
+        httpStatus: response.status,
+        htmlLength: html.length,
+        finalUrl: response.request?.res?.responseUrl ?? null,
+        hasCanonical: html.includes('rel="canonical"'),
+        canonicalHref: canonicalMatch ? canonicalMatch[1] : null,
+        canonicalWatchVideoId: watchMatch ? watchMatch[1] : null,
+        hasIsLiveNow: IS_LIVE_NOW_RE.test(html),
+        firstVideoId: idMatch ? idMatch[1] : null,
+        looksLikeConsent:
+          !html.includes('rel="canonical"') ||
+          /consent\.youtube\.com|before you continue to youtube/i.test(html),
+        htmlSnippet: html.slice(0, 500),
+      };
+    } catch (err) {
+      return {
+        url,
+        error: (err as Error).message,
+      };
+    }
   }
 
   // ─── SiteSetting helpers ──────────────────────────────────────────────────
