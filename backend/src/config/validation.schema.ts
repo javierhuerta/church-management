@@ -36,6 +36,9 @@ export const validationSchema = Joi.object({
   MAX_ATTACHMENTS_PER_EVENT: Joi.number().default(10),
   UNSPLASH_ACCESS_KEY: Joi.string().allow('').optional(),
 
+  // YouTube Data API (detección de transmisión en vivo en producción)
+  YOUTUBE_API_KEY: Joi.string().allow('').optional(),
+
   // Cache
   CACHE_TTL_DEFAULT: Joi.number().default(60000),
   CACHE_MAX: Joi.number().default(500),

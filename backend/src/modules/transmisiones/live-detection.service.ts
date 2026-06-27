@@ -2,10 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { Interval } from '@nestjs/schedule';
 import { firstValueFrom } from 'rxjs';
 import { SiteSetting } from '../site-config/entities/site-setting.entity';
 import { LiveDetectionResultDto } from './dto/live-detection-result.dto';
+import type { UploadConfig } from '../../config/upload.config';
 
 /**
  * Claves de SiteSetting que usa este servicio.
@@ -99,11 +101,23 @@ const FEED_FIRST_VIDEO_RE = /<entry>[\s\S]*?<yt:videoId>([A-Za-z0-9_-]{11})<\/yt
 export class LiveDetectionService {
   private readonly logger = new Logger(LiveDetectionService.name);
 
+  private readonly youtubeApiKey: string;
+
   constructor(
     @InjectRepository(SiteSetting)
     private readonly settingRepo: Repository<SiteSetting>,
     private readonly httpService: HttpService,
-  ) {}
+    private readonly config: ConfigService,
+  ) {
+    this.youtubeApiKey = (
+      this.config.get<UploadConfig>('upload')?.youtubeApiKey ?? ''
+    ).trim();
+    if (!this.youtubeApiKey) {
+      this.logger.warn(
+        'YOUTUBE_API_KEY no configurada — la detección de live usará scraping (no fiable desde datacenter/producción).',
+      );
+    }
+  }
 
   // ─── Background tick (cada 60s) ──────────────────────────────────────────
 
@@ -200,6 +214,26 @@ export class LiveDetectionService {
 
     let anyError = false;
 
+    // ── Vía 0 (preferida): YouTube Data API v3 ────────────────────────────────
+    // 100% fiable desde cualquier IP (incluido datacenter). Cuesta 1 unidad de
+    // cuota por chequeo (videos.list). Solo se usa si hay YOUTUBE_API_KEY.
+    if (this.youtubeApiKey && channelId) {
+      try {
+        const apiResult = await this.detectViaApi(channelId);
+        if (apiResult === 'live-not-found') {
+          // API respondió OK pero el video más reciente no está en vivo.
+          return this.saveOffline('api: último video no está en vivo');
+        }
+        if (apiResult) {
+          return this.saveLive(apiResult, 'api');
+        }
+        // apiResult === null → no se pudo determinar (sin feed); seguir a scraping.
+      } catch (err) {
+        anyError = true;
+        this.logger.warn(`Vía API falló: ${(err as Error).message}`);
+      }
+    }
+
     // ── Vía A: scrape de la página /live del canal ────────────────────────────
     try {
       const liveUrl = channelHandle
@@ -263,6 +297,61 @@ export class LiveDetectionService {
     return this.saveOffline('sin señal de live en ninguna vía');
   }
 
+  /**
+   * Detección vía YouTube Data API v3 (fiable desde cualquier IP).
+   *
+   * 1. Obtiene el videoId más reciente del feed RSS (gratis, sin cuota).
+   * 2. videos.list?part=snippet,liveStreamingDetails&id=VIDEO_ID (1 unidad).
+   * 3. live si snippet.liveBroadcastContent === 'live'.
+   *
+   * Retorna:
+   *   - videoId (string)  → está en vivo
+   *   - 'live-not-found'  → el último video existe pero NO está en vivo (offline real)
+   *   - null              → no se pudo determinar (sin videoId en el feed)
+   */
+  private async detectViaApi(
+    channelId: string,
+  ): Promise<string | 'live-not-found' | null> {
+    // Paso 1: videoId más reciente desde el feed RSS
+    const feed = await this.fetchText(
+      `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`,
+    );
+    const latestVideoId = FEED_FIRST_VIDEO_RE.exec(feed)?.[1] ?? null;
+    if (!latestVideoId) return null;
+
+    // Paso 2: estado del video vía API oficial
+    const apiUrl =
+      `https://www.googleapis.com/youtube/v3/videos` +
+      `?part=snippet,liveStreamingDetails&id=${latestVideoId}` +
+      `&key=${this.youtubeApiKey}`;
+    const response = await firstValueFrom(
+      this.httpService.get<{
+        items?: Array<{
+          snippet?: { liveBroadcastContent?: string };
+          liveStreamingDetails?: {
+            actualStartTime?: string;
+            actualEndTime?: string;
+          };
+        }>;
+      }>(apiUrl, { timeout: 8000 }),
+    );
+
+    const item = response.data.items?.[0];
+    if (!item) return 'live-not-found';
+
+    // liveBroadcastContent: 'live' (en vivo), 'upcoming' (programado), 'none'.
+    const isLive = item.snippet?.liveBroadcastContent === 'live';
+    // Confirmación adicional: tiene inicio real pero no fin.
+    const details = item.liveStreamingDetails;
+    const liveByDetails =
+      !!details?.actualStartTime && !details?.actualEndTime;
+
+    if (isLive || liveByDetails) {
+      return latestVideoId;
+    }
+    return 'live-not-found';
+  }
+
   /** GET de texto a YouTube con los headers anti-consent. */
   private async fetchText(url: string): Promise<string> {
     const response = await firstValueFrom(
@@ -318,7 +407,48 @@ export class LiveDetectionService {
     const channelHandle = await this.getStringSetting(CONFIG_KEYS.channelHandle, '');
     const channelId = await this.getStringSetting(CONFIG_KEYS.channelId, '');
 
-    const result: Record<string, unknown> = { channelHandle, channelId };
+    const result: Record<string, unknown> = {
+      channelHandle,
+      channelId,
+      youtubeApiKeyConfigured: !!this.youtubeApiKey,
+    };
+
+    // ── Vía 0: YouTube Data API v3 ─────────────────────────────────────────
+    if (this.youtubeApiKey && channelId) {
+      try {
+        const feed = await this.fetchText(
+          `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`,
+        );
+        const latestVideoId = FEED_FIRST_VIDEO_RE.exec(feed)?.[1] ?? null;
+        const viaApi: Record<string, unknown> = { latestVideoId };
+        if (latestVideoId) {
+          const apiUrl =
+            `https://www.googleapis.com/youtube/v3/videos` +
+            `?part=snippet,liveStreamingDetails&id=${latestVideoId}` +
+            `&key=${this.youtubeApiKey}`;
+          const response = await firstValueFrom(
+            this.httpService.get<{
+              items?: Array<{
+                snippet?: { liveBroadcastContent?: string };
+                liveStreamingDetails?: {
+                  actualStartTime?: string;
+                  actualEndTime?: string;
+                };
+              }>;
+            }>(apiUrl, { timeout: 8000 }),
+          );
+          const item = response.data.items?.[0];
+          viaApi.liveBroadcastContent = item?.snippet?.liveBroadcastContent ?? null;
+          viaApi.actualStartTime = item?.liveStreamingDetails?.actualStartTime ?? null;
+          viaApi.actualEndTime = item?.liveStreamingDetails?.actualEndTime ?? null;
+        }
+        result.viaApi = viaApi;
+      } catch (err) {
+        result.viaApi = { error: (err as Error).message };
+      }
+    } else {
+      result.viaApi = { skipped: 'sin YOUTUBE_API_KEY o channelId' };
+    }
 
     // ── Vía A: página /live del canal ──────────────────────────────────────
     const liveUrl = channelHandle

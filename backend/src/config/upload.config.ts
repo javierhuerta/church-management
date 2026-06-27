@@ -14,6 +14,7 @@ export const uploadConfig = registerAs('upload', () => ({
     10,
   ),
   unsplashAccessKey: process.env.UNSPLASH_ACCESS_KEY ?? '',
+  youtubeApiKey: process.env.YOUTUBE_API_KEY ?? '',
 }));
 
 export type UploadConfig = ReturnType<typeof uploadConfig>;
