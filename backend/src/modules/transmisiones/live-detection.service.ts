@@ -72,6 +72,18 @@ const IS_LIVE_NOW_RE = /"isLiveNow":\s*true/;
 const VIDEO_ID_RE = /"videoId":"([A-Za-z0-9_-]{11})"/;
 
 /**
+ * Señal definitiva en la página /watch?v=ID: liveBroadcastDetails.isLiveNow.
+ * Presente y true SOLO mientras la transmisión está activa; pasa a false (o
+ * desaparece liveBroadcastDetails) al terminar. Es la señal más fiable y
+ * funciona también desde IPs de datacenter (a diferencia de /@handle/live).
+ */
+const LIVE_BROADCAST_NOW_RE =
+  /"liveBroadcastDetails":\{"isLiveNow":true/;
+
+/** videoId del primer <entry> del feed RSS (el video más reciente). */
+const FEED_FIRST_VIDEO_RE = /<entry>[\s\S]*?<yt:videoId>([A-Za-z0-9_-]{11})<\/yt:videoId>/;
+
+/**
  * Background service que detecta automáticamente si el canal de YouTube
  * está en vivo, sin necesidad de YouTube API Key.
  *
@@ -149,18 +161,23 @@ export class LiveDetectionService {
   // ─── Detección ────────────────────────────────────────────────────────────
 
   /**
-   * Ejecuta la detección de live contra YouTube.
+   * Ejecuta la detección de live contra YouTube, robusta para producción.
    *
-   * Algoritmo:
-   * 1. Lee channelHandle/channelId de config.
-   * 2. Hace GET a /@{handle}/live (o /channel/{id}/live) con User-Agent de navegador.
-   * 3. Busca <link rel="canonical" href="..."> en el HTML.
-   * 4. Si canonical → watch?v=ID → LIVE detectado.
-   * 5. Si canonical → /channel/... o /@... → OFFLINE.
+   * Estrategia en cascada (la 1ª que confirma live gana):
    *
-   * En caso de error (timeout, red, HTML inesperado):
-   * - NO borra el estado previo (degrada elegantemente).
-   * - Marca lastCheckResult='error' y loguea warning.
+   *  A) Scrape de /@{handle}/live (o /channel/{id}/live):
+   *     - <link rel="canonical" href=".../watch?v=ID">  → live
+   *     - "isLiveNow":true + "videoId"                  → live
+   *     Funciona bien desde IPs residenciales. Desde datacenter YouTube suele
+   *     servir una página SIN estas señales (lang=es-419, ~40KB más chica), por
+   *     eso no se confía solo en esto.
+   *
+   *  B) Fallback robusto vía feed RSS + watch page (funciona desde datacenter):
+   *     1. Lee el videoId más reciente del feed videos.xml del canal.
+   *     2. GET /watch?v=ID y busca "liveBroadcastDetails":{"isLiveNow":true.
+   *        Esa señal está SOLO mientras la transmisión está activa.
+   *
+   * En error de red en TODAS las vías: no borra el estado previo y marca 'error'.
    */
   async detectLive(): Promise<LiveDetectionResultDto> {
     const channelHandle = await this.getStringSetting(
@@ -169,120 +186,118 @@ export class LiveDetectionService {
     );
     const channelId = await this.getStringSetting(CONFIG_KEYS.channelId, '');
 
+    const now = () => new Date().toISOString();
+
     if (!channelHandle && !channelId) {
       this.logger.warn(
         'No hay channelHandle ni channelId configurado — no se puede detectar live',
       );
-      const now = new Date().toISOString();
-      await this.setSetting(CONFIG_KEYS.lastCheckAt, now);
+      const ts = now();
+      await this.setSetting(CONFIG_KEYS.lastCheckAt, ts);
       await this.setSetting(CONFIG_KEYS.lastCheckResult, 'error');
-      return {
-        isLive: false,
-        liveVideoId: null,
-        lastCheckResult: 'error',
-        lastCheckAt: now,
-      };
+      return { isLive: false, liveVideoId: null, lastCheckResult: 'error', lastCheckAt: ts };
     }
 
-    // Construir URL: preferir handle, fallback a channelId
-    const url = channelHandle
-      ? `https://www.youtube.com/@${channelHandle}/live`
-      : `https://www.youtube.com/channel/${channelId}/live`;
+    let anyError = false;
 
+    // ── Vía A: scrape de la página /live del canal ────────────────────────────
     try {
-      const response = await firstValueFrom(
-        this.httpService.get<string>(url, {
-          headers: YT_HEADERS,
-          responseType: 'text',
-          maxRedirects: 5,
-          timeout: 8000,
-        }),
-      );
+      const liveUrl = channelHandle
+        ? `https://www.youtube.com/@${channelHandle}/live`
+        : `https://www.youtube.com/channel/${channelId}/live`;
+      const html = await this.fetchText(liveUrl);
 
-      const html: string =
-        typeof response.data === 'string'
-          ? response.data
-          : String(response.data);
-
-      const now = new Date().toISOString();
-      await this.setSetting(CONFIG_KEYS.lastCheckAt, now);
-
-      // ── Detección con dos señales (robusta para datacenter/prod) ──────────
-      // 1ª señal: <link rel="canonical" href=".../watch?v=ID"> (la más fiable).
-      // 2ª señal (fallback): "isLiveNow":true + "videoId":"ID" en el JSON
-      //    embebido. Algunas respuestas de YouTube a IPs de datacenter no traen
-      //    el canonical de watch?v= aunque sí estos flags.
       const canonicalMatch = CANONICAL_LIVE_RE.exec(html);
-      let videoId: string | null =
-        canonicalMatch && canonicalMatch[1] ? canonicalMatch[1] : null;
+      let videoId = canonicalMatch?.[1] ?? null;
       let source = videoId ? 'canonical' : '';
-
       if (!videoId && IS_LIVE_NOW_RE.test(html)) {
         const idMatch = VIDEO_ID_RE.exec(html);
-        if (idMatch && idMatch[1]) {
+        if (idMatch?.[1]) {
           videoId = idMatch[1];
           source = 'isLiveNow';
         }
       }
-
-      // Defensa: si NO detectamos live y la respuesta no parece el HTML real del
-      // canal (sin canonical, o página de consent), es un fallo de fetch, no un
-      // offline real. Marcar 'error' para no apagar el badge ni reportar falso
-      // offline. (Pasaba en producción desde IPs de datacenter.)
-      const looksLikeConsent =
-        !html.includes('rel="canonical"') ||
-        /consent\.youtube\.com|before you continue to youtube/i.test(html);
-      if (!videoId && looksLikeConsent) {
-        await this.setSetting(CONFIG_KEYS.lastCheckResult, 'error');
-        this.logger.warn(
-          `YouTube devolvió una página sin señal de canal (posible consent/bloqueo, len=${html.length}) — marcando error, no offline`,
-        );
-        return {
-          isLive: false,
-          liveVideoId: null,
-          lastCheckResult: 'error',
-          lastCheckAt: now,
-        };
-      }
-
       if (videoId) {
-        await this.setSetting(CONFIG_KEYS.liveVideoId, videoId);
-        await this.setSetting(CONFIG_KEYS.liveDetectedAt, now);
-        await this.setSetting(CONFIG_KEYS.lastCheckResult, 'live');
-        this.logger.log(`Live detectado [${source}]: videoId=${videoId}`);
-        return {
-          isLive: true,
-          liveVideoId: videoId,
-          lastCheckResult: 'live',
-          lastCheckAt: now,
-        };
-      } else {
-        // OFFLINE real — HTML del canal sin señal de live
-        await this.setSetting(CONFIG_KEYS.liveVideoId, '');
-        await this.setSetting(CONFIG_KEYS.lastCheckResult, 'offline');
-        this.logger.debug('Sin transmisión en vivo (sin canonical watch ni isLiveNow)');
-        return {
-          isLive: false,
-          liveVideoId: null,
-          lastCheckResult: 'offline',
-          lastCheckAt: now,
-        };
+        return this.saveLive(videoId, `live-page:${source}`);
       }
     } catch (err) {
-      // Error (timeout, red, HTML inesperado): NO borrar estado previo.
-      // El último liveVideoId conocido sigue vigente hasta el próximo chequeo OK.
-      const msg = (err as Error).message;
-      this.logger.warn(`Error en detección de live: ${msg}`);
-      const now = new Date().toISOString();
-      await this.setSetting(CONFIG_KEYS.lastCheckAt, now);
-      await this.setSetting(CONFIG_KEYS.lastCheckResult, 'error');
-      return {
-        isLive: false,
-        liveVideoId: null,
-        lastCheckResult: 'error',
-        lastCheckAt: now,
-      };
+      anyError = true;
+      this.logger.warn(`Vía A (live-page) falló: ${(err as Error).message}`);
     }
+
+    // ── Vía B: feed RSS → watch page (robusta para datacenter) ────────────────
+    try {
+      const cid = channelId;
+      if (cid) {
+        const feed = await this.fetchText(
+          `https://www.youtube.com/feeds/videos.xml?channel_id=${cid}`,
+        );
+        const feedMatch = FEED_FIRST_VIDEO_RE.exec(feed);
+        const latestVideoId = feedMatch?.[1] ?? null;
+
+        if (latestVideoId) {
+          const watchHtml = await this.fetchText(
+            `https://www.youtube.com/watch?v=${latestVideoId}`,
+          );
+          if (LIVE_BROADCAST_NOW_RE.test(watchHtml)) {
+            return this.saveLive(latestVideoId, 'rss+watch');
+          }
+          // El video más reciente existe pero NO está en vivo → offline real.
+          return this.saveOffline('rss+watch: último video no está en vivo');
+        }
+      }
+    } catch (err) {
+      anyError = true;
+      this.logger.warn(`Vía B (rss+watch) falló: ${(err as Error).message}`);
+    }
+
+    // ── Resolución final ──────────────────────────────────────────────────────
+    if (anyError) {
+      // No pudimos confirmar nada por red: marcar error sin pisar liveVideoId.
+      const ts = now();
+      await this.setSetting(CONFIG_KEYS.lastCheckAt, ts);
+      await this.setSetting(CONFIG_KEYS.lastCheckResult, 'error');
+      return { isLive: false, liveVideoId: null, lastCheckResult: 'error', lastCheckAt: ts };
+    }
+    // Sin errores y sin señal de live → offline real.
+    return this.saveOffline('sin señal de live en ninguna vía');
+  }
+
+  /** GET de texto a YouTube con los headers anti-consent. */
+  private async fetchText(url: string): Promise<string> {
+    const response = await firstValueFrom(
+      this.httpService.get<string>(url, {
+        headers: YT_HEADERS,
+        responseType: 'text',
+        maxRedirects: 5,
+        timeout: 8000,
+      }),
+    );
+    return typeof response.data === 'string'
+      ? response.data
+      : String(response.data);
+  }
+
+  private async saveLive(
+    videoId: string,
+    source: string,
+  ): Promise<LiveDetectionResultDto> {
+    const ts = new Date().toISOString();
+    await this.setSetting(CONFIG_KEYS.lastCheckAt, ts);
+    await this.setSetting(CONFIG_KEYS.liveVideoId, videoId);
+    await this.setSetting(CONFIG_KEYS.liveDetectedAt, ts);
+    await this.setSetting(CONFIG_KEYS.lastCheckResult, 'live');
+    this.logger.log(`Live detectado [${source}]: videoId=${videoId}`);
+    return { isLive: true, liveVideoId: videoId, lastCheckResult: 'live', lastCheckAt: ts };
+  }
+
+  private async saveOffline(reason: string): Promise<LiveDetectionResultDto> {
+    const ts = new Date().toISOString();
+    await this.setSetting(CONFIG_KEYS.lastCheckAt, ts);
+    await this.setSetting(CONFIG_KEYS.liveVideoId, '');
+    await this.setSetting(CONFIG_KEYS.lastCheckResult, 'offline');
+    this.logger.debug(`Sin transmisión en vivo (${reason})`);
+    return { isLive: false, liveVideoId: null, lastCheckResult: 'offline', lastCheckAt: ts };
   }
 
   /**
@@ -302,47 +317,53 @@ export class LiveDetectionService {
   async diagnose(): Promise<Record<string, unknown>> {
     const channelHandle = await this.getStringSetting(CONFIG_KEYS.channelHandle, '');
     const channelId = await this.getStringSetting(CONFIG_KEYS.channelId, '');
-    const url = channelHandle
+
+    const result: Record<string, unknown> = { channelHandle, channelId };
+
+    // ── Vía A: página /live del canal ──────────────────────────────────────
+    const liveUrl = channelHandle
       ? `https://www.youtube.com/@${channelHandle}/live`
       : `https://www.youtube.com/channel/${channelId}/live`;
-
     try {
-      const response = await firstValueFrom(
-        this.httpService.get<string>(url, {
-          headers: YT_HEADERS,
-          responseType: 'text',
-          maxRedirects: 5,
-          timeout: 8000,
-        }),
-      );
-      const html =
-        typeof response.data === 'string' ? response.data : String(response.data);
-
+      const html = await this.fetchText(liveUrl);
       const canonicalMatch = /rel="canonical" href="([^"]*)"/.exec(html);
       const watchMatch = CANONICAL_LIVE_RE.exec(html);
-      const idMatch = VIDEO_ID_RE.exec(html);
-
-      return {
-        url,
-        httpStatus: response.status,
+      result.viaA = {
+        url: liveUrl,
         htmlLength: html.length,
-        finalUrl: response.request?.res?.responseUrl ?? null,
-        hasCanonical: html.includes('rel="canonical"'),
+        lang: /<html[^>]*lang="([^"]+)"/.exec(html)?.[1] ?? null,
         canonicalHref: canonicalMatch ? canonicalMatch[1] : null,
         canonicalWatchVideoId: watchMatch ? watchMatch[1] : null,
         hasIsLiveNow: IS_LIVE_NOW_RE.test(html),
-        firstVideoId: idMatch ? idMatch[1] : null,
         looksLikeConsent:
-          !html.includes('rel="canonical"') ||
           /consent\.youtube\.com|before you continue to youtube/i.test(html),
-        htmlSnippet: html.slice(0, 500),
       };
     } catch (err) {
-      return {
-        url,
-        error: (err as Error).message,
-      };
+      result.viaA = { url: liveUrl, error: (err as Error).message };
     }
+
+    // ── Vía B: feed RSS → watch page ───────────────────────────────────────
+    if (channelId) {
+      const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+      try {
+        const feed = await this.fetchText(feedUrl);
+        const latestVideoId = FEED_FIRST_VIDEO_RE.exec(feed)?.[1] ?? null;
+        const viaB: Record<string, unknown> = { feedUrl, latestVideoId };
+        if (latestVideoId) {
+          const watchUrl = `https://www.youtube.com/watch?v=${latestVideoId}`;
+          const watchHtml = await this.fetchText(watchUrl);
+          viaB.watchUrl = watchUrl;
+          viaB.watchHtmlLength = watchHtml.length;
+          viaB.liveBroadcastIsLiveNow = LIVE_BROADCAST_NOW_RE.test(watchHtml);
+          viaB.hasLiveBroadcastDetails = /"liveBroadcastDetails":/.test(watchHtml);
+        }
+        result.viaB = viaB;
+      } catch (err) {
+        result.viaB = { feedUrl, error: (err as Error).message };
+      }
+    }
+
+    return result;
   }
 
   // ─── SiteSetting helpers ──────────────────────────────────────────────────
