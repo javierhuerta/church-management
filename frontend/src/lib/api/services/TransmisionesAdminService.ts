@@ -7,6 +7,7 @@ import type { LiveDetectionResultDto } from '../models/LiveDetectionResultDto';
 import type { OembedRequestDto } from '../models/OembedRequestDto';
 import type { OembedResponseDto } from '../models/OembedResponseDto';
 import type { ReorderSermonVideosDto } from '../models/ReorderSermonVideosDto';
+import type { SermonSyncResultDto } from '../models/SermonSyncResultDto';
 import type { SermonVideoResponseDto } from '../models/SermonVideoResponseDto';
 import type { TransmisionesConfigResponseDto } from '../models/TransmisionesConfigResponseDto';
 import type { UpdateSermonVideoDto } from '../models/UpdateSermonVideoDto';
@@ -158,6 +159,17 @@ export class TransmisionesAdminService {
             errors: {
                 404: `Predicación no encontrada`,
             },
+        });
+    }
+    /**
+     * Sincronizar predicaciones desde el feed RSS del canal de YouTube — ignora el throttle
+     * @returns SermonSyncResultDto
+     * @throws ApiError
+     */
+    public static transmisionesAdminControllerSyncSermons(): CancelablePromise<SermonSyncResultDto> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/transmisiones/sermons/sync',
         });
     }
     /**

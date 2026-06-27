@@ -104,6 +104,7 @@ export type { SabbathClassResponseDto } from './models/SabbathClassResponseDto';
 export type { ScheduleItemResponseDto } from './models/ScheduleItemResponseDto';
 export type { ScheduleTextsDto } from './models/ScheduleTextsDto';
 export type { SectionDto } from './models/SectionDto';
+export type { SermonSyncResultDto } from './models/SermonSyncResultDto';
 export type { SermonVideoResponseDto } from './models/SermonVideoResponseDto';
 export { ServiceProgramResponseDto } from './models/ServiceProgramResponseDto';
 export { ServiceTemplateResponseDto } from './models/ServiceTemplateResponseDto';

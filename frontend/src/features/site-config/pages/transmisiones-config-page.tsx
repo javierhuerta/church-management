@@ -904,10 +904,28 @@ function DetectionStatusBlock() {
 function SermonsBlock() {
   const [formOpen, setFormOpen] = useState(false)
   const [editingSermon, setEditingSermon] = useState<SermonVideoResponseDto | null>(null)
+  const queryClient = useQueryClient()
 
   const { data: sermons, isLoading } = useQuery({
     queryKey: ['transmisiones-sermons'],
     queryFn: () => TransmisionesAdminService.transmisionesAdminControllerListSermons(),
+  })
+
+  const syncMutation = useMutation({
+    mutationFn: () => TransmisionesAdminService.transmisionesAdminControllerSyncSermons(),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['transmisiones-sermons'] })
+      if (result.error) {
+        toast.error(`No se pudo sincronizar: ${result.error}`)
+      } else if (result.created > 0 || result.updated > 0) {
+        toast.success(
+          `Sincronizado: ${result.created} nuevas, ${result.updated} actualizadas`,
+        )
+      } else {
+        toast.success('Ya está todo al día')
+      }
+    },
+    onError: () => toast.error('Error al sincronizar desde YouTube'),
   })
 
   function handleEdit(sermon: SermonVideoResponseDto) {
@@ -935,25 +953,44 @@ function SermonsBlock() {
             Predicaciones
           </p>
         </div>
-        <Button
-          onClick={handleAddNew}
-          data-testid="sermon-add-button"
-          size="sm"
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Agregar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => syncMutation.mutate()}
+            disabled={syncMutation.isPending}
+            data-testid="sermon-sync-button"
+            size="sm"
+            className="gap-2"
+          >
+            {syncMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            Sincronizar desde YouTube
+          </Button>
+          <Button
+            onClick={handleAddNew}
+            data-testid="sermon-add-button"
+            size="sm"
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Agregar
+          </Button>
+        </div>
       </div>
 
       {/* Ayuda contextual */}
       <div className="rounded-lg border border-border bg-muted/40 p-3 flex items-start gap-3">
         <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
         <p className="text-xs text-muted-foreground">
-          Pega la URL de un video de YouTube para agregar una predicación. El título se
-          auto-completará desde YouTube. Solo las predicaciones{' '}
-          <span className="font-medium text-foreground">publicadas</span> aparecen en el sitio
-          público. La primera (más reciente) se muestra como predicación destacada.
+          Las predicaciones (cultos divinos) se sincronizan automáticamente desde el canal de
+          YouTube cada pocas horas; usa{' '}
+          <span className="font-medium text-foreground">Sincronizar desde YouTube</span> para
+          traerlas al instante. También puedes pegar una URL para agregar una manualmente. Solo
+          las predicaciones <span className="font-medium text-foreground">publicadas</span>{' '}
+          aparecen en el sitio público; la más reciente se muestra como destacada.
         </p>
       </div>
 

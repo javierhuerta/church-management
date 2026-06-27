@@ -16,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { TransmisionesService } from './transmisiones.service';
 import { LiveDetectionService } from './live-detection.service';
+import { SermonSyncService } from './sermon-sync.service';
 import { CreateSermonVideoDto } from './dto/create-sermon-video.dto';
 import { UpdateSermonVideoDto } from './dto/update-sermon-video.dto';
 import { SermonVideoResponseDto } from './dto/sermon-video-response.dto';
@@ -25,6 +26,7 @@ import {
   TransmisionesConfigResponseDto,
 } from './dto/transmisiones-config.dto';
 import { LiveDetectionResultDto } from './dto/live-detection-result.dto';
+import { SermonSyncResultDto } from './dto/sermon-sync-result.dto';
 import { OembedRequestDto } from './dto/oembed-request.dto';
 import { OembedResponseDto } from './dto/oembed-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -41,6 +43,7 @@ export class TransmisionesAdminController {
   constructor(
     private readonly transmisionesService: TransmisionesService,
     private readonly liveDetectionService: LiveDetectionService,
+    private readonly sermonSyncService: SermonSyncService,
   ) {}
 
   // ─── Config del canal ────────────────────────────────────────────────────
@@ -128,6 +131,18 @@ export class TransmisionesAdminController {
     @Param('id') id: string,
   ): Promise<SermonVideoResponseDto> {
     return this.transmisionesService.togglePublish(id);
+  }
+
+  // ─── Sync desde YouTube ──────────────────────────────────────────────────
+
+  @Post('sermons/sync')
+  @ApiOperation({
+    summary:
+      'Sincronizar predicaciones desde el feed RSS del canal de YouTube — ignora el throttle',
+  })
+  @ApiResponse({ status: 200, type: SermonSyncResultDto })
+  async syncSermons(): Promise<SermonSyncResultDto> {
+    return this.sermonSyncService.syncNow();
   }
 
   // ─── Helper oEmbed ───────────────────────────────────────────────────────

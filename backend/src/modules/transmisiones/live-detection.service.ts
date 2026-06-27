@@ -32,6 +32,25 @@ const BROWSER_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 /**
+ * Headers que evitan la página de consentimiento de cookies de YouTube.
+ *
+ * Problema: desde IPs de datacenter (servidor de producción) y regiones EU,
+ * YouTube responde con la página de consent.youtube.com en vez del HTML del
+ * canal. Esa página NO tiene el <link rel="canonical"> con watch?v=, así que la
+ * detección siempre reportaba 'offline' en producción aunque hubiera live.
+ *
+ * Solución: enviar la cookie de consentimiento aceptado (SOCS / CONSENT) para
+ * que YouTube sirva el HTML normal directamente, igual que un navegador que ya
+ * aceptó cookies. Funciona sin YouTube API Key.
+ */
+const YT_HEADERS = {
+  'User-Agent': BROWSER_UA,
+  'Accept-Language': 'es-CL,es;q=0.9,en;q=0.8',
+  // SOCS: consentimiento aceptado (formato vigente). CONSENT: fallback legacy.
+  Cookie: 'SOCS=CAISNQgDEitib3FfaWRlbnRpdHlmcm9udGVuZHVpc2VydmVyXzIwMjQwMTI0LjA4X3AwGgJlbiACGgYIgIu1rwY; CONSENT=YES+',
+};
+
+/**
  * Regex para extraer el videoId del canonical de YouTube.
  *
  * Señal de detección (validada con pruebas reales):
@@ -164,7 +183,7 @@ export class LiveDetectionService {
     try {
       const response = await firstValueFrom(
         this.httpService.get<string>(url, {
-          headers: { 'User-Agent': BROWSER_UA },
+          headers: YT_HEADERS,
           responseType: 'text',
           maxRedirects: 5,
           timeout: 8000,
@@ -180,6 +199,27 @@ export class LiveDetectionService {
       const now = new Date().toISOString();
 
       await this.setSetting(CONFIG_KEYS.lastCheckAt, now);
+
+      // Defensa: si no hay match Y la respuesta es la página de consentimiento
+      // (sin <link rel="canonical"> del canal), NO es un offline real — es que
+      // YouTube no nos sirvió el HTML del canal. Marcar 'error' para no apagar
+      // el badge por error y para que el admin lo note. (Pasaba en producción
+      // desde IPs de datacenter antes de enviar la cookie de consentimiento.)
+      const looksLikeConsent =
+        !html.includes('rel="canonical"') ||
+        /consent\.youtube\.com|before you continue to youtube/i.test(html);
+      if (!match && looksLikeConsent) {
+        await this.setSetting(CONFIG_KEYS.lastCheckResult, 'error');
+        this.logger.warn(
+          'YouTube devolvió una página sin canonical (posible consent/bloqueo) — marcando error, no offline',
+        );
+        return {
+          isLive: false,
+          liveVideoId: null,
+          lastCheckResult: 'error',
+          lastCheckAt: now,
+        };
+      }
 
       if (match && match[1]) {
         // LIVE detectado — canonical apunta a watch?v=VIDEO_ID
