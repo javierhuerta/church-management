@@ -16,3 +16,7 @@ El proyecto usa OpenSpec para gestión de especificaciones y cambios. Ver `AGENT
 ├── frontend/    # React app
 └── openspec/    # Especificaciones y cambios
 ```
+
+## Despliegue
+
+Producción (`main`) y staging (`development`) se despliegan en Dokploy vía GitHub Actions. Ver [`docs/deploy.md`](docs/deploy.md).

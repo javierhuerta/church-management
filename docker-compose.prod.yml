@@ -67,6 +67,7 @@ services:
       CACHE_TTL_DEFAULT: ${CACHE_TTL_DEFAULT:-60000}
       CACHE_MAX: ${CACHE_MAX:-500}
       UNSPLASH_ACCESS_KEY: ${UNSPLASH_ACCESS_KEY:-}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
     volumes:
       - uploads_data:/app/uploads
     restart: unless-stopped
