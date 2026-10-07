@@ -218,7 +218,7 @@ Solo borrar la columna que esté vacía. Si hay datos en ambas, investigar antes
 - Para tareas destructivas o refactors mayores, crear rama dedicada desde development
 - No hacer merge a development hasta que esté validado (por el usuario o por tests)
 - Una vez completada la tarea, volver a development y continuar desde ahi
-- **Nota**: main tiene el sistema legacy que está corriendo. No tocar main hasta que se complete la actualización del stack.
+- **Nota**: `main` se despliega a producción y `development` a staging en Dokploy vía CI (ver `docs/deploy.md`). Un merge a `main` es un release a producción.
 
 ## Estructura de proyecto (por definir agreed)
 
