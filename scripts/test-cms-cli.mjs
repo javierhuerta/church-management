@@ -95,6 +95,14 @@ describe('cms-cli home campaign commands', () => {
     assert.deepEqual(requests.map((r) => [r.method, r.url, r.body]), [['PUT', '/api/site-config/home', { campaignEnabled: false }]]);
   });
 
+  test('gallery reorder sends the image order to the album reorder endpoint', async () => {
+    const order = { images: [{ id: 'img-a', sortOrder: 0 }, { id: 'img-b', sortOrder: 1 }] };
+    const { code } = await runCli(['gallery', 'reorder', 'album-1', JSON.stringify(order)]);
+
+    assert.equal(code, 0);
+    assert.deepEqual(requests.map((r) => [r.method, r.url, r.body]), [['PATCH', '/api/gallery/albums/album-1/reorder', order]]);
+  });
+
   test('existing home get and update commands keep their behavior', async () => {
     let result = await runCli(['home', 'get']);
     assert.equal(result.code, 0);
