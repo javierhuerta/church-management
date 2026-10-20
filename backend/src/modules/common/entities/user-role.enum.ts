@@ -6,4 +6,5 @@ export enum UserRole {
   DirectorDepartamento = 'DirectorDepartamento',
   Secretaria = 'Secretaria',
   MaestroClase = 'MaestroClase',
+  Comunicaciones = 'Comunicaciones',
 }

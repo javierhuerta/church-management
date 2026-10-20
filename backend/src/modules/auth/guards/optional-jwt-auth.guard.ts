@@ -1,10 +1,28 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
+import { ExecutionContext, Injectable, Optional } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiKeyService } from '../services/api-key.service';
+import { extractApiKeyFromRequest } from './extract-api-key';
+import { RequestWithUser } from '../../common/types/auth-request';
 
 @Injectable()
 export class OptionalJwtAuthGuard extends AuthGuard('jwt') {
-  canActivate(context: ExecutionContext) {
-    return super.canActivate(context);
+  constructor(@Optional() private readonly apiKeyService?: ApiKeyService) {
+    super();
+  }
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const req = context.switchToHttp().getRequest<RequestWithUser>();
+    const rawApiKey = extractApiKeyFromRequest(req);
+
+    if (rawApiKey && this.apiKeyService) {
+      const authUser = await this.apiKeyService.validateRawKey(rawApiKey);
+      if (authUser) {
+        req.user = authUser;
+        return true;
+      }
+    }
+
+    return (await super.canActivate(context)) as boolean;
   }
 
   handleRequest<TUser = unknown>(

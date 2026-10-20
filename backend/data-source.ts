@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { User } from './src/modules/auth/entities/user.entity';
+import { ApiKey } from './src/modules/auth/entities/api-key.entity';
 import { Department } from './src/modules/departments/entities/department.entity';
 import { Person } from './src/modules/mission/entities/person.entity';
 import { RescueMember } from './src/modules/mission/entities/rescue-member.entity';
@@ -39,6 +40,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_DATABASE || 'church_management',
   entities: [
     User,
+    ApiKey,
     Department,
     Person,
     RescueMember,

@@ -38,6 +38,7 @@ import { throttleFactory } from './config/factories/throttle.factory';
 import { cacheFactory } from './config/factories/cache.factory';
 
 import { User } from './modules/auth/entities/user.entity';
+import { ApiKey } from './modules/auth/entities/api-key.entity';
 import { Department } from './modules/departments/entities/department.entity';
 import { DepartmentShowcase } from './modules/departments/entities/department-showcase.entity';
 import { ShowcaseAttachment } from './modules/departments/entities/showcase-attachment.entity';
@@ -80,6 +81,7 @@ import { SermonVideo } from './modules/transmisiones/entities/sermon-video.entit
 
 const ENTITIES = [
   User,
+  ApiKey,
   Department,
   Person,
   RescueMember,
