@@ -159,6 +159,8 @@ function PageInicio({ setPage, nextService: propNextService }) {
   const showPublishedDetails = !!(worshipData && worshipData.upcoming);
   const showUnpublishedHint = !!(worshipData && !worshipData.upcoming);
   const campaign = homeData.campaign;
+  // Con la campaña en el hero, su título es el h1 y el nombre de la iglesia baja a h2.
+  const HeroHeading = campaign && campaign.layout === 'hero' ? 'h2' : 'h1';
 
   return (
     <main className="page-enter" data-screen-label="Inicio">
@@ -201,7 +203,7 @@ function PageInicio({ setPage, nextService: propNextService }) {
                 </div>
               </div>
 
-              <h1 className="serif" style={{
+              <HeroHeading className="serif" style={{
                 fontSize: 'clamp(56px, 9vw, 140px)',
                 lineHeight: 0.92,
                 letterSpacing: '-0.035em',
@@ -217,7 +219,7 @@ function PageInicio({ setPage, nextService: propNextService }) {
                     marginLeft: 'clamp(20px, 4vw, 60px)',
                   }}>{homeData.hero.titleAccent}</span>
                 )}
-              </h1>
+              </HeroHeading>
 
               <div style={{
                 marginTop: 'clamp(28px, 4vw, 44px)',
