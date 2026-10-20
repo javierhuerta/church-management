@@ -1201,18 +1201,13 @@ function PageGaleria() {
                   fontSize: 'clamp(26px, 3vw, 36px)', marginTop: 10
                 }}>{c.title}</h2>
               </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: 14
-              }}>
+              {/* Mosaico en columnas: cada foto conserva su proporción y no se recorta. */}
+              <div style={{ columnWidth: 220, columnGap: 14 }}>
                 {c.slots.map((slot, si) => {
                   var id = slot[0], label = slot[1], h = slot[2], kind = slot[3], src = slot[4] || null;
                   return (
-                    <div key={id} style={{
-                      gridColumn: 'auto',
-                    }}>
-                      <PhotoSlot id={id} label={label} height={h} src={src} />
+                    <div key={id} style={{ breakInside: 'avoid', marginBottom: 14 }}>
+                      <PhotoSlot id={id} label={label} height={src ? 'auto' : h} src={src} />
                     </div>
                   );
                 })}
