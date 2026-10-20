@@ -11,6 +11,7 @@
     "test:backend": "cd backend && npm run test",
     "test:frontend": "echo 'Tests pending - framework not configured yet'",
     "test:all": "npm-run-all test:backend test:frontend",
+    "test:skills": "node --test scripts/test-cms-cli.mjs",
 
     "lint:backend": "cd backend && npm run lint",
     "lint:frontend": "cd frontend && npm run lint",

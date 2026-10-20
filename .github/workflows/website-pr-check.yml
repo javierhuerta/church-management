@@ -7,6 +7,8 @@ on:
       - main
     paths:
       - 'website/**'
+      - '.opencode/skills/**'
+      - 'scripts/test-cms-cli.mjs'
 
 permissions:
   contents: read
@@ -27,9 +29,11 @@ jobs:
       - name: Verify window.IASD_API contracts & responsive classes
         run: node website/scripts/verify-integration.mjs
 
+      - name: Install website test tooling
+        run: npm install --no-save --no-audit --no-fund @babel/core @babel/preset-react react@18.3.1 react-dom@18.3.1 jsdom
+
       - name: Validate JSX syntax across website/*.jsx
         run: |
-          npm install --no-save @babel/core @babel/preset-react
           node -e '
             const fs = require("fs");
             const path = require("path");
@@ -51,3 +55,9 @@ jobs:
               }
             }
           '
+
+      - name: Render tests (Inicio campaign block, Galería)
+        run: node --test website/scripts/test-pages.mjs
+
+      - name: CMS skill CLI tests
+        run: node --test scripts/test-cms-cli.mjs

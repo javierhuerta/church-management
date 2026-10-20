@@ -79,6 +79,15 @@ node website/scripts/verify-integration.mjs
 - Si el script reporta `✅ Verificación exitosa`, todos los contratos con el backend y reglas responsive siguen intactos.
 - Si reporta algún `❌`, corrige el punto indicado antes de subir los cambios.
 
+Si tocaste `pages-1.jsx` o `ui.jsx`, corre también los tests de render (Inicio con campaña destacada en sus 2 diseños, Galería sin recorte). Necesitan dependencias de prueba que no se commitean:
+
+```bash
+T=$(mktemp -d) && (cd "$T" && npm init -y >/dev/null && npm install --no-save @babel/core @babel/preset-react react@18.3.1 react-dom@18.3.1 jsdom)
+WEBSITE_TEST_DEPS="$T" node --test website/scripts/test-pages.mjs
+```
+
+El PR check de GitHub corre ambos automáticamente.
+
 ---
 
 ## 6. Flujo de ramas y Pull Requests
