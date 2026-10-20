@@ -13,7 +13,7 @@ import { readFile } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
 
 const BASE_URL = (
-  process.env.CHURCH_API_URL || 'https://iasdosornocentral.unach.app'
+  process.env.CHURCH_API_URL || 'https://adventistascentralosorno.cl'
 )
   .replace(/\/+$/, '')
   .replace(/\/api$/, '');

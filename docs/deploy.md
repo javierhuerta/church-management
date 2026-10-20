@@ -6,7 +6,7 @@ Las imágenes se construyen en GitHub Actions, se publican en GHCR y Dokploy sol
 
 | Rama          | Ambiente Dokploy | Tag de imágenes        | Dominio                                 |
 | ------------- | ---------------- | ---------------------- | --------------------------------------- |
-| `main`        | production       | `:main` (y `:latest`)  | `iasdosornocentral.unach.app`           |
+| `main`        | production       | `:main` (y `:latest`)  | `adventistascentralosorno.cl`           |
 | `development` | staging          | `:development`         | Dominio generado por Dokploy            |
 
 Un merge a `main` es un release a producción.
