@@ -605,6 +605,9 @@ function CampaignBlock({ campaign }) {
   const hasVideo = !!(campaign.videoEmbedUrl || campaign.videoFileUrl);
   const mediaPhoto = !hasVideo && photos.length > 0 ? photos[0] : null;
   const hasMedia = hasVideo || !!mediaPhoto;
+  const gridPhotos = stripPhotos.slice(mediaPhoto ? 1 : 0);
+  // Mosaico (1 grande + 4) solo con 5 fotos; con menos, tira pareja para no dejar huecos.
+  const mosaic = isHero && gridPhotos.length === 5;
   const softText = { color: 'var(--cream)', opacity: 0.82 };
   const ghostOnDark = {
     color: 'var(--cream)',
@@ -728,23 +731,22 @@ function CampaignBlock({ campaign }) {
           )}
         </div>
 
-        {stripPhotos.length > (mediaPhoto ? 1 : 0) && (
+        {gridPhotos.length > 0 && (
           <div>
             {isHero && (
               <div className="mono" style={{
                 fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', marginBottom: 16, ...softText,
               }}>Momentos de la campaña</div>
             )}
-            <div style={{
+            <div className={mosaic ? 'campaign-mosaic' : undefined} style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gridTemplateColumns: mosaic ? undefined : 'repeat(auto-fit, minmax(200px, 1fr))',
               gridAutoRows: isHero ? 'clamp(160px, 18vw, 220px)' : 'clamp(150px, 16vw, 200px)',
               gap: 14,
             }}>
-              {stripPhotos.slice(mediaPhoto ? 1 : 0).map((photo, i) => (
+              {gridPhotos.map((photo) => (
                 <figure key={photo.url} style={{
                   margin: 0, position: 'relative', borderRadius: 10, overflow: 'hidden',
-                  gridRow: isHero && i === 0 ? 'span 2' : undefined,
                 }}>
                   <img src={photo.url} alt={photo.caption || campaign.title} loading="lazy" style={{
                     width: '100%', height: '100%', objectFit: 'cover',
