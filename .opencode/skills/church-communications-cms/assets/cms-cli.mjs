@@ -9,8 +9,48 @@
  *   CHURCH_API_URL (optional) — defaults to https://adventistascentralosorno.cl
  */
 
+import { existsSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { basename, extname } from 'node:path';
+import { basename, dirname, extname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+function loadDotEnvFiles() {
+  const scriptDir = dirname(fileURLToPath(import.meta.url));
+  const repoRoot = resolve(scriptDir, '../../../..');
+  const candidates = [
+    resolve(process.cwd(), '.env.local'),
+    resolve(process.cwd(), '.env'),
+    resolve(repoRoot, '.env.local'),
+    resolve(repoRoot, '.env'),
+  ];
+  for (const file of candidates) {
+    if (!existsSync(file)) continue;
+    try {
+      const lines = readFileSync(file, 'utf8').split(/\r?\n/);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx === -1) continue;
+        const key = trimmed.slice(0, eqIdx).trim();
+        let val = trimmed.slice(eqIdx + 1).trim();
+        if (
+          (val.startsWith('"') && val.endsWith('"')) ||
+          (val.startsWith("'") && val.endsWith("'"))
+        ) {
+          val = val.slice(1, -1);
+        }
+        if (!(key in process.env)) {
+          process.env[key] = val;
+        }
+      }
+    } catch {
+      // ignore unreadable .env
+    }
+  }
+}
+
+loadDotEnvFiles();
 
 const BASE_URL = (
   process.env.CHURCH_API_URL || 'https://adventistascentralosorno.cl'
@@ -115,6 +155,16 @@ async function main() {
         if (!slot || !filePath) throw new Error('Usage: home upload-image <main|small|next-service> <file>');
         return uploadFile(`/site-config/home/images/${slot}`, filePath);
       }
+      if (action === 'campaign-set') {
+        const payload = parseJsonArg(rest[0]);
+        const foreign = Object.keys(payload).filter((key) => !key.startsWith('campaign'));
+        if (foreign.length > 0) {
+          throw new Error(`home campaign-set only accepts campaign* fields (got: ${foreign.join(', ')})`);
+        }
+        return request('PUT', '/site-config/home', payload);
+      }
+      if (action === 'campaign-on') return request('PUT', '/site-config/home', { campaignEnabled: true });
+      if (action === 'campaign-off') return request('PUT', '/site-config/home', { campaignEnabled: false });
       break;
     }
 

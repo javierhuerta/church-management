@@ -4,13 +4,13 @@ description: "Trigger: actualizar sitio web iglesia, subir fotos galeria, progra
 license: Apache-2.0
 metadata:
   author: "javierhuerta"
-  version: "1.0"
+  version: "1.1"
 ---
 
 ## Activation Contract
 
 Activate when the user asks to read or update content on the Iglesia Adventista Central Osorno public website (`adventistascentralosorno.cl`):
-- **Inicio** (`home`): hero text/photos, verse, schedule summary, social links, footer CTA, contact info
+- **Inicio** (`home`): hero text/photos, verse, schedule summary, social links, footer CTA, contact info, and the **Campaña destacada** block (evangelism week, special event, campaign site link, invitation video, photos, countdown)
 - **Liderazgo** (`leaders`): board members (`principal_leaders`), leader portraits, board group photo, ministries
 - **Horarios** (`schedule`): page texts (`kicker`, `title`, `paragraph`) and weekly service items
 - **Calendario** (`calendar`): create, update, publish, archive events, and upload event covers/attachments
@@ -31,12 +31,31 @@ Activate when the user asks to read or update content on the Iglesia Adventista 
 | User Intent | Action |
 |---|---|
 | Update Hero, Verse, Contact, or Home images | Use `cms-cli.mjs home get` / `home update` / `home upload-image <slot> <file>` |
+| Feature a campaign/event on the home page | Follow **Campaña destacada** below; `home campaign-set '<json>'`, `home campaign-on`, `home campaign-off` |
+| Choose the home "Momentos" album | `gallery update-config '{"homeAlbumId":"<uuid>"}'` (albums have no `showOnHome` field) |
 | Manage Board Leaders or Board Photo | Use `cms-cli.mjs leaders list|create|update|delete|upload-photo|upload-board-photo` |
 | Manage Weekly Schedule | Use `cms-cli.mjs schedule get-texts|update-texts|list|create|update|delete` |
 | Create/Edit/Publish Calendar Event | Use `cms-cli.mjs calendar list|create|update|publish|upload-cover` |
 | Prepare or Publish Sabbath Worship Program | Use `cms-cli.mjs worship templates|hymns|list|get|create|update|update-section|publish` |
 | Create Album or Upload Gallery Photos | Use `cms-cli.mjs gallery albums|create-album|upload-image|update-image|publish-album` |
 | Manage Live Stream or YouTube Sermons | Use `cms-cli.mjs live get-config|update-config|force-check|sermons|sync-sermons|create-sermon|publish-sermon` |
+
+## Campaña destacada
+
+Pick the layout from what the user needs; ask only if the intent is unclear:
+
+| Use `hero` when | Use `band` when |
+|---|---|
+| It is THE event of the week (evangelism week, baptism, special Sabbath) and it is happening now or within days | It is relevant but not the main message (registrations, ongoing campaign, upcoming event weeks away) |
+| There is an invitation video or strong photos | The regular hero must stay first (e.g. regular Sabbath weeks) |
+| It has a short, clear end date | It runs for weeks |
+
+Workflow:
+1. `home get` and keep the current `campaign*` values (partial updates are safe).
+2. Photos: create or reuse a gallery album (`gallery create-album`, `gallery upload-image <albumId> <file>`), then publish each image with `gallery update-image <imageId> '{"isPublished":true}'` — uploads start unpublished. The album itself may stay unpublished.
+3. `home campaign-set '<json>'` with layout, texts, CTA URL, YouTube URL, `campaignAlbumId`, countdown and the visibility window (`campaignEndsAt` = day after the event so it hides itself). Times are ISO 8601; Chile is UTC-3 in October.
+4. Confirm the visible copy with the user before `home campaign-on` if it was not stated explicitly.
+5. Verify `GET /api/public/home` → `campaign` is not `null` and has the expected `layout`, `videoEmbedUrl` and `photos`.
 
 ## Execution Steps
 
