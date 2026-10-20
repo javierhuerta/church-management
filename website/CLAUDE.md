@@ -21,7 +21,7 @@ Cuando trabajes con el encargado de Comunicaciones en ajustes de diseño, maquet
   - Ningún archivo fuera de `website/` (`backend/`, `frontend/`, `.github/`, `docker-compose*.yml`)
   - `website/integration.js` (puente de conexión con la API `/api/*`)
   - `website/Dockerfile` ni `website/nginx.conf`
-  - `website/index.html` (salvo agregar fuentes de Google Fonts si fuese necesario; **nunca** quitar `integration.js` ni los sufijos `?v=__ASSET_VERSION__`)
+  - `website/index.html` (salvo agregar fuentes de Google Fonts si fuese necesario; **nunca** quitar `integration.js`, los sufijos `?v=__ASSET_VERSION__` ni las etiquetas de vista previa `og:*` / `twitter:*` con `assets/og-iglesia.jpg`)
 
 ---
 

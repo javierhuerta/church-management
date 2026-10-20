@@ -42,6 +42,14 @@ if (indexHtml) {
   assertContains('index.html', indexHtml, 'integration.js?v=__ASSET_VERSION__', 'Debe cargar el puente integration.js con cache-busting');
   assertContains('index.html', indexHtml, 'image-slot.js?v=__ASSET_VERSION__', 'Debe cargar image-slot.js con cache-busting');
   assertContains('index.html', indexHtml, 'styles.css?v=__ASSET_VERSION__', 'Debe cargar styles.css con cache-busting');
+  // Vista previa al compartir el enlace (WhatsApp, Facebook, Telegram): URL absoluta y archivo presente.
+  assertContains('index.html', indexHtml, '<meta property="og:image" content="https://adventistascentralosorno.cl/assets/og-iglesia.jpg" />', 'Debe publicar la imagen de vista previa (og:image)');
+  assertContains('index.html', indexHtml, '<meta property="og:title"', 'Debe publicar el título de vista previa (og:title)');
+  assertContains('index.html', indexHtml, '<meta property="og:description"', 'Debe publicar la descripción de vista previa (og:description)');
+  assertContains('index.html', indexHtml, '<meta name="twitter:card" content="summary_large_image" />', 'Debe pedir la tarjeta grande al compartir');
+  if (!fs.existsSync(path.join(WEBSITE_DIR, 'assets/og-iglesia.jpg'))) {
+    errors.push('Archivo obligatorio no encontrado: website/assets/og-iglesia.jpg (imagen de vista previa)');
+  }
 }
 
 // 2. Verify integration.js
