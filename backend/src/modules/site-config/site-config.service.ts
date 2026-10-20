@@ -18,8 +18,14 @@ import {
   MinistryLeadershipDto,
   PublicLeadershipDto,
 } from './dto/public-leadership.dto';
-import { PublicHomeDto } from './dto/public-home.dto';
-import { ReadHomeConfigDto, UpdateHomeConfigDto } from './dto/home-config.dto';
+import { GalleryImage } from '../gallery/entities/gallery-image.entity';
+import { HomeCampaignDto, PublicHomeDto } from './dto/public-home.dto';
+import {
+  HOME_CAMPAIGN_LAYOUTS,
+  HomeCampaignLayout,
+  ReadHomeConfigDto,
+  UpdateHomeConfigDto,
+} from './dto/home-config.dto';
 import { SITE_UPLOAD_SUBDIR } from './config/upload.config';
 
 const BOARD_PHOTO_KEY = 'leadership.board_photo';
@@ -47,6 +53,37 @@ const HOME_KEYS = {
   CONTACT_PHONE: 'inicio.contact_phone',
 };
 
+/** Campaña destacada del inicio: claves de site_settings por campo del DTO. */
+const CAMPAIGN_TEXT_KEYS = {
+  campaignKicker: 'inicio.campaign_kicker',
+  campaignTitle: 'inicio.campaign_title',
+  campaignTitleAccent: 'inicio.campaign_title_accent',
+  campaignText: 'inicio.campaign_text',
+  campaignCtaText: 'inicio.campaign_cta_text',
+  campaignCtaUrl: 'inicio.campaign_cta_url',
+  campaignSecondaryCtaText: 'inicio.campaign_secondary_cta_text',
+  campaignSecondaryCtaUrl: 'inicio.campaign_secondary_cta_url',
+  campaignVideoUrl: 'inicio.campaign_video_url',
+  campaignAlbumId: 'inicio.campaign_album_id',
+  campaignCountdownTarget: 'inicio.campaign_countdown_target',
+  campaignCountdownLabel: 'inicio.campaign_countdown_label',
+  campaignStartsAt: 'inicio.campaign_starts_at',
+  campaignEndsAt: 'inicio.campaign_ends_at',
+} as const;
+
+const CAMPAIGN_ENABLED_KEY = 'inicio.campaign_enabled';
+const CAMPAIGN_LAYOUT_KEY = 'inicio.campaign_layout';
+const CAMPAIGN_MAX_PHOTOS = 8;
+
+/** Extrae el videoId de URLs youtube.com/watch, youtu.be, /shorts, /live y /embed. */
+function youtubeVideoId(url: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(
+    /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/,
+  );
+  return match ? match[1] : null;
+}
+
 @Injectable()
 export class SiteConfigService {
   private readonly logger = new Logger(SiteConfigService.name);
@@ -58,6 +95,8 @@ export class SiteConfigService {
     private readonly settingRepo: Repository<SiteSetting>,
     @InjectRepository(Event)
     private readonly eventRepo: Repository<Event>,
+    @InjectRepository(GalleryImage)
+    private readonly imageRepo: Repository<GalleryImage>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -244,6 +283,7 @@ export class SiteConfigService {
     ]);
 
     const s = (key: string) => settings.find((r) => r.key === key)?.value ?? null;
+    const campaign = await this.buildPublicCampaign(s);
 
     return {
       hero: {
@@ -285,7 +325,64 @@ export class SiteConfigService {
             imageUrl: this.toUrl(s(HOME_KEYS.NEXT_SERVICE_IMAGE)),
           }
         : null,
+      campaign,
     };
+  }
+
+  /**
+   * Campaña destacada pública: null si está apagada, sin título o fuera de su
+   * ventana de fechas. Las fotos salen del álbum de galería configurado.
+   */
+  private async buildPublicCampaign(
+    s: (key: string) => string | null,
+  ): Promise<HomeCampaignDto | null> {
+    const v = (key: string) => s(key) || null;
+    const title = v(CAMPAIGN_TEXT_KEYS.campaignTitle);
+    if (s(CAMPAIGN_ENABLED_KEY) !== 'true' || !title) return null;
+
+    const now = Date.now();
+    const startsAt = v(CAMPAIGN_TEXT_KEYS.campaignStartsAt);
+    const endsAt = v(CAMPAIGN_TEXT_KEYS.campaignEndsAt);
+    if (startsAt && new Date(startsAt).getTime() > now) return null;
+    if (endsAt && new Date(endsAt).getTime() < now) return null;
+
+    const albumId = v(CAMPAIGN_TEXT_KEYS.campaignAlbumId);
+    const images = albumId
+      ? await this.imageRepo.find({
+          where: { albumId, isPublished: true },
+          order: { sortOrder: 'ASC' },
+          take: CAMPAIGN_MAX_PHOTOS,
+        })
+      : [];
+
+    const videoUrl = v(CAMPAIGN_TEXT_KEYS.campaignVideoUrl);
+    const videoId = youtubeVideoId(videoUrl);
+
+    return {
+      layout: this.campaignLayout(s(CAMPAIGN_LAYOUT_KEY)),
+      kicker: v(CAMPAIGN_TEXT_KEYS.campaignKicker),
+      title,
+      titleAccent: v(CAMPAIGN_TEXT_KEYS.campaignTitleAccent),
+      text: v(CAMPAIGN_TEXT_KEYS.campaignText),
+      ctaText: v(CAMPAIGN_TEXT_KEYS.campaignCtaText),
+      ctaUrl: v(CAMPAIGN_TEXT_KEYS.campaignCtaUrl),
+      secondaryCtaText: v(CAMPAIGN_TEXT_KEYS.campaignSecondaryCtaText),
+      secondaryCtaUrl: v(CAMPAIGN_TEXT_KEYS.campaignSecondaryCtaUrl),
+      videoUrl,
+      videoEmbedUrl: videoId ? `https://www.youtube.com/embed/${videoId}` : null,
+      countdownTarget: v(CAMPAIGN_TEXT_KEYS.campaignCountdownTarget),
+      countdownLabel: v(CAMPAIGN_TEXT_KEYS.campaignCountdownLabel),
+      photos: images.map((img) => ({
+        url: `/uploads/${img.filePath}`,
+        caption: img.caption ?? null,
+      })),
+    };
+  }
+
+  private campaignLayout(value: string | null): HomeCampaignLayout {
+    return HOME_CAMPAIGN_LAYOUTS.includes(value as HomeCampaignLayout)
+      ? (value as HomeCampaignLayout)
+      : 'band';
   }
 
   async getHomeConfig(): Promise<ReadHomeConfigDto> {
@@ -315,6 +412,11 @@ export class SiteConfigService {
       heroMainImageUrl: this.toUrl(s(HOME_KEYS.HERO_MAIN_IMAGE)),
       heroSmallImageUrl: this.toUrl(s(HOME_KEYS.HERO_SMALL_IMAGE)),
       nextServiceImageUrl: this.toUrl(s(HOME_KEYS.NEXT_SERVICE_IMAGE)),
+      campaignEnabled: s(CAMPAIGN_ENABLED_KEY) === 'true',
+      campaignLayout: this.campaignLayout(s(CAMPAIGN_LAYOUT_KEY)),
+      ...(Object.fromEntries(
+        Object.entries(CAMPAIGN_TEXT_KEYS).map(([field, key]) => [field, s(key) ?? '']),
+      ) as Record<keyof typeof CAMPAIGN_TEXT_KEYS, string>),
     };
   }
 
@@ -338,6 +440,13 @@ export class SiteConfigService {
     if (dto.contactCity !== undefined) updates.push(this.setSetting(HOME_KEYS.CONTACT_CITY, dto.contactCity));
     if (dto.contactEmail !== undefined) updates.push(this.setSetting(HOME_KEYS.CONTACT_EMAIL, dto.contactEmail));
     if (dto.contactPhone !== undefined) updates.push(this.setSetting(HOME_KEYS.CONTACT_PHONE, dto.contactPhone));
+
+    if (dto.campaignEnabled !== undefined) updates.push(this.setSetting(CAMPAIGN_ENABLED_KEY, String(dto.campaignEnabled)));
+    if (dto.campaignLayout !== undefined) updates.push(this.setSetting(CAMPAIGN_LAYOUT_KEY, dto.campaignLayout));
+    for (const [field, key] of Object.entries(CAMPAIGN_TEXT_KEYS)) {
+      const value = dto[field as keyof typeof CAMPAIGN_TEXT_KEYS];
+      if (value !== undefined) updates.push(this.setSetting(key, value));
+    }
 
     await Promise.all(updates);
   }

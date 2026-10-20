@@ -83,6 +83,58 @@ export class HomeNextServiceDto {
   imageUrl: string | null;
 }
 
+export class HomeCampaignPhotoDto {
+  @ApiProperty({ type: String })
+  url: string;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  caption: string | null;
+}
+
+export class HomeCampaignDto {
+  @ApiProperty({ enum: ['band', 'hero'] })
+  layout: 'band' | 'hero';
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  kicker: string | null;
+
+  @ApiProperty({ type: String })
+  title: string;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  titleAccent: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  text: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  ctaText: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  ctaUrl: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  secondaryCtaText: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  secondaryCtaUrl: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  videoUrl: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  videoEmbedUrl: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  countdownTarget: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  countdownLabel: string | null;
+
+  @ApiProperty({ type: [HomeCampaignPhotoDto] })
+  photos: HomeCampaignPhotoDto[];
+}
+
 export class PublicHomeDto {
   @ApiProperty({ type: HomeHeroDto })
   hero: HomeHeroDto;
@@ -104,4 +156,11 @@ export class PublicHomeDto {
 
   @ApiPropertyOptional({ type: HomeNextServiceDto, nullable: true })
   nextService: HomeNextServiceDto | null;
+
+  @ApiPropertyOptional({
+    type: HomeCampaignDto,
+    nullable: true,
+    description: 'Campaña destacada activa (null si está apagada o fuera de su ventana de fechas)',
+  })
+  campaign: HomeCampaignDto | null;
 }
