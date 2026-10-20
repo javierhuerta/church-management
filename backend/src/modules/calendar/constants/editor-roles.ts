@@ -4,6 +4,7 @@ export const EDITOR_ROLES: readonly UserRole[] = [
   UserRole.Admin,
   UserRole.Pastor,
   UserRole.Secretaria,
+  UserRole.Comunicaciones,
 ] as const;
 
 export function isEditorRole(role: UserRole | undefined | null): boolean {

@@ -50,7 +50,12 @@ import {
   CoverSuggestionsResult,
 } from './providers/cover-image-provider.interface';
 
-const EDITOR_ROLES = [UserRole.Admin, UserRole.Pastor, UserRole.Secretaria];
+const EDITOR_ROLES = [
+  UserRole.Admin,
+  UserRole.Pastor,
+  UserRole.Secretaria,
+  UserRole.Comunicaciones,
+];
 
 function viewerFromReq(req: RequestWithUser) {
   return {

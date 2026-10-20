@@ -37,7 +37,7 @@ import { UserRole } from '../common/entities/user-role.enum';
 @ApiTags('Transmisiones - Admin')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.Admin)
+@Roles(UserRole.Admin, UserRole.Comunicaciones)
 @Controller('transmisiones')
 export class TransmisionesAdminController {
   constructor(

@@ -261,6 +261,7 @@ describe('ProgramService — unit tests', () => {
       UserRole.Pastor,
       UserRole.Anciano,
       UserRole.DirectorDepartamento,
+      UserRole.Comunicaciones,
     ])('allows %s to create programs', async (role) => {
       const template = makeTemplate();
       const savedProgram = makeProgram({ id: 'prog-new' });
@@ -342,7 +343,7 @@ describe('ProgramService — unit tests', () => {
   });
 
   describe('updateSection — permission for PUBLISHED programs', () => {
-    it('allows Admin to edit PUBLISHED programs', async () => {
+    it('allows Admin and Comunicaciones to edit PUBLISHED programs', async () => {
       const section = makeSection();
       const program = makeProgram({
         status: ProgramStatus.PUBLISHED,
@@ -353,12 +354,19 @@ describe('ProgramService — unit tests', () => {
 
       await service.updateSection(
         section.id,
-        { notes: 'Cambio' },
+        { notes: 'Cambio Admin' },
         'admin-user',
         UserRole.Admin,
       );
 
-      expect(sectionRepo.save).toHaveBeenCalled();
+      await service.updateSection(
+        section.id,
+        { notes: 'Cambio Comunicaciones' },
+        'comm-user',
+        UserRole.Comunicaciones,
+      );
+
+      expect(sectionRepo.save).toHaveBeenCalledTimes(2);
     });
 
     it('allows original Pastor creator to edit PUBLISHED programs', async () => {
@@ -420,18 +428,21 @@ describe('ProgramService — unit tests', () => {
   });
 
   describe('publish', () => {
-    it('changes status to PUBLISHED and sets publishedAt', async () => {
-      const program = makeProgram({ status: ProgramStatus.DRAFT });
-      mockProgramRepository.findOneWithRelations.mockResolvedValue(program);
+    it.each([UserRole.Admin, UserRole.Comunicaciones])(
+      'changes status to PUBLISHED and sets publishedAt for %s',
+      async (role) => {
+        const program = makeProgram({ status: ProgramStatus.DRAFT });
+        mockProgramRepository.findOneWithRelations.mockResolvedValue(program);
 
-      await service.publish(program.id, 'user-1', UserRole.Admin);
+        await service.publish(program.id, 'user-1', role);
 
-      expect(programRepo.save).toHaveBeenCalled();
-      const saved = programRepo.save.mock.calls[0][0] as ServiceProgram;
-      expect(saved.status).toBe(ProgramStatus.PUBLISHED);
-      expect(saved.publishedById).toBe('user-1');
-      expect(saved.publishedAt).toBeInstanceOf(Date);
-    });
+        expect(programRepo.save).toHaveBeenCalled();
+        const saved = programRepo.save.mock.calls[0][0] as ServiceProgram;
+        expect(saved.status).toBe(ProgramStatus.PUBLISHED);
+        expect(saved.publishedById).toBe('user-1');
+        expect(saved.publishedAt).toBeInstanceOf(Date);
+      },
+    );
 
     it('throws BadRequestException when program is already published', async () => {
       const program = makeProgram({ status: ProgramStatus.PUBLISHED });

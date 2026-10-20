@@ -39,7 +39,7 @@ import { siteImageMulterConfig } from './config/upload.config';
 @ApiBearerAuth()
 @Controller('site-config')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.Admin)
+@Roles(UserRole.Admin, UserRole.Comunicaciones)
 export class SiteConfigController {
   constructor(private readonly service: SiteConfigService) {}
 

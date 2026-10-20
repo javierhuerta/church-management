@@ -806,6 +806,7 @@ export class ProgramService {
       UserRole.Pastor,
       UserRole.Anciano,
       UserRole.DirectorDepartamento,
+      UserRole.Comunicaciones,
     ].includes(role);
   }
 
@@ -820,7 +821,10 @@ export class ProgramService {
     if (program.status === ProgramStatus.DRAFT) {
       return this.canCreateProgram(userRole);
     }
-    if (userRole === UserRole.Admin) {
+    if (
+      userRole === UserRole.Admin ||
+      userRole === UserRole.Comunicaciones
+    ) {
       return true;
     }
     if (userRole === UserRole.Pastor && program.createdById === userId) {

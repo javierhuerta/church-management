@@ -39,7 +39,7 @@ import { UserRole } from '../common/entities/user-role.enum';
 @ApiTags('gallery')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.Admin)
+@Roles(UserRole.Admin, UserRole.Comunicaciones)
 @Controller('gallery')
 export class GalleryAdminController {
   constructor(private readonly galleryService: GalleryService) {}

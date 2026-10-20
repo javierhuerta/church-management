@@ -94,6 +94,7 @@ export class ProgramController {
     UserRole.Pastor,
     UserRole.Anciano,
     UserRole.DirectorDepartamento,
+    UserRole.Comunicaciones,
   )
   @ApiOperation({ summary: 'Create a program from template' })
   @ApiResponse({ status: 201, description: 'Program created' })
@@ -115,6 +116,7 @@ export class ProgramController {
     UserRole.Pastor,
     UserRole.Anciano,
     UserRole.DirectorDepartamento,
+    UserRole.Comunicaciones,
   )
   @ApiOperation({ summary: 'Add a group to a program' })
   @ApiResponse({ status: 201, description: 'Group added' })
@@ -140,6 +142,7 @@ export class ProgramController {
     UserRole.Pastor,
     UserRole.Anciano,
     UserRole.DirectorDepartamento,
+    UserRole.Comunicaciones,
   )
   @ApiOperation({ summary: 'Add a section to a group' })
   @ApiResponse({ status: 201, description: 'Section added' })
@@ -165,6 +168,7 @@ export class ProgramController {
     UserRole.Pastor,
     UserRole.Anciano,
     UserRole.DirectorDepartamento,
+    UserRole.Comunicaciones,
   )
   @ApiOperation({ summary: 'Update a program section' })
   @ApiResponse({ status: 200, description: 'Section updated' })
@@ -187,7 +191,7 @@ export class ProgramController {
   }
 
   @Post(':id/publish')
-  @Roles(UserRole.Admin, UserRole.Pastor)
+  @Roles(UserRole.Admin, UserRole.Pastor, UserRole.Comunicaciones)
   @ApiOperation({ summary: 'Publish a program' })
   @ApiResponse({ status: 200, description: 'Program published' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -200,7 +204,7 @@ export class ProgramController {
   }
 
   @Post(':id/publish-with-event')
-  @Roles(UserRole.Admin, UserRole.Pastor)
+  @Roles(UserRole.Admin, UserRole.Pastor, UserRole.Comunicaciones)
   @ApiOperation({
     summary: 'Publish a program and optionally create a calendar event',
   })
@@ -260,6 +264,7 @@ export class ProgramController {
     UserRole.Pastor,
     UserRole.Anciano,
     UserRole.DirectorDepartamento,
+    UserRole.Comunicaciones,
   )
   @ApiOperation({ summary: 'Delete a group and its sections from a program' })
   @ApiResponse({ status: 200, description: 'Group deleted' })
@@ -285,6 +290,7 @@ export class ProgramController {
     UserRole.Pastor,
     UserRole.Anciano,
     UserRole.DirectorDepartamento,
+    UserRole.Comunicaciones,
   )
   @ApiOperation({ summary: 'Delete a section from a program' })
   @ApiResponse({ status: 200, description: 'Section deleted' })
@@ -310,6 +316,7 @@ export class ProgramController {
     UserRole.Pastor,
     UserRole.Anciano,
     UserRole.DirectorDepartamento,
+    UserRole.Comunicaciones,
   )
   @ApiOperation({ summary: 'Update a program group' })
   @ApiResponse({ status: 200, description: 'Group updated' })
@@ -337,6 +344,7 @@ export class ProgramController {
     UserRole.Pastor,
     UserRole.Anciano,
     UserRole.DirectorDepartamento,
+    UserRole.Comunicaciones,
   )
   @ApiOperation({ summary: 'Reorder groups in a program' })
   @ApiResponse({ status: 200, description: 'Groups reordered' })
@@ -354,6 +362,7 @@ export class ProgramController {
     UserRole.Pastor,
     UserRole.Anciano,
     UserRole.DirectorDepartamento,
+    UserRole.Comunicaciones,
   )
   @ApiOperation({ summary: 'Reorder sections in a program' })
   @ApiResponse({ status: 200, description: 'Sections reordered' })
@@ -371,6 +380,7 @@ export class ProgramController {
     UserRole.Pastor,
     UserRole.Anciano,
     UserRole.DirectorDepartamento,
+    UserRole.Comunicaciones,
   )
   @ApiOperation({ summary: 'Update program (date, title, preacher, theme, scripture)' })
   @ApiResponse({ status: 200, description: 'Program updated', type: ServiceProgramResponseDto })

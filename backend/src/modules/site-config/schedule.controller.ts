@@ -32,7 +32,7 @@ import { UserRole } from '../common/entities/user-role.enum';
 @ApiBearerAuth()
 @Controller('site-config/schedule')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.Admin)
+@Roles(UserRole.Admin, UserRole.Comunicaciones)
 export class ScheduleController {
   constructor(private readonly service: ScheduleService) {}
 
