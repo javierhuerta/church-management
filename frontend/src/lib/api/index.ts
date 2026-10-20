@@ -9,6 +9,7 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AddMemberDto } from './models/AddMemberDto';
 export type { AddSmallGroupMemberDto } from './models/AddSmallGroupMemberDto';
+export type { ApiKeyResponseDto } from './models/ApiKeyResponseDto';
 export type { AttachmentResponseDto } from './models/AttachmentResponseDto';
 export { BibleCourseResponseDto } from './models/BibleCourseResponseDto';
 export { BibleStudyCourseDto } from './models/BibleStudyCourseDto';
@@ -18,6 +19,8 @@ export { BibleStudyResponseDto } from './models/BibleStudyResponseDto';
 export type { BibleStudyTeamDto } from './models/BibleStudyTeamDto';
 export type { BibleStudyTotalsDto } from './models/BibleStudyTotalsDto';
 export type { ChangePasswordDto } from './models/ChangePasswordDto';
+export type { CreateApiKeyDto } from './models/CreateApiKeyDto';
+export type { CreatedApiKeyResponseDto } from './models/CreatedApiKeyResponseDto';
 export { CreateBibleCourseDto } from './models/CreateBibleCourseDto';
 export { CreateBibleStudyDto } from './models/CreateBibleStudyDto';
 export type { CreateCatalogDto } from './models/CreateCatalogDto';

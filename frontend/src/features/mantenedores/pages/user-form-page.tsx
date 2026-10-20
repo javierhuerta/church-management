@@ -4,8 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import type { CreateUserDto, UpdateUserDto } from '@/lib/api'
-import { ArrowLeft } from 'lucide-react'
+import type { CreateUserDto, UpdateUserDto, CreatedApiKeyResponseDto } from '@/lib/api'
+import { ArrowLeft, KeyRound, Plus, Trash2, Copy, Check } from 'lucide-react'
 import { UsersService, DepartmentsService } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,6 +17,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
 import { PersonCombobox } from '@/features/mission/components/person-combobox'
 import { usePeopleList } from '@/features/mission/hooks/use-people-list'
@@ -29,6 +38,7 @@ const USER_ROLES = [
   { value: 'DirectorDepartamento', label: 'Director de Departamento' },
   { value: 'Secretaria',           label: 'Secretaria' },
   { value: 'MaestroClase',         label: 'Maestro de Clase' },
+  { value: 'Comunicaciones',       label: 'Comunicaciones' },
 ]
 
 const createSchema = z.object({
@@ -60,6 +70,52 @@ export function UserFormPage() {
   const [serverError, setServerError] = useState<string | null>(null)
   const [selectedDeptIds, setSelectedDeptIds] = useState<string[]>([])
   const [formReady, setFormReady] = useState(!isEdit)
+  const [newKeyName, setNewKeyName] = useState('')
+  const [createdKey, setCreatedKey] = useState<CreatedApiKeyResponseDto | null>(null)
+  const [copiedKey, setCopiedKey] = useState(false)
+  const [revokeKeyId, setRevokeKeyId] = useState<string | null>(null)
+
+  const { data: apiKeys = [], isLoading: isLoadingKeys } = useQuery({
+    queryKey: ['users', id, 'api-keys'],
+    queryFn: () => UsersService.usersControllerListApiKeys(id!),
+    enabled: isEdit,
+  })
+
+  const createKeyMutation = useMutation({
+    mutationFn: (name: string) =>
+      UsersService.usersControllerCreateApiKey(id!, { name }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['users', id, 'api-keys'] })
+      setNewKeyName('')
+      setCopiedKey(false)
+      setCreatedKey(res)
+      toast.success('Clave de API generada')
+    },
+    onError: (err: { body?: { message?: string } }) => {
+      toast.error(err.body?.message ?? 'Error al generar clave de API')
+    },
+  })
+
+  const revokeKeyMutation = useMutation({
+    mutationFn: (keyId: string) =>
+      UsersService.usersControllerRevokeApiKey(id!, keyId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', id, 'api-keys'] })
+      setRevokeKeyId(null)
+      toast.success('Clave de API revocada')
+    },
+    onError: (err: { body?: { message?: string } }) => {
+      toast.error(err.body?.message ?? 'Error al revocar clave de API')
+      setRevokeKeyId(null)
+    },
+  })
+
+  async function handleCopyRawKey() {
+    if (!createdKey?.rawKey) return
+    await navigator.clipboard.writeText(createdKey.rawKey)
+    setCopiedKey(true)
+    toast.success('Clave copiada al portapapeles')
+  }
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
@@ -322,6 +378,145 @@ export function UserFormPage() {
           </Button>
         </div>
       </form>
+
+      {isEdit && (
+        <div className="space-y-4 bg-card rounded-xl border border-border p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <KeyRound className="h-4 w-4 text-primary" />
+                <p className="text-base font-semibold text-foreground">
+                  Claves de API (Agentes / Integraciones)
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Genera claves revocables para que este usuario pueda operar sus módulos autorizados desde un agente IA (ej. Claude Desktop / Claude Code) vía header <code className="px-1 py-0.5 bg-muted rounded">X-API-Key</code>.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.target.value)}
+              placeholder="Etiqueta de la clave (ej. Claude Pro Comunicaciones)"
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              size="sm"
+              disabled={!newKeyName.trim() || createKeyMutation.isPending}
+              onClick={() => createKeyMutation.mutate(newKeyName.trim())}
+              className="shrink-0"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              {createKeyMutation.isPending ? 'Generando...' : 'Generar clave'}
+            </Button>
+          </div>
+
+          {isLoadingKeys ? (
+            <p className="text-xs text-muted-foreground">Cargando claves activas...</p>
+          ) : apiKeys.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border p-4 text-center">
+              <p className="text-xs text-muted-foreground">
+                Este usuario no tiene claves de API activas.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
+              {apiKeys.map((k) => (
+                <div
+                  key={k.id}
+                  className="flex items-center justify-between gap-3 px-4 py-3 bg-card hover:bg-muted/40 transition-colors"
+                >
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-medium text-foreground">{k.name}</p>
+                      <code className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                        {k.keyPrefix}
+                      </code>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Creada: {new Date(k.createdAt).toLocaleDateString('es-CL')}
+                      {' · '}
+                      {k.lastUsedAt
+                        ? `Último uso: ${new Date(k.lastUsedAt).toLocaleString('es-CL')}`
+                        : 'Sin uso registrado'}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive/80 hover:bg-destructive/10 shrink-0"
+                    onClick={() => setRevokeKeyId(k.id)}
+                    title="Revocar clave"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <Dialog open={!!createdKey} onOpenChange={(open) => !open && setCreatedKey(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Clave de API generada</DialogTitle>
+            <DialogDescription>
+              Copia y guarda esta clave ahora. Por seguridad solo almacenamos su hash y <strong>no podrás volver a verla completa</strong> después de cerrar esta ventana.
+            </DialogDescription>
+          </DialogHeader>
+          {createdKey && (
+            <div className="space-y-3 py-2">
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">Etiqueta</p>
+                <p className="text-sm font-semibold text-foreground">{createdKey.name}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">Clave secreta (X-API-Key)</p>
+                <div className="flex items-center gap-2">
+                  <Input
+                    readOnly
+                    value={createdKey.rawKey}
+                    className="font-mono text-xs"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopyRawKey}
+                    title="Copiar clave"
+                  >
+                    {copiedKey ? (
+                      <Check className="h-4 w-4 text-primary" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button type="button" onClick={() => setCreatedKey(null)}>
+              Ya la guardé
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={!!revokeKeyId}
+        onOpenChange={(open) => !open && setRevokeKeyId(null)}
+        title="Revocar clave de API"
+        description="¿Estás seguro de que deseas revocar esta clave? Cualquier agente o integración que la utilice dejará de tener acceso de inmediato."
+        confirmLabel="Revocar clave"
+        variant="destructive"
+        onConfirm={() => revokeKeyId && revokeKeyMutation.mutate(revokeKeyId)}
+      />
     </div>
   )
 }

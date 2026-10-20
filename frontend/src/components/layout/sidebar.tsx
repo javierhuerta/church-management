@@ -195,7 +195,9 @@ export function Sidebar() {
                 </button>
               )
             })}
-            {(user?.role === 'Admin' || user?.role === 'Pastor') && adminNavItems.map((item) => {
+            {(user?.role === 'Admin' || user?.role === 'Pastor' || user?.role === 'Comunicaciones') && adminNavItems
+              .filter((item) => item.id === 'configuraciones' || user?.role === 'Admin' || user?.role === 'Pastor')
+              .map((item) => {
               const Icon = item.icon
               const isActive = item.matchPrefix
                 ? location.pathname.startsWith(item.matchPrefix)
@@ -291,12 +293,14 @@ export function Sidebar() {
                 </AccordionContent>
               </AccordionItem>
             )}
-            {(user?.role === 'Admin' || user?.role === 'Pastor') && (
+            {(user?.role === 'Admin' || user?.role === 'Pastor' || user?.role === 'Comunicaciones') && (
               <AccordionItem value="admin">
                 <AccordionTrigger>Administración</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-1">
-                    {adminNavItems.map((item) => {
+                    {adminNavItems
+                      .filter((item) => item.id === 'configuraciones' || user?.role === 'Admin' || user?.role === 'Pastor')
+                      .map((item) => {
                       const Icon = item.icon
                       const isActive = item.matchPrefix
                         ? location.pathname.startsWith(item.matchPrefix)

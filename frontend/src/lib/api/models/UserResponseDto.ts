@@ -23,6 +23,7 @@ export namespace UserResponseDto {
         DIRECTOR_DEPARTAMENTO = 'DirectorDepartamento',
         SECRETARIA = 'Secretaria',
         MAESTRO_CLASE = 'MaestroClase',
+        COMUNICACIONES = 'Comunicaciones',
     }
 }
 

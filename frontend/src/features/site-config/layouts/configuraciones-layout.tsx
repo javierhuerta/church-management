@@ -58,7 +58,7 @@ export function ConfiguracionesLayout() {
     scrollRef.current?.scrollBy({ left: dir === 'left' ? -120 : 120, behavior: 'smooth' })
   }
 
-  if (role !== 'Admin') {
+  if (role !== 'Admin' && role !== 'Comunicaciones') {
     return <Navigate to="/" replace />
   }
 

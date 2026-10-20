@@ -16,6 +16,7 @@ const ROLE_LABELS: Record<string, string> = {
   DirectorDepartamento: 'Director de Departamento',
   Secretaria: 'Secretaria',
   MaestroClase: 'Maestro de Clase',
+  Comunicaciones: 'Comunicaciones',
 }
 
 const ROLE_BADGE_COLORS: Record<string, { bg: string; color: string }> = {
@@ -26,6 +27,7 @@ const ROLE_BADGE_COLORS: Record<string, { bg: string; color: string }> = {
   DirectorDepartamento: { bg: '#2563EB22', color: '#2563EB' },
   Secretaria: { bg: '#47556922', color: '#475569' },
   MaestroClase: { bg: '#16A34A22', color: '#16A34A' },
+  Comunicaciones: { bg: '#0D948822', color: '#0F766E' },
 }
 
 function EmptyState() {
