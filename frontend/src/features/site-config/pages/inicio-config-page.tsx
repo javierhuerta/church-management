@@ -1,4 +1,5 @@
 import { HomeConfigForm } from './home-config-form'
+import { CampaignConfigForm } from './campaign-config-form'
 
 export function InicioConfigPage() {
   return (
@@ -9,7 +10,9 @@ export function InicioConfigPage() {
           Administra los textos, imágenes y enlaces de la página principal del sitio público.
         </p>
       </div>
-      
+
+      <CampaignConfigForm />
+
       <HomeConfigForm />
     </div>
   )

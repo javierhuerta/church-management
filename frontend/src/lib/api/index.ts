@@ -54,6 +54,8 @@ export type { GalleryAlbumResponseDto } from './models/GalleryAlbumResponseDto';
 export type { GalleryConfigResponseDto } from './models/GalleryConfigResponseDto';
 export type { GalleryImageResponseDto } from './models/GalleryImageResponseDto';
 export type { GroupWithSectionsDto } from './models/GroupWithSectionsDto';
+export type { HomeCampaignDto } from './models/HomeCampaignDto';
+export type { HomeCampaignPhotoDto } from './models/HomeCampaignPhotoDto';
 export type { HomeContactDto } from './models/HomeContactDto';
 export type { HomeFooterCtaDto } from './models/HomeFooterCtaDto';
 export type { HomeHeroDto } from './models/HomeHeroDto';
