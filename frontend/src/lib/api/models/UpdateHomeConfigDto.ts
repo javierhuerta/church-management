@@ -34,9 +34,13 @@ export type UpdateHomeConfigDto = {
     campaignSecondaryCtaText?: string;
     campaignSecondaryCtaUrl?: string;
     /**
-     * URL de YouTube del video de invitación
+     * Video de invitación: URL de YouTube o archivo directo (.mp4, .webm, .m4v)
      */
     campaignVideoUrl?: string;
+    /**
+     * Imagen de portada para un video de archivo directo
+     */
+    campaignVideoPosterUrl?: string;
     /**
      * ID del álbum de galería con las fotos de la campaña
      */

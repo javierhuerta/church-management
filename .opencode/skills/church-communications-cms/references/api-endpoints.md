@@ -48,7 +48,8 @@ Same `GET`/`PUT /api/site-config/home` endpoints; all fields are optional and pa
   "campaignCtaUrl": "https://regresiva.adventistascentralosorno.cl",
   "campaignSecondaryCtaText": "Descargar el libro gratis",
   "campaignSecondaryCtaUrl": "https://regresiva.adventistascentralosorno.cl",
-  "campaignVideoUrl": "https://www.youtube.com/watch?v=VIDEO_ID",
+  "campaignVideoUrl": "https://regresiva.adventistascentralosorno.cl/video/invitacion.mp4",
+  "campaignVideoPosterUrl": "https://regresiva.adventistascentralosorno.cl/video/invitacion.webp",
   "campaignAlbumId": "<gallery album uuid>",
   "campaignCountdownTarget": "2026-10-21T22:30:00.000Z",
   "campaignCountdownLabel": "Primera noche en",
@@ -61,11 +62,13 @@ Same `GET`/`PUT /api/site-config/home` endpoints; all fields are optional and pa
 |---|---|
 | `campaignEnabled` | boolean. The block shows only when `true` **and** `campaignTitle` is not empty. |
 | `campaignLayout` | `hero` (campaign takes the top of the home page, regular hero moves below) or `band` (band right below the regular hero). Default `band`. |
-| `campaignCtaUrl`, `campaignSecondaryCtaUrl`, `campaignVideoUrl` | valid URL or `""`. Video must be YouTube (`watch?v=`, `youtu.be/`, `/shorts/`, `/live/`, `/embed/`) to be embedded. |
+| `campaignCtaUrl`, `campaignSecondaryCtaUrl`, `campaignVideoUrl`, `campaignVideoPosterUrl` | absolute `http(s)://` URL or `""` (a bare host is rejected). |
+| `campaignVideoUrl` | Either YouTube (`watch?v=`, `youtu.be/`, `/shorts/`, `/live/`, `/embed/`) → embedded with `<iframe>`, or a direct video file ending in `.mp4`, `.webm` or `.m4v` (e.g. a HyperFrames render) → native `<video>` player that keeps the file's aspect ratio (vertical 9:16 works). Any other URL is ignored. |
+| `campaignVideoPosterUrl` | Cover image shown before playing a direct video file (ignored for YouTube). |
 | `campaignAlbumId` | gallery album UUID or `""`. Only **published images** of that album are shown (max 8); the album itself may stay unpublished. |
 | `campaignCountdownTarget`, `campaignStartsAt`, `campaignEndsAt` | ISO 8601 or `""`. Chile is UTC-3 in October (19:30 local = 22:30Z). The countdown hides itself once the target passes; the block hides itself outside `startsAt`/`endsAt`. |
 
-Public result: `GET /api/public/home` → `campaign` (`null` when hidden) with `layout`, texts, `videoEmbedUrl` and `photos: [{ url, caption }]`.
+Public result: `GET /api/public/home` → `campaign` (`null` when hidden) with `layout`, texts, `videoEmbedUrl` (YouTube) or `videoFileUrl` + `videoPosterUrl` (direct file), and `photos: [{ url, caption }]`.
 
 ---
 

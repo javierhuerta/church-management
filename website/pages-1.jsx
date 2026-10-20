@@ -602,8 +602,9 @@ function CampaignBlock({ campaign }) {
   const countdown = useCountdown(campaign.countdownTarget);
   const photos = campaign.photos || [];
   const stripPhotos = isHero ? photos.slice(0, 5) : photos.slice(0, 3);
-  const mediaPhoto = !campaign.videoEmbedUrl && photos.length > 0 ? photos[0] : null;
-  const hasMedia = !!(campaign.videoEmbedUrl || mediaPhoto);
+  const hasVideo = !!(campaign.videoEmbedUrl || campaign.videoFileUrl);
+  const mediaPhoto = !hasVideo && photos.length > 0 ? photos[0] : null;
+  const hasMedia = hasVideo || !!mediaPhoto;
   const softText = { color: 'var(--cream)', opacity: 0.82 };
   const ghostOnDark = {
     color: 'var(--cream)',
@@ -704,6 +705,20 @@ function CampaignBlock({ campaign }) {
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
                   />
                 </div>
+              ) : campaign.videoFileUrl ? (
+                // Archivo propio (p. ej. vertical 9:16): toma la proporción del poster/video.
+                <video
+                  src={campaign.videoFileUrl}
+                  poster={campaign.videoPosterUrl || undefined}
+                  controls
+                  playsInline
+                  preload="none"
+                  aria-label={'Video · ' + campaign.title}
+                  style={{
+                    display: 'block', margin: '0 auto', borderRadius: 12, background: '#000',
+                    width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: 'min(70vh, 620px)',
+                  }}
+                />
               ) : (
                 <img src={mediaPhoto.url} alt={mediaPhoto.caption || campaign.title} style={{
                   width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 12,

@@ -14,7 +14,15 @@ export type HomeCampaignDto = {
     secondaryCtaText?: string | null;
     secondaryCtaUrl?: string | null;
     videoUrl?: string | null;
+    /**
+     * Embed de YouTube (si el video es de YouTube)
+     */
     videoEmbedUrl?: string | null;
+    /**
+     * Archivo de video directo (.mp4, .webm, .m4v)
+     */
+    videoFileUrl?: string | null;
+    videoPosterUrl?: string | null;
     countdownTarget?: string | null;
     countdownLabel?: string | null;
     photos: Array<HomeCampaignPhotoDto>;

@@ -37,8 +37,9 @@ describe('UpdateHomeConfigDto campaign fields', () => {
         campaignCtaUrl: 'regresiva.adventistascentralosorno.cl',
         campaignSecondaryCtaUrl: 'www.example.com/libro.pdf',
         campaignVideoUrl: 'youtu.be/abcDEF12345',
+        campaignVideoPosterUrl: 'example.com/poster.webp',
       }),
-    ).toEqual(['campaignCtaUrl', 'campaignSecondaryCtaUrl', 'campaignVideoUrl']);
+    ).toEqual(['campaignCtaUrl', 'campaignSecondaryCtaUrl', 'campaignVideoUrl', 'campaignVideoPosterUrl']);
   });
 
   it('rejects an invalid layout', async () => {

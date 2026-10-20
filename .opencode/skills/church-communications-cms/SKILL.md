@@ -53,9 +53,9 @@ Pick the layout from what the user needs; ask only if the intent is unclear:
 Workflow:
 1. `home get` and keep the current `campaign*` values (partial updates are safe).
 2. Photos: create or reuse a gallery album (`gallery create-album`, `gallery upload-image <albumId> <file>`), then publish each image with `gallery update-image <imageId> '{"isPublished":true}'` — uploads start unpublished. The album itself may stay unpublished.
-3. `home campaign-set '<json>'` with layout, texts, CTA URL, YouTube URL, `campaignAlbumId`, countdown and the visibility window (`campaignEndsAt` = day after the event so it hides itself). Times are ISO 8601; Chile is UTC-3 in October.
+3. `home campaign-set '<json>'` with layout, texts, CTA URL, video (YouTube URL or a public `.mp4`/`.webm` file URL plus `campaignVideoPosterUrl`), `campaignAlbumId`, countdown and the visibility window (`campaignEndsAt` = day after the event so it hides itself). Times are ISO 8601; Chile is UTC-3 in October.
 4. Confirm the visible copy with the user before `home campaign-on` if it was not stated explicitly.
-5. Verify `GET /api/public/home` → `campaign` is not `null` and has the expected `layout`, `videoEmbedUrl` and `photos`.
+5. Verify `GET /api/public/home` → `campaign` is not `null` and has the expected `layout`, `videoEmbedUrl` or `videoFileUrl`, and `photos`.
 
 ## Execution Steps
 

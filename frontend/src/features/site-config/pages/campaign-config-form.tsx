@@ -14,7 +14,10 @@ import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 
 // ─── Schema ──────────────────────────────────────────────────────────────────
-const optionalUrl = z.string().url('URL inválida').or(z.literal(''))
+const optionalUrl = z
+  .string()
+  .regex(/^https?:\/\/\S+$/i, 'URL inválida (debe empezar con https://)')
+  .or(z.literal(''))
 
 const campaignSchema = z
   .object({
@@ -29,6 +32,7 @@ const campaignSchema = z
     campaignSecondaryCtaText: z.string(),
     campaignSecondaryCtaUrl: optionalUrl,
     campaignVideoUrl: optionalUrl,
+    campaignVideoPosterUrl: optionalUrl,
     campaignAlbumId: z.string(),
     campaignCountdownTarget: z.string(),
     campaignCountdownLabel: z.string(),
@@ -70,6 +74,7 @@ function toFormValues(config: ReadHomeConfigDto | undefined): CampaignFormValues
     campaignSecondaryCtaText: config?.campaignSecondaryCtaText ?? '',
     campaignSecondaryCtaUrl: config?.campaignSecondaryCtaUrl ?? '',
     campaignVideoUrl: config?.campaignVideoUrl ?? '',
+    campaignVideoPosterUrl: config?.campaignVideoPosterUrl ?? '',
     campaignAlbumId: config?.campaignAlbumId ?? '',
     campaignCountdownTarget: isoToLocalInput(config?.campaignCountdownTarget),
     campaignCountdownLabel: config?.campaignCountdownLabel ?? '',
@@ -229,9 +234,15 @@ export function CampaignConfigForm() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="campaignVideoUrl">Video de invitación (YouTube)</Label>
-          <Input id="campaignVideoUrl" {...form.register('campaignVideoUrl')} placeholder="https://www.youtube.com/watch?v=..." />
+          <Label htmlFor="campaignVideoUrl">Video de invitación</Label>
+          <Input id="campaignVideoUrl" {...form.register('campaignVideoUrl')} placeholder="YouTube o archivo .mp4: https://..." />
           {errors.campaignVideoUrl && <p className="text-xs text-destructive">{errors.campaignVideoUrl.message}</p>}
+          <p className="text-xs text-muted-foreground">Acepta un enlace de YouTube o un archivo de video directo (.mp4, .webm).</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="campaignVideoPosterUrl">Portada del video (solo archivo .mp4/.webm)</Label>
+          <Input id="campaignVideoPosterUrl" {...form.register('campaignVideoPosterUrl')} placeholder="https://.../portada.webp" />
+          {errors.campaignVideoPosterUrl && <p className="text-xs text-destructive">{errors.campaignVideoPosterUrl.message}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="campaignAlbumId">Fotos (álbum de la galería)</Label>

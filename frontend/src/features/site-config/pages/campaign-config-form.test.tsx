@@ -52,6 +52,7 @@ const storedConfig = {
   campaignSecondaryCtaText: '',
   campaignSecondaryCtaUrl: '',
   campaignVideoUrl: '',
+  campaignVideoPosterUrl: '',
   campaignAlbumId: 'album-2',
   campaignCountdownTarget: '2026-10-21T22:30:00.000Z',
   campaignCountdownLabel: 'Primera noche en',
@@ -129,7 +130,36 @@ describe('CampaignConfigForm', () => {
     await user.type(screen.getByLabelText(/Video de invitación/), 'no-es-url')
     await user.click(screen.getByTestId('campaign-save-button'))
 
-    expect(await screen.findByText('URL inválida')).toBeInTheDocument()
+    expect(await screen.findByText('URL inválida (debe empezar con https://)')).toBeInTheDocument()
+    expect(api.saveHomeConfig).not.toHaveBeenCalled()
+  })
+
+  it('accepts a direct .mp4 video with its poster', async () => {
+    const user = userEvent.setup()
+    renderForm()
+    await screen.findByDisplayValue('Cuenta Regresiva')
+
+    await user.type(screen.getByLabelText(/^Video de invitación/), 'https://regresiva.adventistascentralosorno.cl/video/invitacion.mp4')
+    await user.type(screen.getByLabelText(/Portada del video/), 'https://regresiva.adventistascentralosorno.cl/video/invitacion.webp')
+    await user.click(screen.getByTestId('campaign-save-button'))
+
+    await waitFor(() => expect(api.saveHomeConfig).toHaveBeenCalledTimes(1))
+    expect(api.saveHomeConfig.mock.calls[0][0]).toMatchObject({
+      campaignVideoUrl: 'https://regresiva.adventistascentralosorno.cl/video/invitacion.mp4',
+      campaignVideoPosterUrl: 'https://regresiva.adventistascentralosorno.cl/video/invitacion.webp',
+    })
+  })
+
+  it('rejects a URL without protocol', async () => {
+    const user = userEvent.setup()
+    renderForm()
+    await screen.findByDisplayValue('Cuenta Regresiva')
+
+    await user.clear(screen.getByLabelText(/Botón principal · enlace/))
+    await user.type(screen.getByLabelText(/Botón principal · enlace/), 'regresiva.adventistascentralosorno.cl')
+    await user.click(screen.getByTestId('campaign-save-button'))
+
+    expect(await screen.findByText('URL inválida (debe empezar con https://)')).toBeInTheDocument()
     expect(api.saveHomeConfig).not.toHaveBeenCalled()
   })
 

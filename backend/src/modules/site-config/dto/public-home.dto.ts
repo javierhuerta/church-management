@@ -122,8 +122,14 @@ export class HomeCampaignDto {
   @ApiPropertyOptional({ type: String, nullable: true })
   videoUrl: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true, description: 'Embed de YouTube (si el video es de YouTube)' })
   videoEmbedUrl: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true, description: 'Archivo de video directo (.mp4, .webm, .m4v)' })
+  videoFileUrl: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  videoPosterUrl: string | null;
 
   @ApiPropertyOptional({ type: String, nullable: true })
   countdownTarget: string | null;
