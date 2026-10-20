@@ -285,6 +285,7 @@ Registrados via `.opencode/opencode.json` → `skills.paths`. OpenCode los escan
 
 ### Frontend — Design System (`.opencode/skills/` y `.claude/skills/`)
 - `church-ui-design` ⭐ — **skill principal de diseño del proyecto**. Paleta de marca, cómo aplicar colores (semántico vs inline), tipografía sin tags HTML semánticos, patrón mobile/desktop obligatorio, patrones de tarjetas de evento, badges, dark mode. **Cargar siempre que se construya o modifique cualquier componente o pantalla.**
+- `church-communications-cms` — **skill de operación de contenido del sitio público**. Permite gestionar las 7 secciones del sitio (`inicio`, `liderazgo`, `horarios`, `calendario`, `programa`, `galeria`, `envivo`) vía API Key (`X-API-Key` / `CHURCH_API_KEY`) usando el CLI `assets/cms-cli.mjs`.
 
 ### Frontend — Skills técnicas (`frontend/.agents/skills/`)
 - `vercel-react-best-practices` — performance React/Vite, data fetching, bundle
