@@ -32,6 +32,41 @@ Base URL defaults to `https://adventistascentralosorno.cl` (all paths below are 
   ```
 - `POST /api/site-config/home/images/:slot` — `multipart/form-data` (`file`), where `:slot` is `main`, `small`, or `next-service`.
 
+### Campaña destacada (featured campaign block)
+
+Same `GET`/`PUT /api/site-config/home` endpoints; all fields are optional and partial updates are safe. Send `""` to clear a text, URL or date field.
+
+```json
+{
+  "campaignEnabled": true,
+  "campaignLayout": "hero",
+  "campaignKicker": "Semana de evangelismo · 21 al 24 de octubre",
+  "campaignTitle": "Cuenta Regresiva",
+  "campaignTitleAccent": "El amanecer de un nuevo tiempo",
+  "campaignText": "Seminario profético con el Pr. Israel Jaramillo. Cada noche a las 19:30.",
+  "campaignCtaText": "Ir al sitio de la campaña",
+  "campaignCtaUrl": "https://regresiva.adventistascentralosorno.cl",
+  "campaignSecondaryCtaText": "Descargar el libro gratis",
+  "campaignSecondaryCtaUrl": "https://regresiva.adventistascentralosorno.cl",
+  "campaignVideoUrl": "https://www.youtube.com/watch?v=VIDEO_ID",
+  "campaignAlbumId": "<gallery album uuid>",
+  "campaignCountdownTarget": "2026-10-21T22:30:00.000Z",
+  "campaignCountdownLabel": "Primera noche en",
+  "campaignStartsAt": "2026-10-19T03:00:00.000Z",
+  "campaignEndsAt": "2026-10-25T02:59:00.000Z"
+}
+```
+
+| Field | Rules |
+|---|---|
+| `campaignEnabled` | boolean. The block shows only when `true` **and** `campaignTitle` is not empty. |
+| `campaignLayout` | `hero` (campaign takes the top of the home page, regular hero moves below) or `band` (band right below the regular hero). Default `band`. |
+| `campaignCtaUrl`, `campaignSecondaryCtaUrl`, `campaignVideoUrl` | valid URL or `""`. Video must be YouTube (`watch?v=`, `youtu.be/`, `/shorts/`, `/live/`, `/embed/`) to be embedded. |
+| `campaignAlbumId` | gallery album UUID or `""`. Only **published images** of that album are shown (max 8); the album itself may stay unpublished. |
+| `campaignCountdownTarget`, `campaignStartsAt`, `campaignEndsAt` | ISO 8601 or `""`. Chile is UTC-3 in October (19:30 local = 22:30Z). The countdown hides itself once the target passes; the block hides itself outside `startsAt`/`endsAt`. |
+
+Public result: `GET /api/public/home` → `campaign` (`null` when hidden) with `layout`, texts, `videoEmbedUrl` and `photos: [{ url, caption }]`.
+
 ---
 
 ## 2. Liderazgo (`leaders`)
@@ -140,22 +175,24 @@ Base URL defaults to `https://adventistascentralosorno.cl` (all paths below are 
 
 ## 6. Galería (`gallery`)
 
-- `GET /api/gallery/config` / `PATCH /api/gallery/config` — Gallery page header config
+- `GET /api/gallery/config` / `PATCH /api/gallery/config` — Gallery config: `headerTitle`, `introText`, `homeAlbumId` (album shown in the home page "Momentos" section; `null` falls back to the first published album)
 - `GET /api/gallery/albums` — List all albums
 - `GET /api/gallery/albums/:id` — Get album with images
 - `POST /api/gallery/albums` — Create album:
   ```json
   {
     "title": "Bautismos Primavera 2026",
+    "kicker": "Sábados",
     "description": "Sábado especial de bautismos",
-    "eventDate": "2026-10-17",
-    "showOnHome": false
+    "sortOrder": 0,
+    "isPublished": false
   }
   ```
-- `PATCH /api/gallery/albums/:id` — Update album (`title`, `description`, `eventDate`, `showOnHome`, `coverImageUrl`)
+- `PATCH /api/gallery/albums/:id` — Update album (`title`, `kicker`, `description`, `sortOrder`, `isPublished`, `coverImagePath`)
 - `PATCH /api/gallery/albums/:id/publish` — Toggle publish/unpublish album
-- `POST /api/gallery/albums/:id/images` — `multipart/form-data` (`file`) upload image to album
-- `PATCH /api/gallery/images/:id` — Update image (`caption`, `order`, `isPublished`)
+- `POST /api/gallery/albums/:id/images` — `multipart/form-data` (`file`) upload image to album. **Uploaded images start unpublished** (`isPublished: false`).
+- `PATCH /api/gallery/images/:id` — Update image (`caption`, `sortOrder`, `isPublished`)
+- `PATCH /api/gallery/albums/:id/reorder` — Bulk reorder (`{ "images": [{ "id": "uuid", "sortOrder": 0 }] }`)
 - `PATCH /api/gallery/images/:id/publish` — Toggle publish/unpublish image
 - `DELETE /api/gallery/images/:id` — Delete image
 
