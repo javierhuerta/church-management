@@ -236,6 +236,7 @@ async function main() {
       if (action === 'update-image') return request('PATCH', `/gallery/images/${rest[0]}`, parseJsonArg(rest[1]));
       if (action === 'publish-image') return request('PATCH', `/gallery/images/${rest[0]}/publish`);
       if (action === 'delete-image') return request('DELETE', `/gallery/images/${rest[0]}`);
+      if (action === 'reorder') return request('PATCH', `/gallery/albums/${rest[0]}/reorder`, parseJsonArg(rest[1]));
       break;
     }
 
