@@ -16,7 +16,7 @@ Objective: configurable featured-campaign block on the public home page with two
 - T2 — S1,S2: website `PageInicio` renders `band`/`hero` layouts; docs `website/INTEGRATION.md`. Route: inline. Status: done — 1ccb8b5, 8f0cc87 (verify-integration OK; manual preview hero/band/none, 1440 + 390px, dark theme).
 - T3 — S1: admin form section "Campaña destacada" + generated API model fields. Route: inline. Status: done — 3ee490c (5/5 vitest; tsc OK; 12 pre-existing home-config-form.test failures unchanged).
 - T4 — S3,S5: skill (SKILL.md decision guide, api-endpoints.md, cms-cli `home campaign` helpers), synced to `.opencode`, `.claude`, `.agents` copies. Route: inline. Status: done — 2e61ebb (includes pre-existing uncommitted .env loading in cms-cli).
-- T5 — S4: configure campaign B in production after deploy (needs user's video URL/photos + deploy). Route: inline. Status: pending (blocked on deploy).
+- T5 — S4: configure campaign B in production. Route: inline. Status: done — deployed a3b5fea + e5372e8 (mosaic fix) via PR #15/#16, Dokploy deploy triggered locally (CI webhook times out from GitHub runners); album 9e33b356-600a-44c4-a9f3-456418f9442c (unpublished) with 8 published photos; campaign hero ON until 2026-10-25T02:59Z.
 
 ## Log
 
@@ -29,3 +29,4 @@ Objective: configurable featured-campaign block on the public home page with two
 - L7 — Independent verifier launched for risk item 6 (website rendering has no automated tests). Pending result.
 - L8 (2026-10-20) — "dale con subir a produccion no mas el link de la invitacion no es un video de youtube es un video que hicimos aca con hyperframes". Video found published at https://regresiva.adventistascentralosorno.cl/video/invitacion.mp4 (720x1280, 56 s) with poster invitacion.webp. S1 updated; T1–T4 reopened and closed in the direct-video commit. Verifier (L7) result: no blockers, S1/S2/S3/S5 pass; advisory 1 (URLs without protocol) fixed in 2c8424b.
 - L9 — Deploy to production authorized by user (L8).
+- L10 (2026-10-20) — Deployed to production. GitHub Actions deploy job fails (curl timeout to dokploy-op.unach.app from runners, geo-block); images build OK, deploy triggered with Dokploy API from local. Public API returns campaign layout hero, videoFileUrl invitacion.mp4, 8 photos. Production visual check: single h1, vertical video, mosaic fixed (1 large + 4) in e5372e8.
