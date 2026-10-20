@@ -33,6 +33,7 @@ function PageInicio({ setPage, nextService: propNextService }) {
       buttonText: 'Ver Ubicación',
     },
     nextService: propNextService,
+    campaign: null,
     scheduleItems: [
       ['Sábado',    '09:45', 'Escuela Sabática'],
       ['Sábado',    '11:00', 'Culto Divino'],
@@ -98,6 +99,7 @@ function PageInicio({ setPage, nextService: propNextService }) {
               buttonText: data.footerCta.buttonText || prev.footerCta.buttonText,
             },
             nextService: data.nextService || prev.nextService,
+            campaign: data.campaign || null,
           }));
         })
         .catch(err => {
@@ -156,9 +158,13 @@ function PageInicio({ setPage, nextService: propNextService }) {
 
   const showPublishedDetails = !!(worshipData && worshipData.upcoming);
   const showUnpublishedHint = !!(worshipData && !worshipData.upcoming);
+  const campaign = homeData.campaign;
 
   return (
     <main className="page-enter" data-screen-label="Inicio">
+
+      {/* Campaña destacada (layout "hero"): ocupa el inicio y el hero habitual baja */}
+      {campaign && campaign.layout === 'hero' && <CampaignBlock campaign={campaign} />}
 
       {/* HERO editorial: nombre grande izquierda, imagen alta derecha */}
       <section style={{
@@ -283,6 +289,9 @@ function PageInicio({ setPage, nextService: propNextService }) {
           </div>
         </div>
       </section>
+
+      {/* Campaña destacada (layout "band"): banda justo bajo el hero */}
+      {campaign && campaign.layout !== 'hero' && <CampaignBlock campaign={campaign} />}
 
       {/* Verse band */}
       <section style={{
@@ -554,6 +563,186 @@ function PageInicio({ setPage, nextService: propNextService }) {
 }
 
 // Mini-info cell for hero footer-row
+// ─── Campaña destacada ───────────────────────────────────
+// layout "hero": ocupa el inicio (cuenta regresiva en cajas, fotos en mosaico).
+// layout "band": banda bajo el hero (cuenta regresiva en línea, fotos en tira).
+function useCountdown(targetIso) {
+  const target = targetIso ? new Date(targetIso).getTime() : null;
+  const [now, setNow] = useS1(Date.now());
+  React.useEffect(() => {
+    if (!target) return undefined;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [target]);
+  if (!target || target <= now) return null;
+  const s = Math.floor((target - now) / 1000);
+  const pad = (n) => String(n).padStart(2, '0');
+  return {
+    d: pad(Math.floor(s / 86400)),
+    h: pad(Math.floor((s % 86400) / 3600)),
+    m: pad(Math.floor((s % 3600) / 60)),
+    s: pad(s % 60),
+  };
+}
+
+function CampaignLink({ href, className, style, children }) {
+  const external = /^https?:\/\//.test(href || '');
+  return (
+    <a href={href} className={className} style={style}
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noopener' : undefined}>
+      {children}
+    </a>
+  );
+}
+
+function CampaignBlock({ campaign }) {
+  const isHero = campaign.layout === 'hero';
+  const countdown = useCountdown(campaign.countdownTarget);
+  const photos = campaign.photos || [];
+  const stripPhotos = isHero ? photos.slice(0, 5) : photos.slice(0, 3);
+  const mediaPhoto = !campaign.videoEmbedUrl && photos.length > 0 ? photos[0] : null;
+  const hasMedia = !!(campaign.videoEmbedUrl || mediaPhoto);
+  const softText = { color: 'var(--cream)', opacity: 0.82 };
+  const ghostOnDark = {
+    color: 'var(--cream)',
+    borderColor: 'color-mix(in oklab, var(--cream) 35%, transparent)',
+  };
+
+  return (
+    <section aria-label={campaign.title} style={{
+      background: 'var(--navy)', color: 'var(--cream)',
+      padding: isHero ? 'clamp(44px, 6vw, 88px) 0 clamp(48px, 6vw, 88px)' : 'clamp(48px, 6vw, 80px) 0',
+    }}>
+      <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(32px, 4vw, 48px)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(28px, 4vw, 56px)', alignItems: 'center' }}>
+          <div style={{ flex: '1 1 380px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
+            {campaign.kicker && (
+              <div className="mono" style={{
+                fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--gold)',
+              }}>{campaign.kicker}</div>
+            )}
+            {isHero ? (
+              <h1 className="serif" style={{
+                fontSize: 'clamp(52px, 7.5vw, 104px)', lineHeight: 0.95, letterSpacing: '-0.03em',
+                fontWeight: 500, margin: 0, color: 'var(--cream)',
+              }}>{campaign.title}</h1>
+            ) : (
+              <h2 className="serif" style={{
+                fontSize: 'clamp(38px, 5vw, 64px)', lineHeight: 1, letterSpacing: '-0.02em',
+                fontWeight: 500, margin: 0, color: 'var(--cream)',
+              }}>{campaign.title}</h2>
+            )}
+            {campaign.titleAccent && (
+              <p className="serif" style={{
+                fontSize: isHero ? 'clamp(22px, 2.2vw, 28px)' : 'clamp(20px, 2vw, 24px)',
+                fontStyle: 'italic', color: 'var(--gold)', margin: 0,
+              }}>{campaign.titleAccent}</p>
+            )}
+            {campaign.text && (
+              <p style={{ fontSize: 16, lineHeight: 1.6, maxWidth: 500, margin: 0, ...softText }}>
+                {campaign.text}
+              </p>
+            )}
+
+            {countdown && isHero && (
+              <div role="timer" aria-label={campaign.countdownLabel || 'Cuenta regresiva'} style={{
+                display: 'flex', gap: 10, flexWrap: 'wrap', maxWidth: 420,
+              }}>
+                {[[countdown.d, 'días'], [countdown.h, 'horas'], [countdown.m, 'min'], [countdown.s, 'seg']].map(([value, unit]) => (
+                  <div key={unit} style={{
+                    flex: '1 1 70px', minWidth: 70, padding: '12px 8px', borderRadius: 8,
+                    border: '1px solid color-mix(in oklab, var(--cream) 22%, transparent)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                  }}>
+                    <span className="mono" style={{ fontSize: 30 }}>{value}</span>
+                    <span style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', ...softText }}>{unit}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {countdown && !isHero && (
+              <div role="timer" style={{ display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap' }}>
+                {campaign.countdownLabel && (
+                  <span className="mono" style={{ fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', ...softText }}>
+                    {campaign.countdownLabel}
+                  </span>
+                )}
+                <span className="mono" style={{ fontSize: 22 }}>
+                  {countdown.d}d {countdown.h}h {countdown.m}m {countdown.s}s
+                </span>
+              </div>
+            )}
+
+            {(campaign.ctaUrl || campaign.secondaryCtaUrl) && (
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 6 }}>
+                {campaign.ctaUrl && (
+                  <CampaignLink href={campaign.ctaUrl} className="btn btn-gold">
+                    {campaign.ctaText || 'Ver más'} <Arrow />
+                  </CampaignLink>
+                )}
+                {campaign.secondaryCtaUrl && (
+                  <CampaignLink href={campaign.secondaryCtaUrl} className="btn btn-ghost" style={ghostOnDark}>
+                    {campaign.secondaryCtaText || 'Más información'}
+                  </CampaignLink>
+                )}
+              </div>
+            )}
+          </div>
+
+          {hasMedia && (
+            <div style={{ flex: '1 1 420px', minWidth: 0 }}>
+              {campaign.videoEmbedUrl ? (
+                <div style={{ position: 'relative', aspectRatio: '16 / 9', borderRadius: 12, overflow: 'hidden', background: '#000' }}>
+                  <iframe
+                    src={campaign.videoEmbedUrl}
+                    title={'Video · ' + campaign.title}
+                    loading="lazy"
+                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+                  />
+                </div>
+              ) : (
+                <img src={mediaPhoto.url} alt={mediaPhoto.caption || campaign.title} style={{
+                  width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 12,
+                }} />
+              )}
+            </div>
+          )}
+        </div>
+
+        {stripPhotos.length > (mediaPhoto ? 1 : 0) && (
+          <div>
+            {isHero && (
+              <div className="mono" style={{
+                fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', marginBottom: 16, ...softText,
+              }}>Momentos de la campaña</div>
+            )}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gridAutoRows: isHero ? 'clamp(160px, 18vw, 220px)' : 'clamp(150px, 16vw, 200px)',
+              gap: 14,
+            }}>
+              {stripPhotos.slice(mediaPhoto ? 1 : 0).map((photo, i) => (
+                <figure key={photo.url} style={{
+                  margin: 0, position: 'relative', borderRadius: 10, overflow: 'hidden',
+                  gridRow: isHero && i === 0 ? 'span 2' : undefined,
+                }}>
+                  <img src={photo.url} alt={photo.caption || campaign.title} loading="lazy" style={{
+                    width: '100%', height: '100%', objectFit: 'cover',
+                  }} />
+                </figure>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function MiniInfo({ label, value, sub, gold }) {
   return (
     <div>

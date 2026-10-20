@@ -64,6 +64,15 @@ re-aplicar solo estos parches:
       - Muestra siempre fecha + título.
       - Muestra predicador + tema solo cuando `upcoming: true`.
       - Si `upcoming: false`, muestra indicador sutil de "programa aún no publicado".
+    - **Campaña destacada** (`CampaignBlock`): `fetchHome()` devuelve `campaign`
+      (o `null` si está apagada, sin título o fuera de su ventana de fechas).
+      - `campaign.layout === 'hero'`: el bloque va primero y el hero habitual baja.
+      - `campaign.layout === 'band'`: banda justo bajo el hero.
+      - Campos: `kicker`, `title`, `titleAccent`, `text`, `ctaText`/`ctaUrl`,
+        `secondaryCtaText`/`secondaryCtaUrl`, `videoUrl`/`videoEmbedUrl` (YouTube),
+        `countdownTarget` (ISO) + `countdownLabel`, `photos: [{ url, caption }]`.
+      - La cuenta regresiva se oculta sola cuando la fecha objetivo ya pasó.
+      - Sin video, la primera foto ocupa el lugar del video.
 
 8. **`pages-4.jsx`** — `PagePrograma` consume datos vivos de culto:
    - Se eliminó edición inline en la vista pública (no `EditBanner`, no add/remove/move).
