@@ -20,5 +20,39 @@ export type UpdateHomeConfigDto = {
     contactCity?: string;
     contactEmail?: string;
     contactPhone?: string;
+    campaignEnabled?: boolean;
+    /**
+     * band = banda bajo el hero; hero = la campaña ocupa el hero
+     */
+    campaignLayout?: 'band' | 'hero';
+    campaignKicker?: string;
+    campaignTitle?: string;
+    campaignTitleAccent?: string;
+    campaignText?: string;
+    campaignCtaText?: string;
+    campaignCtaUrl?: string;
+    campaignSecondaryCtaText?: string;
+    campaignSecondaryCtaUrl?: string;
+    /**
+     * URL de YouTube del video de invitación
+     */
+    campaignVideoUrl?: string;
+    /**
+     * ID del álbum de galería con las fotos de la campaña
+     */
+    campaignAlbumId?: string;
+    /**
+     * Fecha ISO 8601 hacia la que cuenta la cuenta regresiva
+     */
+    campaignCountdownTarget?: string;
+    campaignCountdownLabel?: string;
+    /**
+     * Fecha ISO 8601 desde la que se muestra la campaña
+     */
+    campaignStartsAt?: string;
+    /**
+     * Fecha ISO 8601 hasta la que se muestra la campaña
+     */
+    campaignEndsAt?: string;
 };
 

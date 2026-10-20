@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { HomeCampaignDto } from './HomeCampaignDto';
 import type { HomeContactDto } from './HomeContactDto';
 import type { HomeFooterCtaDto } from './HomeFooterCtaDto';
 import type { HomeHeroDto } from './HomeHeroDto';
@@ -17,5 +18,9 @@ export type PublicHomeDto = {
     footerCta: HomeFooterCtaDto;
     contact: HomeContactDto;
     nextService?: HomeNextServiceDto | null;
+    /**
+     * Campaña destacada activa (null si está apagada o fuera de su ventana de fechas)
+     */
+    campaign?: HomeCampaignDto | null;
 };
 

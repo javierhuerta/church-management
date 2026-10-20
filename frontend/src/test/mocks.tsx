@@ -82,6 +82,7 @@ export function setupApiMocks() {
     ChevronUp: 'mock-chevron-up-icon',
     ChevronDown: 'mock-chevron-down-icon',
     Clock: 'mock-clock-icon',
+    Megaphone: 'mock-megaphone-icon',
   }));
 
   // Mock UI components
