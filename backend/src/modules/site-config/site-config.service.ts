@@ -64,6 +64,7 @@ const CAMPAIGN_TEXT_KEYS = {
   campaignSecondaryCtaText: 'inicio.campaign_secondary_cta_text',
   campaignSecondaryCtaUrl: 'inicio.campaign_secondary_cta_url',
   campaignVideoUrl: 'inicio.campaign_video_url',
+  campaignVideoPosterUrl: 'inicio.campaign_video_poster_url',
   campaignAlbumId: 'inicio.campaign_album_id',
   campaignCountdownTarget: 'inicio.campaign_countdown_target',
   campaignCountdownLabel: 'inicio.campaign_countdown_label',
@@ -82,6 +83,11 @@ function youtubeVideoId(url: string | null): string | null {
     /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/,
   );
   return match ? match[1] : null;
+}
+
+/** URL de un archivo de video reproducible con <video> (no una página de video). */
+function isVideoFileUrl(url: string | null): boolean {
+  return !!url && /\.(mp4|webm|m4v)(?:[?#].*)?$/i.test(url);
 }
 
 @Injectable()
@@ -370,6 +376,8 @@ export class SiteConfigService {
       secondaryCtaUrl: v(CAMPAIGN_TEXT_KEYS.campaignSecondaryCtaUrl),
       videoUrl,
       videoEmbedUrl: videoId ? `https://www.youtube.com/embed/${videoId}` : null,
+      videoFileUrl: !videoId && isVideoFileUrl(videoUrl) ? videoUrl : null,
+      videoPosterUrl: v(CAMPAIGN_TEXT_KEYS.campaignVideoPosterUrl),
       countdownTarget: v(CAMPAIGN_TEXT_KEYS.campaignCountdownTarget),
       countdownLabel: v(CAMPAIGN_TEXT_KEYS.campaignCountdownLabel),
       photos: images.map((img) => ({

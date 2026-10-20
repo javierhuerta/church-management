@@ -69,7 +69,9 @@ re-aplicar solo estos parches:
       - `campaign.layout === 'hero'`: el bloque va primero y el hero habitual baja.
       - `campaign.layout === 'band'`: banda justo bajo el hero.
       - Campos: `kicker`, `title`, `titleAccent`, `text`, `ctaText`/`ctaUrl`,
-        `secondaryCtaText`/`secondaryCtaUrl`, `videoUrl`/`videoEmbedUrl` (YouTube),
+        `secondaryCtaText`/`secondaryCtaUrl`, `videoUrl`, `videoEmbedUrl` (YouTube, se
+        muestra en `<iframe>`), `videoFileUrl` + `videoPosterUrl` (archivo .mp4/.webm propio,
+        se muestra en `<video>` respetando su proporción, p. ej. vertical 9:16),
         `countdownTarget` (ISO) + `countdownLabel`, `photos: [{ url, caption }]`.
       - La cuenta regresiva se oculta sola cuando la fecha objetivo ya pasó.
       - Sin video, la primera foto ocupa el lugar del video.

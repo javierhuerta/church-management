@@ -471,6 +471,7 @@ describe('SiteConfigService', () => {
         'inicio.campaign_secondary_cta_text': '',
         'inicio.campaign_secondary_cta_url': '',
         'inicio.campaign_video_url': 'https://youtu.be/abcDEF12345',
+        'inicio.campaign_video_poster_url': '',
         'inicio.campaign_album_id': 'album-1',
         'inicio.campaign_countdown_target': '2026-10-21T22:30:00.000Z',
         'inicio.campaign_countdown_label': 'Primera noche en',
@@ -503,6 +504,8 @@ describe('SiteConfigService', () => {
         secondaryCtaUrl: null,
         videoUrl: 'https://youtu.be/abcDEF12345',
         videoEmbedUrl: 'https://www.youtube.com/embed/abcDEF12345',
+        videoFileUrl: null,
+        videoPosterUrl: null,
         countdownTarget: '2026-10-21T22:30:00.000Z',
         countdownLabel: 'Primera noche en',
         photos: [
@@ -561,7 +564,35 @@ describe('SiteConfigService', () => {
       expect(result.campaign!.layout).toBe('band');
       expect(result.campaign!.photos).toEqual([]);
       expect(result.campaign!.videoEmbedUrl).toBeNull();
+      expect(result.campaign!.videoFileUrl).toBeNull();
       expect(imageRepo.find).not.toHaveBeenCalled();
+    });
+
+    it('returns a direct video file with its poster instead of a YouTube embed', async () => {
+      settingRepo.find.mockResolvedValue(
+        campaignSettings({
+          'inicio.campaign_video_url': 'https://regresiva.adventistascentralosorno.cl/video/invitacion.mp4',
+          'inicio.campaign_video_poster_url': 'https://regresiva.adventistascentralosorno.cl/video/invitacion.webp',
+        }),
+      );
+      eventRepo.findOne.mockResolvedValue(null);
+
+      const result = await service.getPublicHome();
+
+      expect(result.campaign!.videoEmbedUrl).toBeNull();
+      expect(result.campaign!.videoFileUrl).toBe('https://regresiva.adventistascentralosorno.cl/video/invitacion.mp4');
+      expect(result.campaign!.videoPosterUrl).toBe('https://regresiva.adventistascentralosorno.cl/video/invitacion.webp');
+    });
+
+    it.each([
+      'https://example.com/media/invitacion.webm',
+      'https://example.com/media/INVITACION.MP4?v=2',
+      'https://example.com/media/clip.m4v',
+    ])('treats %s as a direct video file', async (videoUrl) => {
+      settingRepo.find.mockResolvedValue(campaignSettings({ 'inicio.campaign_video_url': videoUrl }));
+      eventRepo.findOne.mockResolvedValue(null);
+
+      expect((await service.getPublicHome()).campaign!.videoFileUrl).toBe(videoUrl);
     });
 
     it.each([
@@ -601,6 +632,7 @@ describe('SiteConfigService', () => {
       expect(result.campaignTitle).toBe('Cuenta Regresiva');
       expect(result.campaignVideoUrl).toBe('https://youtu.be/abcDEF12345');
       expect(result.campaignCountdownTarget).toBe('2026-10-21T22:30:00.000Z');
+      expect(result.campaignVideoPosterUrl).toBe('');
     });
 
     it('saves campaign fields, storing booleans as text', async () => {

@@ -55,8 +55,10 @@ export class UpdateHomeConfigDto {
   @ApiPropertyOptional({ type: String }) @IsOptional() @IfNotEmpty() @IsAbsoluteUrl() campaignCtaUrl?: string;
   @ApiPropertyOptional({ type: String }) @IsOptional() @IsString() campaignSecondaryCtaText?: string;
   @ApiPropertyOptional({ type: String }) @IsOptional() @IfNotEmpty() @IsAbsoluteUrl() campaignSecondaryCtaUrl?: string;
-  @ApiPropertyOptional({ type: String, description: 'URL de YouTube del video de invitación' })
+  @ApiPropertyOptional({ type: String, description: 'Video de invitación: URL de YouTube o archivo directo (.mp4, .webm, .m4v)' })
   @IsOptional() @IfNotEmpty() @IsAbsoluteUrl() campaignVideoUrl?: string;
+  @ApiPropertyOptional({ type: String, description: 'Imagen de portada para un video de archivo directo' })
+  @IsOptional() @IfNotEmpty() @IsAbsoluteUrl() campaignVideoPosterUrl?: string;
   @ApiPropertyOptional({ type: String, description: 'ID del álbum de galería con las fotos de la campaña' })
   @IsOptional() @IfNotEmpty() @IsUUID() campaignAlbumId?: string;
   @ApiPropertyOptional({ type: String, description: 'Fecha ISO 8601 hacia la que cuenta la cuenta regresiva' })
