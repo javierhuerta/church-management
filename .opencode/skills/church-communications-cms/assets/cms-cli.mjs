@@ -13,8 +13,10 @@ import { readFile } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
 
 const BASE_URL = (
-  process.env.CHURCH_API_URL || 'https://adventistascentralosorno.cl'
-).replace(/\/+$/, '');
+  process.env.CHURCH_API_URL || 'https://iasdosornocentral.unach.app'
+)
+  .replace(/\/+$/, '')
+  .replace(/\/api$/, '');
 const API_KEY = process.env.CHURCH_API_KEY || '';
 
 if (!API_KEY) {
@@ -98,6 +100,13 @@ const [, , section, action, ...rest] = process.argv;
 
 async function main() {
   switch (section) {
+    case 'whoami':
+    case 'test': {
+      await request('GET', '/site-config/home');
+      console.error(`✅ Conexión verificada con éxito hacia ${BASE_URL}/api`);
+      return;
+    }
+
     case 'home': {
       if (action === 'get') return request('GET', '/site-config/home');
       if (action === 'update') return request('PUT', '/site-config/home', parseJsonArg(rest[0]));

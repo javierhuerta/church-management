@@ -63,3 +63,4 @@ backend/uploads/
 resources/
 # Local AI runtime state
 .atl/
+docs/public/presentaciones/
