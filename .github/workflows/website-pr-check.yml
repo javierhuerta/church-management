@@ -1,0 +1,53 @@
+name: Website PR Check
+
+on:
+  pull_request:
+    branches:
+      - development
+      - main
+    paths:
+      - 'website/**'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-website:
+    name: Verify Website Integration & JSX Syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify window.IASD_API contracts & responsive classes
+        run: node website/scripts/verify-integration.mjs
+
+      - name: Validate JSX syntax across website/*.jsx
+        run: |
+          npm install --no-save @babel/core @babel/preset-react
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const babel = require("@babel/core");
+            const dir = path.join(process.cwd(), "website");
+            const files = fs.readdirSync(dir).filter(f => f.endsWith(".jsx"));
+            for (const file of files) {
+              const full = path.join(dir, file);
+              const code = fs.readFileSync(full, "utf8");
+              try {
+                babel.transformSync(code, {
+                  filename: file,
+                  presets: ["@babel/preset-react"],
+                });
+                console.log("✓ JSX válido:", file);
+              } catch (err) {
+                console.error("✗ Error de sintaxis JSX en", file, "\n", err.message);
+                process.exit(1);
+              }
+            }
+          '

@@ -1,0 +1,9 @@
+# CODEOWNERS — Revisión obligatoria antes de merge a development o main
+*                               @javierhuerta
+/backend/                       @javierhuerta
+/frontend/                      @javierhuerta
+/.github/                       @javierhuerta
+/website/                       @javierhuerta
+/website/integration.js         @javierhuerta
+/website/Dockerfile             @javierhuerta
+/website/nginx.conf             @javierhuerta

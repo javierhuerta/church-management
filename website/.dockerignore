@@ -7,3 +7,5 @@ Dockerfile
 .dockerignore
 README.md
 INTEGRATION.md
+CLAUDE.md
+scripts/

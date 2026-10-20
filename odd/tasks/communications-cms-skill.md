@@ -33,6 +33,11 @@ Enable the Church Communications officer to manage all 7 public website sections
    - Add an **API Keys** management section inside `UserFormPage` (when editing a user) to list keys, generate a new key with a one-time copy dialog, and revoke keys.
 4. **Agent Skill (`church-communications-cms`)**:
    - Create `.opencode/skills/church-communications-cms/SKILL.md` (and mirror/exportable package) with `assets/cms-cli.mjs` helper script and `references/api-endpoints.md` covering all 7 website sections with `CHURCH_API_URL` and `CHURCH_API_KEY`.
+5. **Frente 2 — Website Design PR Workflow & Claude Pro Guide**:
+   - Create `website/CLAUDE.md` so Claude Code automatically enforces `website/` boundaries, `window.IASD_API` data hooks, dark mode variables, and mobile responsive rules whenever the Communications officer edits the public site design.
+   - Create `website/scripts/verify-integration.mjs` (zero-dependency Node script) to automatically verify that `index.html`, `integration.js`, all `window.IASD_API` hooks across `auth.jsx` and `pages-1..4.jsx`, and mobile responsive CSS classes in `styles.css` remain intact after any design edit.
+   - Create `.github/CODEOWNERS` (`@javierhuerta` required reviewer) and `.github/pull_request_template.md` + `.github/workflows/website-pr-check.yml` (runs `verify-integration.mjs` + Docker build test on PRs touching `website/`).
+   - Create `docs/guia-comunicaciones-web.md`: practical onboarding guide for the Communications officer covering both content updates (Skill + API Key / Admin panel) and design PRs with Claude Pro (`design/*` -> `development` Staging -> review -> `main` Production).
 
 ## Constraints
 - Never run migrations against production automatically; create TypeORM migration file and run only on local dev DB if needed.
@@ -53,6 +58,9 @@ Enable the Church Communications officer to manage all 7 public website sections
 - [x] T2 Wire `UsersController` API key endpoints (`GET/POST/DELETE /api/users/:id/api-keys`) and update role permissions across the 7 website content modules (`site-config`, `schedule`, `gallery`, `transmisiones`, `calendar`, `worship-services`) + unit tests.
 - [x] T3 Update Frontend OpenAPI types/client, add `Comunicaciones` role to `UsersListPage`, `UserFormPage`, `Sidebar`, `ConfiguracionesLayout`, and build the API Keys management card in `UserFormPage`.
 - [x] T4 Create the `church-communications-cms` skill (`SKILL.md`, `assets/cms-cli.mjs`, `references/api-endpoints.md`) for the Communications officer's Claude agent and refresh skill registry.
+- [x] T5 Create `website/CLAUDE.md` and `website/scripts/verify-integration.mjs` to protect `window.IASD_API` contracts, responsive classes, and `website/` scope when editing design with Claude Code.
+- [x] T6 Add GitHub guardrails (`.github/CODEOWNERS`, `.github/pull_request_template.md`, and `.github/workflows/website-pr-check.yml`) for fast, safe PR reviews into `development`.
+- [x] T7 Create `docs/guia-comunicaciones-web.md` (complete guide for the Communications officer: Skill + API Key setup and step-by-step Claude Code PR workflow).
 
 ## Progress / Evidence
 - 2026-10-20: Initial ODD task specification created and mirrored to Engram.
@@ -60,6 +68,7 @@ Enable the Church Communications officer to manage all 7 public website sections
 - 2026-10-20 T2: Added `GET /api/users/:id/api-keys`, `POST /api/users/:id/api-keys`, and `DELETE /api/users/:id/api-keys/:keyId` in `UsersController`. Enabled `UserRole.Comunicaciones` across `SiteConfigController`, `ScheduleController`, `GalleryAdminController`, `TransmisionesAdminController`, `CalendarController`/`EDITOR_ROLES`, `ProgramController`, and `ProgramService` (create, edit draft/published, publish, publish-with-event). `nest build` and unit tests (`api-key.service.spec.ts`, `program.service.spec.ts`, `calendar.service.spec.ts`, `users.service.spec.ts` — 64/64 tests) passing.
 - 2026-10-20 T3: Updated frontend API models & `UsersService`, added `Comunicaciones` role to `UsersListPage`, `UserFormPage`, `Sidebar`, and `ConfiguracionesLayout`, and built the API Keys management section with one-time secret modal and revoke confirmation in `UserFormPage`. `tsc -b && vite build` succeeded cleanly.
 - 2026-10-20 T4: Created `.opencode/skills/church-communications-cms` (and mirrored to `.claude/skills/church-communications-cms`) with `SKILL.md`, `assets/cms-cli.mjs`, and `references/api-endpoints.md`. Registered in `AGENTS.md` and refreshed `.atl/skill-registry.md` (66 skills).
+- 2026-10-20 T5–T7: Created `website/CLAUDE.md`, `website/scripts/verify-integration.mjs` (verified passing `✅`), `.github/CODEOWNERS`, `.github/pull_request_template.md`, `.github/workflows/website-pr-check.yml`, and `docs/guia-comunicaciones-web.md`. Committed all work units on `feature/communications-cms-skill`.
 
 ## Next step
-- Review changes with user, commit work units on `feature/communications-cms-skill` when approved, or proceed to Frente 2 (GitHub PR workflow & `website/CLAUDE.md` guide for design updates).
+- Merge `feature/communications-cms-skill` into `development` when ready to deploy to Staging and run `sh entrypoint.sh migrate`.
