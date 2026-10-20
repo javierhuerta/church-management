@@ -16,6 +16,9 @@ export type HomeCampaignLayout = (typeof HOME_CAMPAIGN_LAYOUTS)[number];
 /** Empty string clears a campaign field, so validators only run on non-empty values. */
 const IfNotEmpty = () => ValidateIf((_, value) => value !== '' && value != null);
 
+/** Absolute http(s) URL: the website renders campaign links as-is, so a bare host would become a relative link. */
+const IsAbsoluteUrl = () => IsUrl({ require_protocol: true, protocols: ['http', 'https'] });
+
 export class UpdateHomeConfigDto {
   @ApiPropertyOptional({ type: String }) @IsOptional() @IsString() heroTitle?: string;
   @ApiPropertyOptional({ type: String }) @IsOptional() @IsString() heroTitleAccent?: string;
@@ -49,11 +52,11 @@ export class UpdateHomeConfigDto {
   @ApiPropertyOptional({ type: String }) @IsOptional() @IsString() campaignTitleAccent?: string;
   @ApiPropertyOptional({ type: String }) @IsOptional() @IsString() campaignText?: string;
   @ApiPropertyOptional({ type: String }) @IsOptional() @IsString() campaignCtaText?: string;
-  @ApiPropertyOptional({ type: String }) @IsOptional() @IfNotEmpty() @IsUrl() campaignCtaUrl?: string;
+  @ApiPropertyOptional({ type: String }) @IsOptional() @IfNotEmpty() @IsAbsoluteUrl() campaignCtaUrl?: string;
   @ApiPropertyOptional({ type: String }) @IsOptional() @IsString() campaignSecondaryCtaText?: string;
-  @ApiPropertyOptional({ type: String }) @IsOptional() @IfNotEmpty() @IsUrl() campaignSecondaryCtaUrl?: string;
+  @ApiPropertyOptional({ type: String }) @IsOptional() @IfNotEmpty() @IsAbsoluteUrl() campaignSecondaryCtaUrl?: string;
   @ApiPropertyOptional({ type: String, description: 'URL de YouTube del video de invitación' })
-  @IsOptional() @IfNotEmpty() @IsUrl() campaignVideoUrl?: string;
+  @IsOptional() @IfNotEmpty() @IsAbsoluteUrl() campaignVideoUrl?: string;
   @ApiPropertyOptional({ type: String, description: 'ID del álbum de galería con las fotos de la campaña' })
   @IsOptional() @IfNotEmpty() @IsUUID() campaignAlbumId?: string;
   @ApiPropertyOptional({ type: String, description: 'Fecha ISO 8601 hacia la que cuenta la cuenta regresiva' })

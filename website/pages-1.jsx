@@ -564,7 +564,6 @@ function PageInicio({ setPage, nextService: propNextService }) {
 
 }
 
-// Mini-info cell for hero footer-row
 // ─── Campaña destacada ───────────────────────────────────
 // layout "hero": ocupa el inicio (cuenta regresiva en cajas, fotos en mosaico).
 // layout "band": banda bajo el hero (cuenta regresiva en línea, fotos en tira).
@@ -745,6 +744,7 @@ function CampaignBlock({ campaign }) {
   );
 }
 
+// Mini-info cell for hero footer-row
 function MiniInfo({ label, value, sub, gold }) {
   return (
     <div>
