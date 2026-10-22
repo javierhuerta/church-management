@@ -586,12 +586,13 @@ function useCountdown(targetIso) {
   };
 }
 
-function CampaignLink({ href, className, style, children }) {
+function CampaignLink({ href, className, style, label, children }) {
   const external = /^https?:\/\//.test(href || '');
   return (
     <a href={href} className={className} style={style}
       target={external ? '_blank' : undefined}
-      rel={external ? 'noopener' : undefined}>
+      rel={external ? 'noopener' : undefined}
+      onClick={() => window.siteTrack && window.siteTrack('Clic en campaña', { boton: label, destino: href })}>
       {children}
     </a>
   );
@@ -682,12 +683,13 @@ function CampaignBlock({ campaign }) {
             {(campaign.ctaUrl || campaign.secondaryCtaUrl) && (
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 6 }}>
                 {campaign.ctaUrl && (
-                  <CampaignLink href={campaign.ctaUrl} className="btn btn-gold">
+                  <CampaignLink href={campaign.ctaUrl} className="btn btn-gold" label={campaign.ctaText || 'Ver más'}>
                     {campaign.ctaText || 'Ver más'} <Arrow />
                   </CampaignLink>
                 )}
                 {campaign.secondaryCtaUrl && (
-                  <CampaignLink href={campaign.secondaryCtaUrl} className="btn btn-ghost" style={ghostOnDark}>
+                  <CampaignLink href={campaign.secondaryCtaUrl} className="btn btn-ghost" style={ghostOnDark}
+                    label={campaign.secondaryCtaText || 'Más información'}>
                     {campaign.secondaryCtaText || 'Más información'}
                   </CampaignLink>
                 )}
@@ -1305,7 +1307,10 @@ function GalleryAlbum({ album }) {
           return (
             <button key={id} type="button" className="gallery-item"
               aria-label={'Ver foto ' + (photoIndex + 1) + (label ? ': ' + label : '')}
-              onClick={() => setOpenIndex(photoIndex)}>
+              onClick={() => {
+                setOpenIndex(photoIndex);
+                if (window.siteTrack) window.siteTrack('Ver foto', { album: album.title });
+              }}>
               <PhotoSlot id={id} label={label} height="var(--gallery-h)" src={src}
                 style={{ width: 'auto', objectFit: 'contain' }} />
             </button>
@@ -1376,4 +1381,66 @@ function GalleryViewer({ photos, index, albumTitle, onChange, onClose }) {
   );
 }
 
-Object.assign(window, { PageInicio, PageNosotros, PageGaleria, Arrow });
+// ═════════════════════════════════════════════════════════
+// PRIVACIDAD — qué mide el sitio y qué guarda el navegador
+// ═════════════════════════════════════════════════════════
+function PagePrivacidad() {
+  const blocks = [
+    {
+      title: 'Qué medimos',
+      items: [
+        'Contamos las visitas con Umami, una herramienta de estadísticas instalada en un servidor propio de la iglesia (estadisticas.adventistascentralosorno.cl). No es un servicio de publicidad.',
+        'Registramos qué sección se visita (Inicio, Galería, Calendario…), el tipo de dispositivo y navegador, el país o la ciudad aproximada, desde qué página se llegó y algunos clics, como abrir una foto o el botón de una campaña.',
+        'También registramos los errores técnicos de la página, para saber si algo deja de funcionar.',
+      ],
+    },
+    {
+      title: 'Lo que no hacemos',
+      items: [
+        'Este sitio no usa cookies de seguimiento, por eso no te pedimos aceptarlas.',
+        'Al contar visitas no guardamos tu dirección IP, tu nombre ni ningún dato que te identifique, y no seguimos tu actividad en otros sitios.',
+        'No vendemos ni compartimos estas estadísticas con terceros.',
+      ],
+    },
+    {
+      title: 'Lo que guarda tu navegador',
+      items: [
+        'Para que el sitio funcione, tu navegador guarda algunas preferencias (como la vista del calendario) y una copia del calendario y del programa para cargarlos más rápido.',
+        'Si eres miembro e inicias sesión en «Acceder», se guarda tu sesión en el navegador hasta que cierres sesión.',
+      ],
+    },
+    {
+      title: 'Tus derechos',
+      items: [
+        'Cuidamos estos datos según la Ley 21.719 de protección de datos personales. Si tienes dudas o quieres pedir que revisemos o borremos algún dato, escríbenos al correo de contacto que aparece al pie de esta página.',
+      ],
+    },
+  ];
+
+  return (
+    <main className="page-enter" data-screen-label="Privacidad">
+      <section className="section">
+        <div className="container" style={{ maxWidth: 760 }}>
+          <div className="kicker">Iglesia Adventista Central Osorno</div>
+          <h1 className="serif" style={{ fontSize: 'clamp(40px, 5.4vw, 64px)', marginTop: 16, lineHeight: 1.05 }}>Privacidad</h1>
+          <p className="muted" style={{ marginTop: 18, fontSize: 17, lineHeight: 1.6 }}>
+            Medimos las visitas de forma anónima para saber qué secciones son útiles y si la página funciona bien.
+          </p>
+          {blocks.map((b) => (
+            <div key={b.title} style={{ marginTop: 40 }}>
+              <h2 className="serif" style={{ fontSize: 'clamp(24px, 2.6vw, 30px)' }}>{b.title}</h2>
+              <ul style={{ marginTop: 14, paddingLeft: 20, display: 'grid', gap: 10, lineHeight: 1.6, color: 'var(--ink-2)' }}>
+                {b.items.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          ))}
+          <p className="mono muted" style={{ marginTop: 48, fontSize: 12, letterSpacing: '.08em' }}>
+            Actualizado el 22 de octubre de 2026
+          </p>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+Object.assign(window, { PageInicio, PageNosotros, PageGaleria, PagePrivacidad, Arrow });
