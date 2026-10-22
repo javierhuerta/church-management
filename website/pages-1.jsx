@@ -1194,29 +1194,142 @@ function PageGaleria() {
           </div>
 
           {collections.map((c, ci) => (
-            <div key={ci} style={{ marginBottom: 80 }}>
-              <div style={{ marginBottom: 24 }}>
-                <div className="kicker">{c.kicker}</div>
-                <h2 className="serif" style={{
-                  fontSize: 'clamp(26px, 3vw, 36px)', marginTop: 10
-                }}>{c.title}</h2>
-              </div>
-              {/* Mosaico en columnas: cada foto conserva su proporción y no se recorta. */}
-              <div style={{ columnWidth: 220, columnGap: 14 }}>
-                {c.slots.map((slot, si) => {
-                  var id = slot[0], label = slot[1], h = slot[2], kind = slot[3], src = slot[4] || null;
-                  return (
-                    <div key={id} style={{ breakInside: 'avoid', marginBottom: 14 }}>
-                      <PhotoSlot id={id} label={label} height={src ? 'auto' : h} src={src} />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <GalleryAlbum key={ci} album={c} />
           ))}
         </div>
       </section>
     </main>
+  );
+}
+
+// Un álbum de la galería: carrusel horizontal (no ocupa tanto alto) y visor al tocar una foto.
+function GalleryAlbum({ album }) {
+  const trackRef = React.useRef(null);
+  const [edges, setEdges] = React.useState({ start: true, end: true });
+  const [openIndex, setOpenIndex] = React.useState(null);
+  const photos = album.slots.filter((slot) => slot[4]);
+
+  const updateEdges = React.useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    setEdges({
+      start: el.scrollLeft <= 4,
+      end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4,
+    });
+  }, []);
+
+  React.useEffect(() => {
+    updateEdges();
+    window.addEventListener('resize', updateEdges);
+    return () => window.removeEventListener('resize', updateEdges);
+  }, [updateEdges, album]);
+
+  function scrollByPage(direction) {
+    const el = trackRef.current;
+    if (el && el.scrollBy) el.scrollBy({ left: direction * el.clientWidth * 0.85, behavior: 'smooth' });
+  }
+
+  const count = album.slots.length;
+  return (
+    <div data-album style={{ marginBottom: 64 }}>
+      <div className="gallery-album-head">
+        <div>
+          <div className="kicker">{album.kicker}</div>
+          <h2 className="serif" style={{
+            fontSize: 'clamp(26px, 3vw, 36px)', marginTop: 10
+          }}>{album.title}</h2>
+        </div>
+        <div className="gallery-nav">
+          <span className="mono muted" style={{ fontSize: 12 }}>{count} {count === 1 ? 'foto' : 'fotos'}</span>
+          <button type="button" aria-label="Fotos anteriores" disabled={edges.start}
+            onClick={() => scrollByPage(-1)}>‹</button>
+          <button type="button" aria-label="Fotos siguientes" disabled={edges.end}
+            onClick={() => scrollByPage(1)}>›</button>
+        </div>
+      </div>
+      {/* Alto fijo y ancho según la foto: se ven completas, sin recorte. */}
+      <div className="gallery-carousel" ref={trackRef} onScroll={updateEdges}>
+        {album.slots.map((slot) => {
+          var id = slot[0], label = slot[1], src = slot[4] || null;
+          if (!src) {
+            return (
+              <div key={id} className="gallery-item">
+                <PhotoSlot id={id} label={label} height="var(--gallery-h)" style={{ width: 280 }} />
+              </div>
+            );
+          }
+          var photoIndex = photos.indexOf(slot);
+          return (
+            <button key={id} type="button" className="gallery-item"
+              aria-label={'Ver foto ' + (photoIndex + 1) + (label ? ': ' + label : '')}
+              onClick={() => setOpenIndex(photoIndex)}>
+              <PhotoSlot id={id} label={label} height="var(--gallery-h)" src={src}
+                style={{ width: 'auto', objectFit: 'contain' }} />
+            </button>
+          );
+        })}
+      </div>
+      {openIndex !== null && (
+        <GalleryViewer photos={photos} index={openIndex} albumTitle={album.title}
+          onChange={setOpenIndex} onClose={() => setOpenIndex(null)} />
+      )}
+    </div>
+  );
+}
+
+// Visor a pantalla completa: flechas, teclado (← → Esc) y deslizar en el teléfono.
+function GalleryViewer({ photos, index, albumTitle, onChange, onClose }) {
+  const total = photos.length;
+  const go = React.useCallback((step) => onChange((index + step + total) % total), [index, total, onChange]);
+  const touchX = React.useRef(null);
+  const closeRef = React.useRef(null);
+
+  React.useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'Escape') onClose();
+      else if (e.key === 'ArrowRight') go(1);
+      else if (e.key === 'ArrowLeft') go(-1);
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [go, onClose]);
+
+  React.useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    if (closeRef.current) closeRef.current.focus();
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, []);
+
+  const photo = photos[index];
+  const caption = photo[1];
+  // Se monta en <body>: dentro de .page-enter (animación con transform) position:fixed no cubriría la pantalla.
+  return ReactDOM.createPortal(
+    <div className="gallery-viewer" role="dialog" aria-modal="true" aria-label={albumTitle}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
+      onTouchEnd={(e) => {
+        if (touchX.current === null) return;
+        const dx = e.changedTouches[0].clientX - touchX.current;
+        touchX.current = null;
+        if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+      }}>
+      <button type="button" ref={closeRef} className="gallery-viewer-close" aria-label="Cerrar" onClick={onClose}>×</button>
+      {total > 1 && (
+        <button type="button" className="gallery-viewer-arrow prev" aria-label="Foto anterior" onClick={() => go(-1)}>‹</button>
+      )}
+      <figure className="gallery-viewer-figure" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+        <img src={photo[4]} alt={caption || albumTitle} />
+        <figcaption>
+          <span>{caption}</span>
+          <span className="mono">{index + 1} / {total}</span>
+        </figcaption>
+      </figure>
+      {total > 1 && (
+        <button type="button" className="gallery-viewer-arrow next" aria-label="Foto siguiente" onClick={() => go(1)}>›</button>
+      )}
+    </div>,
+    document.body
   );
 }
 
