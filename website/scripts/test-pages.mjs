@@ -73,6 +73,7 @@ async function renderPage(componentName, api) {
   });
   const { window } = dom;
   window.React = require('react');
+  window.ReactDOM = require('react-dom');
   window.IS_REACT_ACT_ENVIRONMENT = true;
   window.IASD_API = {
     fetchHome: async () => BASE_HOME,
@@ -101,6 +102,11 @@ async function renderPage(componentName, api) {
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
   return {
     document: window.document,
+    window,
+    /** Runs a user interaction (click, key press) inside act() so React re-renders. */
+    async interact(fn) {
+      await act(async () => { fn(); });
+    },
     cleanup() {
       act(() => root.unmount());
       globalThis.window = previous.window;
@@ -268,7 +274,7 @@ describe('PageInicio — campaña destacada', () => {
 });
 
 describe('PageGaleria', () => {
-  test('shows every photo uncropped (natural height) in a column masonry', async () => {
+  test('shows each album as a horizontal carousel of uncropped photos', async () => {
     const page = await renderPage('PageGaleria', {
       fetchGallery: async () => [
         {
@@ -281,13 +287,61 @@ describe('PageGaleria', () => {
     try {
       const heading = [...page.document.querySelectorAll('main h2')].find((h) => h.textContent.startsWith('Cuenta Regresiva'));
       assert.ok(heading, 'album is rendered');
-      const imgs = [...heading.parentElement.parentElement.querySelectorAll('img')];
+      const album = heading.closest('[data-album]');
+      assert.ok(album, 'album wrapper is marked');
+      const track = album.querySelector('.gallery-carousel');
+      assert.ok(track, 'photos sit in a horizontal carousel track');
+      const imgs = [...track.querySelectorAll('img')];
       assert.deepEqual(imgs.map((i) => i.getAttribute('src')), PHOTOS.slice(0, 3).map((p) => p.url));
       for (const img of imgs) {
-        assert.equal(img.style.height, 'auto', 'photos are not forced to a fixed height');
+        assert.equal(img.style.width, 'auto', 'width follows the photo, so it is not cropped');
+        assert.equal(img.style.objectFit, 'contain');
       }
-      const container = imgs[0].parentElement.parentElement;
-      assert.equal(container.style.columnWidth, '220px');
+      const buttons = [...album.querySelectorAll('.gallery-nav button')].map((b) => b.getAttribute('aria-label'));
+      assert.deepEqual(buttons, ['Fotos anteriores', 'Fotos siguientes']);
+      assert.match(album.textContent, /3 fotos/);
+    } finally {
+      page.cleanup();
+    }
+  });
+
+  test('opens a photo in a full-screen viewer and moves through the album', async () => {
+    const page = await renderPage('PageGaleria', {
+      fetchGallery: async () => [
+        {
+          title: 'Cuenta Regresiva · Semana de evangelismo',
+          kicker: 'Octubre 2026',
+          images: PHOTOS.slice(0, 3).map((p, i) => ({ id: `img-${i}`, url: p.url, caption: p.caption })),
+        },
+      ],
+    });
+    try {
+      const { document, window } = page;
+      const viewerImage = () => document.querySelector('[role="dialog"] img');
+      const button = (label) => document.querySelector(`[role="dialog"] button[aria-label="${label}"]`);
+      assert.equal(document.querySelector('[role="dialog"]'), null, 'viewer starts closed');
+
+      const thumbs = [...document.querySelectorAll('.gallery-carousel img')];
+      await page.interact(() => thumbs[1].click());
+      assert.ok(document.querySelector('[role="dialog"][aria-modal="true"]'), 'clicking a photo opens the viewer');
+      assert.equal(viewerImage().getAttribute('src'), PHOTOS[1].url);
+      assert.match(document.querySelector('[role="dialog"]').textContent, /2 \/ 3/);
+      assert.match(document.querySelector('[role="dialog"]').textContent, /Foto grupo/);
+
+      await page.interact(() => button('Foto siguiente').click());
+      assert.equal(viewerImage().getAttribute('src'), PHOTOS[2].url);
+      await page.interact(() => button('Foto siguiente').click());
+      assert.equal(viewerImage().getAttribute('src'), PHOTOS[0].url, 'wraps around after the last photo');
+
+      await page.interact(() => window.document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowLeft' })));
+      assert.equal(viewerImage().getAttribute('src'), PHOTOS[2].url, 'left arrow key goes back');
+
+      await page.interact(() => window.document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape' })));
+      assert.equal(document.querySelector('[role="dialog"]'), null, 'Escape closes the viewer');
+
+      await page.interact(() => thumbs[0].click());
+      await page.interact(() => button('Cerrar').click());
+      assert.equal(document.querySelector('[role="dialog"]'), null, 'the close button closes the viewer');
     } finally {
       page.cleanup();
     }
