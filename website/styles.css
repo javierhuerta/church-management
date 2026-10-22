@@ -244,8 +244,9 @@ p { text-wrap: pretty; margin: 0; }
 .gallery-carousel {
   --gallery-h: clamp(220px, 30vw, 340px);
   display: flex; gap: 14px; overflow-x: auto; overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory; scrollbar-width: thin; padding-bottom: 10px;
+  scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 4px;
 }
+.gallery-carousel::-webkit-scrollbar { display: none; }
 .gallery-item {
   flex: 0 0 auto; scroll-snap-align: start; padding: 0; border: 0; background: none;
   border-radius: 14px; cursor: zoom-in;

@@ -1229,6 +1229,47 @@ function GalleryAlbum({ album }) {
     if (el && el.scrollBy) el.scrollBy({ left: direction * el.clientWidth * 0.85, behavior: 'smooth' });
   }
 
+  // Con el mouse encima el carrusel avanza solo; al llegar al final vuelve al inicio.
+  const [hovering, setHovering] = React.useState(false);
+  const canHover = !window.matchMedia || (
+    window.matchMedia('(hover: hover)').matches &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+  const autoplay = hovering && canHover && openIndex === null;
+
+  React.useEffect(() => {
+    const el = trackRef.current;
+    if (!autoplay || !el || !window.requestAnimationFrame) return;
+    const SPEED = 45; // px por segundo
+    let frame = null;
+    let last = null;
+    let pos = el.scrollLeft;
+    let pausedUntil = 0;
+    // Sin snap: devolvería cada paso pequeño y, al reactivarlo, saltaría a la foto anterior.
+    // Queda apagado al salir; con mouse no hace falta (en el teléfono nunca se activa).
+    el.style.scrollSnapType = 'none';
+    function step(now) {
+      if (last === null) last = now;
+      const dt = Math.min(now - last, 100) / 1000;
+      last = now;
+      const max = el.scrollWidth - el.clientWidth;
+      if (now >= pausedUntil && max > 0) {
+        if (Math.abs(el.scrollLeft - pos) > 2) pos = el.scrollLeft; // el usuario movió el carrusel
+        pos += SPEED * dt;
+        if (pos >= max) {
+          el.scrollTo({ left: 0, behavior: 'smooth' });
+          pos = 0;
+          pausedUntil = now + 1500;
+        } else {
+          el.scrollLeft = pos;
+        }
+      }
+      frame = window.requestAnimationFrame(step);
+    }
+    frame = window.requestAnimationFrame(step);
+    return () => window.cancelAnimationFrame(frame);
+  }, [autoplay]);
+
   const count = album.slots.length;
   return (
     <div data-album style={{ marginBottom: 64 }}>
@@ -1248,7 +1289,9 @@ function GalleryAlbum({ album }) {
         </div>
       </div>
       {/* Alto fijo y ancho según la foto: se ven completas, sin recorte. */}
-      <div className="gallery-carousel" ref={trackRef} onScroll={updateEdges}>
+      <div className="gallery-carousel" ref={trackRef} onScroll={updateEdges}
+        data-autoplay={autoplay ? 'on' : 'off'}
+        onMouseEnter={() => setHovering(true)} onMouseLeave={() => setHovering(false)}>
         {album.slots.map((slot) => {
           var id = slot[0], label = slot[1], src = slot[4] || null;
           if (!src) {

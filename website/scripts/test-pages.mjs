@@ -346,4 +346,24 @@ describe('PageGaleria', () => {
       page.cleanup();
     }
   });
+
+  test('moves the carousel by itself while the mouse is over it', async () => {
+    const page = await renderPage('PageGaleria', {
+      fetchGallery: async () => [
+        { title: 'Cuenta Regresiva', kicker: 'Octubre 2026', images: PHOTOS.map((p, i) => ({ id: `img-${i}`, url: p.url, caption: p.caption })) },
+      ],
+    });
+    try {
+      const { document, window } = page;
+      const track = document.querySelector('.gallery-carousel');
+      assert.equal(track.dataset.autoplay, 'off', 'still until the mouse enters');
+      await page.interact(() => track.querySelector('img').dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true })));
+      assert.equal(track.dataset.autoplay, 'on', 'hovering a photo starts the motion');
+      await page.interact(() => track.querySelector('img').dispatchEvent(new window.MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body })));
+      assert.equal(track.dataset.autoplay, 'off', 'leaving the carousel stops it');
+    } finally {
+      page.cleanup();
+    }
+  });
 });
+
