@@ -16,7 +16,7 @@ const ACCENT_OPTIONS = [
   '#A65A4A', // terracota
 ];
 
-const VALID_PAGES = ['inicio', 'nosotros', 'horarios', 'calendario', 'programa', 'galeria', 'envivo', 'acceso'];
+const VALID_PAGES = ['inicio', 'nosotros', 'horarios', 'calendario', 'programa', 'galeria', 'envivo', 'acceso', 'privacidad'];
 
 function AppInner() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
@@ -29,6 +29,8 @@ function AppInner() {
   // Sync hash
   useEA(() => {
     window.location.hash = page;
+    // Cada sección cuenta como una página en Umami (/galeria, /calendario…).
+    if (window.siteTrack) window.siteTrack((props) => ({ ...props, url: '/' + page }));
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [page]);
 
@@ -79,6 +81,7 @@ function AppInner() {
       case 'programa':   return <PagePrograma store={store} />;
       case 'galeria':    return <PageGaleria />;
       case 'acceso':     return <PageAcceso setPage={setPage} />;
+      case 'privacidad': return <PagePrivacidad />;
       default:           return <PageInicio setPage={setPage} nextService={nextService} />;
     }
   }, [page, liveNow, nextService, store.events, store.program]);

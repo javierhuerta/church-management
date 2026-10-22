@@ -255,7 +255,11 @@ function Footer({ setPage }) {
         </div>
         <hr style={{ border: 0, height: 1, background: 'rgba(245,239,224,.14)', margin: '48px 0 20px' }} />
         <div className="between" style={{ fontSize: 12, opacity: .6 }}>
-          <span>© 2026 IASD Central Osorno</span>
+          <span>
+            © 2026 IASD Central Osorno ·{' '}
+            <a href="#privacidad" onClick={(e) => { e.preventDefault(); setPage('privacidad'); }}
+              style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>Privacidad</a>
+          </span>
           <span className="mono" style={{ letterSpacing: '.1em' }}>MARANATHA</span>
         </div>
       </div>

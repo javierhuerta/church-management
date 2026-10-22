@@ -75,6 +75,9 @@ async function renderPage(componentName, api) {
   window.React = require('react');
   window.ReactDOM = require('react-dom');
   window.IS_REACT_ACT_ENVIRONMENT = true;
+  window.siteTrackCalls = [];
+  // JSON round-trip: objects built inside jsdom have another realm's prototypes.
+  window.siteTrack = (...args) => window.siteTrackCalls.push(JSON.parse(JSON.stringify(args)));
   window.IASD_API = {
     fetchHome: async () => BASE_HOME,
     fetchHomeAlbum: async () => null,
@@ -248,6 +251,8 @@ describe('PageInicio — campaña destacada', () => {
       assert.equal(main.getAttribute('target'), '_blank');
       assert.equal(main.getAttribute('rel'), 'noopener');
       assert.equal(secondary.getAttribute('target'), null);
+      await page.interact(() => secondary.click());
+      assert.deepEqual(page.window.siteTrackCalls, [['Clic en campaña', { boton: 'Descargar el libro gratis', destino: '#libro' }]], 'campaign button clicks are counted');
     } finally {
       page.cleanup();
     }
@@ -324,6 +329,7 @@ describe('PageGaleria', () => {
       const thumbs = [...document.querySelectorAll('.gallery-carousel img')];
       await page.interact(() => thumbs[1].click());
       assert.ok(document.querySelector('[role="dialog"][aria-modal="true"]'), 'clicking a photo opens the viewer');
+      assert.deepEqual(window.siteTrackCalls, [['Ver foto', { album: 'Cuenta Regresiva · Semana de evangelismo' }]], 'opening a photo is counted once');
       assert.equal(viewerImage().getAttribute('src'), PHOTOS[1].url);
       assert.match(document.querySelector('[role="dialog"]').textContent, /2 \/ 3/);
       assert.match(document.querySelector('[role="dialog"]').textContent, /Foto grupo/);
@@ -367,3 +373,20 @@ describe('PageGaleria', () => {
   });
 });
 
+
+describe('PagePrivacidad', () => {
+  test('explains what is measured, that there are no cookies and how to ask', async () => {
+    const page = await renderPage('PagePrivacidad', {});
+    try {
+      const text = page.document.querySelector('main').textContent;
+      assert.equal(page.document.querySelector('main h1').textContent, 'Privacidad');
+      assert.match(text, /no usa cookies de seguimiento/);
+      assert.match(text, /Umami/);
+      assert.match(text, /no guardamos tu dirección IP/);
+      assert.match(text, /Ley 21\.719/);
+      assert.match(text, /correo de contacto/);
+    } finally {
+      page.cleanup();
+    }
+  });
+});
