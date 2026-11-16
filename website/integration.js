@@ -42,14 +42,21 @@
     };
   }
 
-  // Eventos publicados desde hoy en adelante. La API ya filtra a "published"
-  // para usuarios anónimos (sin token).
+  // Todos los eventos publicados, pasados y futuros: el calendario muestra los
+  // meses anteriores y la lista permite ver las actividades ya realizadas.
+  // La API ya filtra a "published" para usuarios anónimos (sin token) y pagina
+  // con un máximo de 100 por página, así que se recorren todas las páginas.
   async function fetchEvents() {
-    var now = new Date();
-    var from =
-      now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
-    var json = await apiGet('/calendar?startDate=' + from + '&limit=100');
-    var list = Array.isArray(json) ? json : json.data || [];
+    var list = [];
+    var page = 1;
+    var totalPages = 1;
+    do {
+      var json = await apiGet('/calendar?limit=100&page=' + page);
+      if (Array.isArray(json)) return json.map(mapEvent);
+      list = list.concat(json.data || []);
+      totalPages = json.totalPages || 1;
+      page += 1;
+    } while (page <= totalPages && page <= 20);
     return list.map(mapEvent);
   }
 
