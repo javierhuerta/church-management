@@ -338,6 +338,12 @@ function toISO(y, m, d) {
   return y + '-' + String(m + 1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
 }
 
+// Today's date in local time as YYYY-MM-DD (events use local dates too).
+function todayISO() {
+  const now = new Date();
+  return toISO(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
 function PageCalendarioEditable({ store }) {
   const { session, can } = useAuth();
   const { events, setEvents, resetEvents } = store;
@@ -349,11 +355,10 @@ function PageCalendarioEditable({ store }) {
   });
   React.useEffect(() => { localStorage.setItem('iasd_cal_view', view); }, [view]);
 
-  // Default to first event's month (or today)
+  // Open on the current month; earlier months stay reachable with the arrows.
   const initialMonth = useM4(() => {
-    const first = events[0]?.date || new Date().toISOString().slice(0,10);
-    const [y, m] = first.split('-').map(Number);
-    return { y, m: m - 1 };
+    const now = new Date();
+    return { y: now.getFullYear(), m: now.getMonth() };
   }, []); // only once
   const [cursor, setCursor] = useS4(initialMonth);
 
@@ -394,7 +399,7 @@ function PageCalendarioEditable({ store }) {
             onAdd={() => addEvent()}
             onReset={() => { if (confirm('¿Restaurar el calendario por defecto?')) resetEvents(); }} />
 
-          <ToolbarBar onPrint={() => printCalendar(events)} />
+          <ToolbarBar onPrint={() => printCalendar(events.filter(e => e.date >= todayISO()))} />
 
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
             <div className="kicker">Calendario</div>
@@ -479,29 +484,61 @@ function ViewToggle({ view, setView }) {
 // ─────────────────────────────────────────────────────────
 // LIST VIEW
 function ListView({ events, isEditor, selectedId, onUpdate, onRemove }) {
-  const grouped = useM4(() => {
+  const [showPast, setShowPast] = useS4(false);
+
+  // Upcoming days first (oldest to newest); past days apart, most recent first.
+  const { upcoming, past } = useM4(() => {
     const g = {};
     [...events].sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start))
       .forEach(e => { (g[e.date] = g[e.date] || []).push(e); });
-    return Object.entries(g);
+    const today = todayISO();
+    const days = Object.entries(g);
+    return {
+      upcoming: days.filter(([date]) => date >= today),
+      past: days.filter(([date]) => date < today).reverse(),
+    };
   }, [events]);
 
   const dayLabel = (iso) => {
     const d = new Date(iso + 'T12:00');
-    return d.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
+    const sameYear = d.getFullYear() === new Date().getFullYear();
+    return d.toLocaleDateString('es-CL', sameYear
+      ? { weekday: 'long', day: 'numeric', month: 'long' }
+      : { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  if (!events.length) {
-    return (
-      <div className="muted" style={{ textAlign: 'center', padding: '40px 0', fontSize: 14 }}>
-        No hay actividades programadas.
-      </div>
-    );
-  }
+  const pastToggle = past.length > 0 && (
+    <div style={{ textAlign: 'center', margin: '8px 0 36px' }}>
+      <button type="button" className="btn btn-ghost"
+        aria-expanded={showPast}
+        onClick={() => setShowPast(!showPast)}>
+        {showPast ? 'Ocultar actividades anteriores' : 'Ver actividades anteriores'}
+      </button>
+    </div>
+  );
 
   return (
     <div style={{ maxWidth: 860, margin: '0 auto' }}>
-      {grouped.map(([date, items]) => (
+      {upcoming.length === 0 && (
+        <div className="muted" style={{ textAlign: 'center', padding: '40px 0', fontSize: 14 }}>
+          No hay actividades programadas.
+        </div>
+      )}
+      {upcoming.map(renderDay)}
+      {pastToggle}
+      {showPast && (
+        <div style={{ opacity: 0.75 }}>
+          <div className="kicker" style={{ textAlign: 'center', marginBottom: 24 }}>
+            Actividades anteriores
+          </div>
+          {past.map(renderDay)}
+        </div>
+      )}
+    </div>
+  );
+
+  function renderDay([date, items]) {
+    return (
         <div key={date} style={{ marginBottom: 36 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginBottom: 14 }}>
             <div className="serif" style={{ fontSize: 22, fontWeight: 500, textTransform: 'capitalize' }}>
@@ -574,9 +611,8 @@ function ListView({ events, isEditor, selectedId, onUpdate, onRemove }) {
             ))}
           </div>
         </div>
-      ))}
-    </div>
-  );
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────
